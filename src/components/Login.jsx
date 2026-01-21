@@ -13,7 +13,6 @@ export default function LoginComponent() {
         e.preventDefault();
         console.log('Form submitted:', formData);
     };
-
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({
