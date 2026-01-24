@@ -54,7 +54,7 @@ export default function LoginComponent() {
                                     name="username"
                                     value={formData.username}
                                     onChange={handleChange}
-                                    placeholder="Enter your username"
+                                    placeholder="Enter username"
                                     required
                                     className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:bg-gray-100"
                                 />
