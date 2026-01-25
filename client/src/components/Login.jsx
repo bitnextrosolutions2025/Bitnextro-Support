@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import logo from "../assets/f_logo.jpg"
+import { handleError, handleSuccess } from './ErrorMessage';
+import { useNavigate } from 'react-router';
 export default function LoginComponent() {
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -8,10 +10,41 @@ export default function LoginComponent() {
         password: '',
         remember: false
     });
-
-    const handleSubmit = (e) => {
+ const [loder,setLoder]=useState(false)
+ const naviget=useNavigate()
+ useEffect(()=>{
+     const fecthuser=()=>{
+        const token= localStorage.getItem('auth-token')
+        if(token){
+            
+           return naviget("/support")
+        }
+     }
+     fecthuser()
+ },[])
+    const handleSubmit = async(e) => {
         e.preventDefault();
+          setLoder(true)
         console.log('Form submitted:', formData);
+         const url=`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/login`
+        const responce= await fetch(url,{
+            method:'POST',
+            headers:{
+                "Content-Type": "application/json"
+            },
+            body:JSON.stringify({name:formData.username,password:formData.password})
+        })
+        const resdata= await responce.json()
+        if(!resdata.status){
+             handleError("Invalid credential. Try again!")
+            return setLoder(false);
+        }
+        handleSuccess("Login Successful")
+        localStorage.setItem("auth-token",resdata.token);
+        setLoder(false);
+        return naviget("/support")  
+
+
     };
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -118,9 +151,9 @@ export default function LoginComponent() {
                         {/* Submit Button */}
                         <button
                             onClick={handleSubmit}
-                            className="w-full bg-linear-to-r from-green-600 to-green-700 text-white py-3.5 rounded-3xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="w-full bg-linear-to-r from-green-600 to-green-700 text-white py-3.5 rounded-3xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex justify-center"
                         >
-                            LogIn
+                            {loder?<div className="loader mr-3.5"></div>:'LogIn'}
                         </button>
 
                         {/* Divider */}

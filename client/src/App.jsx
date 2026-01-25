@@ -9,14 +9,19 @@ import {
   Routes,
   Route,
 } from "react-router-dom";
+import { ToastContainer,Flip } from 'react-toastify'
+import SupportPortal from './components/Support'
 function App() {
 
   return (
     <>
     <BrowserRouter>
+    <ToastContainer transition={Flip}/>
     <Routes>
       <Route path='/' element={<LoginComponent/>}/>
       <Route path='/adminbitnextro' element={<RegisterPage/>}/>
+      <Route path='/support' element={<SupportPortal/>}/>
+
     </Routes>
     </BrowserRouter>
    
