@@ -5,7 +5,7 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [userdata,setUserdata]=useState({name:"",gmail:"",password:""})
   const onChange=(e)=>{
-    setUserdata({...userdata,[e.target.value]:e.target.name})
+    setUserdata({...userdata,[e.target.name]:e.target.value})
   }
   const handlesubmit=(e)=>{
     e.preventDefault();
