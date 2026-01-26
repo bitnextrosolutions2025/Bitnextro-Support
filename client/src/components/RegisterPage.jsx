@@ -23,7 +23,6 @@ const RegisterPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log(formData)
     if(formData.username===import.meta.env.VITE_USERNAME && formData.password===import.meta.env.VITE_PASSWORD ){
       handleSuccess("Welcome to admin portal.")
       return setadminCheck(true)
@@ -36,7 +35,7 @@ const RegisterPage = () => {
   }
   const handlesubmit=async(e)=>{
     e.preventDefault();
-    
+
         const url=`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/register`
         setLoder(true)
         const responce= await fetch(url,{
@@ -47,8 +46,6 @@ const RegisterPage = () => {
             body:JSON.stringify({name:userdata.name,password:userdata.password,email:userdata.gmail})
         })
         const resdata= await responce.json()
-        
-        console.log(resdata);
         if(!resdata.status){
           handleError("Some Error occured. Try again!")
           return setLoder(false);

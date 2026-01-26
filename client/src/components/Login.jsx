@@ -26,7 +26,6 @@ export default function LoginComponent() {
     const handleSubmit = async(e) => {
         e.preventDefault();
           setLoder(true)
-        console.log('Form submitted:', formData);
          const url=`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/login`
         const responce= await fetch(url,{
             method:'POST',
