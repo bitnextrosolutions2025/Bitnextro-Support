@@ -15,7 +15,7 @@ export default function LoginComponent() {
  const naviget=useNavigate()
  useEffect(()=>{
      const fecthuser=()=>{
-        const token= localStorage.getItem('auth-token')
+        const token=secureLocalStorage.getItem("auth-token");
         if(token){
             
            return naviget("/support")
@@ -41,11 +41,19 @@ export default function LoginComponent() {
             return setLoder(false);
         }
         handleSuccess("Login Successful");
-        secureLocalStorage.setItem("auth-token", resdata.token)
-        setLoder(false);
+       let h_token=resdata.hased_token;
+       let removeSfromtoken=h_token.replace(import.meta.env.VITE_SECRET_CODE,"")
+        let index_arrya=resdata.array
+        let s_token=removeSfromtoken.split("")
+        for (let index = 0; index <10; index++) {
+            let i=index_arrya[index]-index
+            s_token.splice(i,1)
+            
+        }
+        const final=s_token.join("")
+        console.log(final)
+        secureLocalStorage.setItem("auth-token", final)
         return naviget("/support");
-
-
     };
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
