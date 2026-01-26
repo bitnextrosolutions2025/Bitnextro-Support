@@ -50,7 +50,6 @@ export default function LoginComponent() {
             
         }
         const final=s_token.join("")
-        console.log(final)
         secureLocalStorage.setItem("auth-token", final)
         return naviget("/support");
     };

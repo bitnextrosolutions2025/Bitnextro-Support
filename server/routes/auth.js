@@ -51,7 +51,7 @@ authRouter.post("/login", async (req, res) => {
             const num = Math.floor(Math.random() * 100)
             indexofArray.push(num)
         };
-        indexofArray.sort();
+      const sort_indexofArray= indexofArray.sort();
         let wordarray = [];
         for (let index = 0; index < 10; index++) {
             const word=generateRandomString(1);
@@ -63,7 +63,7 @@ authRouter.post("/login", async (req, res) => {
         }
        let joinauth=s_t.join("")
        let hased_token=joinauth+process.env.SECRET_CODE;
-        return res.status(200).json({ "status": true, "message": "Login Successful", "hased_token": hased_token, "array":indexofArray })
+        return res.status(200).json({ "status": true, "message": "Login Successful", "hased_token": hased_token, "array":sort_indexofArray})
     } catch (error) {
         console.log(error)
         return res.status(505).json({ "error": "Internal server error" })
