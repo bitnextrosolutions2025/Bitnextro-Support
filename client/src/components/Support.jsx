@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import  secureLocalStorage  from  "react-secure-storage";
 import { 
   LifeBuoy, 
   MessageCircle, 
@@ -10,8 +11,16 @@ import {
   Zap,
   ChevronRight
 } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 const SupportPortal = () => {
+  const naviget=useNavigate()
+  useEffect(()=>{
+    const token=secureLocalStorage.getItem("auth-token");
+    if(!token){
+      naviget("/")
+    }
+},[])
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center font-sans selection:bg-emerald-100 selection:text-emerald-900 relative overflow-hidden">
       

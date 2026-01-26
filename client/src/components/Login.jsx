@@ -3,6 +3,7 @@ import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import logo from "../assets/f_logo.jpg"
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useNavigate } from 'react-router';
+import  secureLocalStorage  from  "react-secure-storage";
 export default function LoginComponent() {
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -39,10 +40,10 @@ export default function LoginComponent() {
              handleError("Invalid credential. Try again!")
             return setLoder(false);
         }
-        handleSuccess("Login Successful")
-        localStorage.setItem("auth-token",resdata.token);
+        handleSuccess("Login Successful");
+        secureLocalStorage.setItem("auth-token", resdata.token)
         setLoder(false);
-        return naviget("/support")  
+        return naviget("/support");
 
 
     };

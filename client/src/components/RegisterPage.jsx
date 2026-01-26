@@ -36,6 +36,7 @@ const RegisterPage = () => {
   }
   const handlesubmit=async(e)=>{
     e.preventDefault();
+    
         const url=`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/register`
         setLoder(true)
         const responce= await fetch(url,{
@@ -290,6 +291,7 @@ const RegisterPage = () => {
                 name="name"
                 onChange={onChange}
                 value={userdata.name}
+                required
                 className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl text-slate-700 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all duration-200"
                 placeholder="Enter username"
               />
@@ -307,6 +309,7 @@ const RegisterPage = () => {
                 type="email"
                 name='gmail'
                 value={userdata.gmail}
+                required
                 onChange={onChange}
                 className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl text-slate-700 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all duration-200"
                 placeholder="Enter your gmail"
@@ -325,6 +328,7 @@ const RegisterPage = () => {
                 type={showPassword ? "text" : "password"}
                 name='password'
                 value={userdata.password}
+                required
                 onChange={onChange}
                 className="block w-full pl-10 pr-10 py-3 border border-slate-200 rounded-xl text-slate-700 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all duration-200"
                 placeholder="Create a password"
