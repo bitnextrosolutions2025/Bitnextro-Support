@@ -2,6 +2,7 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import User from '../models/User.js';
+import sendemail from '../middleware/sendmail.js';
 const authRouter = express.Router();
 
 authRouter.post("/register", async (req, res) => {
@@ -69,5 +70,17 @@ authRouter.post("/login", async (req, res) => {
         return res.status(505).json({ "error": "Internal server error" })
     }
 })
+authRouter.post("/sendemail", async (req, res) => {
+    try {
+        const { email, username, password } = req.body;
+        const send = await sendemail(email,username,password)
+        console.log("✅ Email Response:", send);
 
+        return res.status(200).json({ "message": "send was mail", "status": true })
+
+    } catch (error) {
+        console.log(error)
+        return res.status(505).json({ "error": "Internal server error" })
+    }
+})
 export default authRouter;
