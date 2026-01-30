@@ -4,8 +4,10 @@ import logo from "../assets/f_logo.jpg"
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useNavigate } from 'react-router';
 import  secureLocalStorage  from  "react-secure-storage";
+import { useAuth } from "../context/AuthContext";
 export default function LoginComponent() {
     const [showPassword, setShowPassword] = useState(false);
+     const { user } = useAuth();
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -13,6 +15,21 @@ export default function LoginComponent() {
     });
  const [loder,setLoder]=useState(false)
  const naviget=useNavigate()
+//    useEffect(() => {
+//      const fecthuser = async () => {
+//        // const user1 = await user; 
+//        const token = await user
+//      //    const token = await auth.currentUser.getIdToken();
+//      // console.log(token)
+//        console.log(token)
+//        // if (user) {
+//        //   const email = user.email;
+//        //   console.log(email);
+//        // }
+//      }
+//      fecthuser()
+ 
+//    }, [])
  useEffect(()=>{
      const fecthuser=()=>{
         const token=secureLocalStorage.getItem("auth-token");

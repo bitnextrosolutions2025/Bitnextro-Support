@@ -13,7 +13,7 @@ const coresoption = {
     optionsSuccessStatus: 200 // Fixes some browser CORS issues
 }
 app.use(cors(coresoption));
-connectDB();
+await connectDB();
 app.get("/",(req,res)=>{
    return res.status(200).json({"message":"code run"})
 })
