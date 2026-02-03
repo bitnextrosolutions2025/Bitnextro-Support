@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 import { ToastContainer,Flip } from 'react-toastify'
 import SupportPortal from './components/Support'
+import TicktSubmit from './pages/TicktSubmit'
 function App() {
 
   return (
@@ -21,6 +22,8 @@ function App() {
       <Route path='/' element={<LoginComponent/>}/>
       <Route path='/adminbitnextro' element={<RegisterPage/>}/>
       <Route path='/support' element={<SupportPortal/>}/>
+      <Route path='/ticket' element={<TicktSubmit/>}/>
+      
 
     </Routes>
     </BrowserRouter>

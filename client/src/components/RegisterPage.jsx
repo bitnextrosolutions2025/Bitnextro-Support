@@ -24,17 +24,16 @@ const RegisterPage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
-
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-  //   if (formData.username === import.meta.env.VITE_USERNAME && formData.password === import.meta.env.VITE_PASSWORD) {
-  //     handleSuccess("Welcome to admin portal.")
-  //     return setadminCheck(true)
-  //   }
-  //   handleError("Invalid credential")
-  //   setIsLoading(false)
-  // };
+  useEffect(() => {
+    const getoken = async () => {
+      if(user.email==="bitnextrosolutions@gmail.com"){
+         handleSuccess("Welcome to admin portal.")
+         return setadminCheck(true)
+      }
+      handleError("Invalid admin")
+    }
+    getoken()
+  }, [user])
 
   const handlelogin = async () => {
     const data = await googleSignIn();
@@ -46,9 +45,6 @@ const RegisterPage = () => {
 
     }
     handleError("Invalid admin")
-    // setuserdata(data.user)
-    const token = await auth.currentUser.getIdToken();
-    // console.log(token)
   }
   const onChange = (e) => {
     setUserdata({ ...userdata, [e.target.name]: e.target.value })

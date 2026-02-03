@@ -11,7 +11,7 @@ import {
   Zap,
   ChevronRight
 } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 const SupportPortal = () => {
   const naviget=useNavigate()
@@ -76,9 +76,9 @@ const SupportPortal = () => {
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">Submit a Ticket</h3>
             <p className="text-slate-500 mb-6">Facing a technical issue? Create a support request and track its progress.</p>
-            <div className="flex items-center text-blue-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
+            <Link to="/ticket"><div className="flex items-center text-blue-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
               Open Request <ArrowRight className="h-4 w-4 ml-2" />
-            </div>
+            </div></Link>
           </div>
 
           {/* Card 2: Knowledge Base */}
