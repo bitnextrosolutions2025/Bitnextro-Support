@@ -34,6 +34,11 @@ const ticktSchema = new mongoose.Schema({
     t_subject:{
         type:String,
         required:true
+    },
+    t_disc:{
+        type:String,
+        required:true
+
     }
 
 

@@ -64,13 +64,28 @@ export default function TicktSubmit() {
         e.preventDefault();
         setStatus('submitting');
         console.log(formData)
+        const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/gen-ticket`
+        const responce = await fetch(url, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ firstName: formData.firstName, lastName: formData.lastName, phone: formData.phone, priority: formData.priority, subject: formData.subject, department: formData.department, description: formData.description, email: formData.email })
+        })
+        const data = await responce.json();
+        const urlmail = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/sendemail`
+        const responcemail = await fetch(urlmail, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email: formData.email, ticketNO:data.Ticket_No, username: formData.firstName })
+        })
+        const datamail = await responcemail.json();
+        console.log(datamail)
+        setStatus('success');
+        setTicketId(`Ticket_No - ${data.Ticket_No}`);
 
-        // Simulate API call
-        setTimeout(() => {
-            setStatus('success');
-            setTicketId(`TKT-${Math.floor(100000 + Math.random() * 900000)}`);
-            // Reset form if needed, but keeping it visible is often better UX so they see what they sent
-        }, 2000);
     };
 
     const resetForm = () => {
