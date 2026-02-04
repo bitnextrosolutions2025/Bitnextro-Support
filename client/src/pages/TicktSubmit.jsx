@@ -45,24 +45,25 @@ export default function TicktSubmit() {
         }));
     };
 
-    const handleFileChange = (e) => {
-        const newFiles = Array.from(e.target.files);
-        setFormData(prev => ({
-            ...prev,
-            files: [...prev.files, ...newFiles]
-        }));
-    };
+    // const handleFileChange = (e) => {
+    //     const newFiles = Array.from(e.target.files);
+    //     setFormData(prev => ({
+    //         ...prev,
+    //         files: [...prev.files, ...newFiles]
+    //     }));
+    // };
 
-    const removeFile = (index) => {
-        setFormData(prev => ({
-            ...prev,
-            files: prev.files.filter((_, i) => i !== index)
-        }));
-    };
+    // const removeFile = (index) => {
+    //     setFormData(prev => ({
+    //         ...prev,
+    //         files: prev.files.filter((_, i) => i !== index)
+    //     }));
+    // };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setStatus('submitting');
+        console.log(formData)
 
         // Simulate API call
         setTimeout(() => {
@@ -307,7 +308,7 @@ export default function TicktSubmit() {
                                 ></textarea>
                             </div>
 
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 block">Attachments (Optional)</label>
                                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:bg-gray-50 transition-colors text-center cursor-pointer relative group">
                                     <input
@@ -326,8 +327,6 @@ export default function TicktSubmit() {
                                         <p className="text-xs text-gray-400">SVG, PNG, JPG or PDF (max. 10MB)</p>
                                     </div>
                                 </div>
-
-                                {/* File List */}
                                 {formData.files.length > 0 && (
                                     <div className="mt-4 space-y-2">
                                         {formData.files.map((file, index) => (
@@ -348,7 +347,7 @@ export default function TicktSubmit() {
                                         ))}
                                     </div>
                                 )}
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Submit Action */}
