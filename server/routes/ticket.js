@@ -26,7 +26,8 @@ ticketRouter.post("/gen-ticket", async (req, res) => {
             c_department: department,
             t_priority: priority,
             t_subject: subject,
-            t_disc: description
+            t_disc: description,
+            t_status:"Tickt is forword to Admin panel."
         })
         newTickt.save();
      return res.status(200).json({"status":true,"message":"Ticket is done","Ticket_No":ticket})
@@ -44,6 +45,20 @@ ticketRouter.post("/sendemail", async (req, res) => {
 
         return res.status(200).json({ "message": "send was mail", "status": true })
 
+    } catch (error) {
+        console.log(error)
+        return res.status(505).json({ "error": "Internal server error" })
+    }
+});
+ticketRouter.post("/findtikctstatus",async(req,res)=>{
+    try {
+        const {ticket}=req.body;
+        const findticket=await Ticket.findOne({t_uid:ticket})
+        if(!findticket){
+            return res.status(404).json({"status":false})
+        }
+        return res.status(200).json({"status":true,"ticketdata":findticket});
+        
     } catch (error) {
         console.log(error)
         return res.status(505).json({ "error": "Internal server error" })

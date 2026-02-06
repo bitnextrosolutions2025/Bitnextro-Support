@@ -87,11 +87,11 @@ const SupportPortal = () => {
             <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
               <FileText className="h-7 w-7 text-emerald-600" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Knowledge Base</h3>
-            <p className="text-slate-500 mb-6">Browse guides, tutorials, and FAQs to find answers quickly on your own.</p>
-            <div className="flex items-center text-emerald-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
-              View Articles <ArrowRight className="h-4 w-4 ml-2" />
-            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Search your Ticket</h3>
+            <p className="text-slate-500 mb-6">Check your tick Status.</p>
+            <Link to="/checkticket"><div className="flex items-center text-emerald-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
+             Check ticket <ArrowRight className="h-4 w-4 ml-2" />
+            </div></Link>
           </div>
 
           {/* Card 3: Live Chat */}

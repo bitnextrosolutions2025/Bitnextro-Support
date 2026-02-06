@@ -14,6 +14,8 @@ import {
     X
 } from 'lucide-react';
 import secureLocalStorage from 'react-secure-storage';
+import { handleError } from '../components/ErrorMessage';
+import { Link } from 'react-router';
 
 export default function TicktSubmit() {
     useEffect(() => {
@@ -83,6 +85,9 @@ export default function TicktSubmit() {
         })
         const datamail = await responcemail.json();
         console.log(datamail)
+        if(!data.status || !datamail.status){
+            return handleError("Some this is worong !! Try again ")
+        }
         setStatus('success');
         setTicketId(`Ticket_No - ${data.Ticket_No}`);
 
@@ -141,12 +146,12 @@ export default function TicktSubmit() {
                     <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-blue-600 rounded-full opacity-30 blur-3xl"></div>
 
                     <div className="relative z-10">
-                        <div className="flex items-center space-x-3 mb-8">
+                        <Link to="/"><div className="flex items-center space-x-3 mb-8">
                             <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
                                 <LifeBuoy className="w-6 h-6 text-indigo-200" />
                             </div>
-                            <span className="font-bold text-lg tracking-wide">ServiceDesk Pro</span>
-                        </div>
+                         <span className="font-bold text-lg tracking-wide">Bitnextro Service Portal</span>
+                        </div></Link>
 
                         <h1 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">
                             Let's get your issue resolved.
@@ -161,21 +166,21 @@ export default function TicktSubmit() {
                             <Mail className="w-6 h-6 text-indigo-300 mt-1" />
                             <div>
                                 <h3 className="font-semibold text-indigo-100">Email Us</h3>
-                                <p className="text-indigo-300">support@servicedesk.com</p>
+                                <p className="text-indigo-300">info@bitnextro.com</p>
                             </div>
                         </div>
                         <div className="flex items-start space-x-4">
                             <Phone className="w-6 h-6 text-indigo-300 mt-1" />
                             <div>
                                 <h3 className="font-semibold text-indigo-100">Call Us</h3>
-                                <p className="text-indigo-300">+1 (555) 123-4567</p>
+                                <p className="text-indigo-300">+91 9330855877</p>
                             </div>
                         </div>
                         <div className="flex items-start space-x-4">
                             <Clock className="w-6 h-6 text-indigo-300 mt-1" />
                             <div>
                                 <h3 className="font-semibold text-indigo-100">Operating Hours</h3>
-                                <p className="text-indigo-300">Mon-Fri: 9AM - 6PM EST</p>
+                                <p className="text-indigo-300">Mon-Sat: 10AM - 7PM IST</p>
                             </div>
                         </div>
                     </div>

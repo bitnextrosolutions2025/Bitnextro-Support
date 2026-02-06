@@ -12,6 +12,7 @@ import {
 import { ToastContainer,Flip } from 'react-toastify'
 import SupportPortal from './components/Support'
 import TicktSubmit from './pages/TicktSubmit'
+import TickeCheck from './pages/TiecktCheck'
 function App() {
 
   return (
@@ -23,6 +24,7 @@ function App() {
       <Route path='/adminbitnextro' element={<RegisterPage/>}/>
       <Route path='/support' element={<SupportPortal/>}/>
       <Route path='/ticket' element={<TicktSubmit/>}/>
+      <Route path='/checkticket' element={<TickeCheck/>}/>
       
 
     </Routes>

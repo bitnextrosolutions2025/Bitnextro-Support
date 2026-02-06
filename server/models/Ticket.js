@@ -1,4 +1,6 @@
+import { timeStamp } from "console";
 import mongoose from "mongoose";
+import { types } from "util";
 
 const ticktSchema = new mongoose.Schema({
     t_uid:{
@@ -39,9 +41,12 @@ const ticktSchema = new mongoose.Schema({
         type:String,
         required:true
 
+    },
+    t_status:{
+         type:String,
     }
 
 
-})
+},{timestamps:true})
 const Ticket = mongoose.model("Ticket", ticktSchema);
 export default Ticket;
