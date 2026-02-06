@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     FileText,
     ArrowRight,
@@ -11,6 +11,9 @@ import {
     Plus,
     HelpCircle
 } from 'lucide-react';
+import { handleError } from '../components/ErrorMessage';
+import secureLocalStorage from 'react-secure-storage';
+import { useNavigate } from 'react-router';
 
 // --- Components ---
 
@@ -18,47 +21,29 @@ import {
  * ServiceCard: The specific component requested in the image.
  * replicates the visual style: Green left border, icon container, typography.
  */
-const ServiceCard = ({ icon: Icon, title, subtitle, linkText, active, onClick }) => (
-    <div
-        onClick={onClick}
-        className={`
-      relative bg-white rounded-2xl p-6 cursor-pointer transition-all duration-300
-      border-l-[6px] shadow-sm hover:shadow-xl group
-      ${active ? 'border-emerald-600 ring-2 ring-emerald-100 shadow-md' : 'border-emerald-500/30 hover:border-emerald-500'}
-    `}
-    >
-        <div className="flex flex-col h-full justify-between space-y-4">
-            <div>
-                <div className={`
-          w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-colors
-          ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'}
-        `}>
-                    <Icon size={28} strokeWidth={2} />
-                </div>
-
-                <h3 className="text-xl font-bold text-slate-800 mb-2">{title}</h3>
-                <p className="text-slate-500 text-sm font-medium leading-relaxed">
-                    {subtitle}
-                </p>
-            </div>
-
-            <div className="flex items-center text-emerald-600 font-bold text-sm mt-2 group-hover:translate-x-1 transition-transform">
-                {linkText} <ArrowRight size={16} className="ml-2" />
-            </div>
-        </div>
-    </div>
-);
 
 /**
  * TicketResult: Displays a mock ticket result with a timeline.
  */
 const TicketResult = ({ ticketdata }) => {
     // Mock data simulation based on ID
+    const formatted = new Date(ticketdata.createdAt).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
+
+    // console.log(formatted);
+     const f2=formatted.split(" ").slice(0,2).join(" ")
     const steps = [
-        { title: 'Ticket Created', date: 'Oct 24, 2025', status: 'completed' },
-        { title: 'Assigned to Agent', date: 'Oct 25, 2025', status: 'completed' },
-        { title: 'In Progress', date: 'Oct 26, 2025', status: 'current' },
-        { title: 'Resolved', date: 'Estimated Oct 28', status: 'pending' },
+        { title: 'Ticket Created', date: formatted, status: 'completed' },
+        { title: 'Forword to admin Panel', date: f2, status: 'completed' },
+        { title: 'Check by admin', date: 'NA', status: 'pending' },
+        // { title: 'Resolved', date: 'Estimated Oct 28', status: 'pending' },
     ];
 
     return (
@@ -67,10 +52,10 @@ const TicketResult = ({ ticketdata }) => {
                 <div className="flex justify-between items-start">
                     <div>
                         <span className="inline-block px-3 py-1 bg-emerald-500/50 rounded-full text-xs font-semibold mb-2 backdrop-blur-sm border border-emerald-400/30">
-                            High Priority
+                            Priority {ticketdata.t_priority}
                         </span>
                         <h2 className="text-2xl font-bold">Ticket #{ticketdata.t_uid}</h2>
-                        <p className="text-emerald-100 mt-1">Login Issue on Mobile App</p>
+                        <p className="text-emerald-100 mt-1"></p>
                     </div>
                     <div className="bg-white/20 p-2 rounded-lg backdrop-blur-md">
                         <Clock className="text-white" size={24} />
@@ -116,80 +101,53 @@ const TicketResult = ({ ticketdata }) => {
 
 export default function TickeCheck() {
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState('search'); // 'search', 'create', 'faq'
     const [ticketResult, setTicketResult] = useState(null);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('search');
     const [loading, setLoading] = useState(false);
-    const [ticktalldata,setticketdata]=useState({})
-
+    const [ticktalldata, setticketdata] = useState({})
+    const naviget=useNavigate()
+ useEffect(()=>{
+     const fecthuser=()=>{
+        const token=secureLocalStorage.getItem("auth-token");
+        if(!token){
+          handleError("Login frist!!")
+           return naviget("/")
+        }
+     }
+     fecthuser()
+ },[])
     const handleSearch = async (e) => {
         e.preventDefault();
         if (!searchTerm) return;
-         console.log(searchTerm)
+        // console.log(searchTerm)
         setLoading(true);
         setTicketResult(null);
         const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/findtikctstatus`
-        const responce = await fetch(url,{
+        const responce = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({ ticket: searchTerm })
         })
-        const data= await responce.json();
-        console.log(data)
+        const data = await responce.json();
+        // console.log(data)
         setticketdata(data.ticketdata)
         // Simulate API call
-
-            setTicketResult(searchTerm);
+        if(!data.status){
             setLoading(false);
+            return handleError("Ticket no is not find.")
+
+        }
+        setTicketResult(searchTerm);
+        setLoading(false);
     };
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-emerald-100 selection:text-emerald-900">
 
             {/* Navigation */}
-            <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16">
-                        <div className="flex items-center gap-2">
-                            <div className="bg-emerald-600 p-1.5 rounded-lg">
-                                <FileText className="text-white" size={20} />
-                            </div>
-                            <span className="font-bold text-xl tracking-tight text-slate-800">
-                                Ticket<span className="text-emerald-600">Flow</span>
-                            </span>
-                        </div>
-
-                        {/* Desktop Nav */}
-                        <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
-                            <a href="#" className="hover:text-emerald-600 transition-colors">Dashboard</a>
-                            <a href="#" className="text-emerald-600">Track Ticket</a>
-                            <a href="#" className="hover:text-emerald-600 transition-colors">Knowledge Base</a>
-                            <button className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-all">
-                                Sign In
-                            </button>
-                        </div>
-
-                        {/* Mobile Menu Button */}
-                        <div className="md:hidden flex items-center">
-                            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-slate-600">
-                                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Mobile Nav Dropdown */}
-                {isMobileMenuOpen && (
-                    <div className="md:hidden bg-white border-t border-slate-100 p-4 space-y-4 shadow-lg">
-                        <a href="#" className="block py-2 px-3 hover:bg-slate-50 rounded-lg font-medium">Dashboard</a>
-                        <a href="#" className="block py-2 px-3 bg-emerald-50 text-emerald-700 rounded-lg font-medium">Track Ticket</a>
-                        <a href="#" className="block py-2 px-3 hover:bg-slate-50 rounded-lg font-medium">Knowledge Base</a>
-                        <button className="w-full bg-slate-900 text-white py-3 rounded-lg font-medium">Sign In</button>
-                    </div>
-                )}
-            </nav>
+         
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

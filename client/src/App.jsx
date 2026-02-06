@@ -13,12 +13,14 @@ import { ToastContainer,Flip } from 'react-toastify'
 import SupportPortal from './components/Support'
 import TicktSubmit from './pages/TicktSubmit'
 import TickeCheck from './pages/TiecktCheck'
+import Navbar from './components/Navbar'
 function App() {
 
   return (
     <>
     <BrowserRouter>
     <ToastContainer transition={Flip}/>
+    <Navbar/>
     <Routes>
       <Route path='/' element={<LoginComponent/>}/>
       <Route path='/adminbitnextro' element={<RegisterPage/>}/>
