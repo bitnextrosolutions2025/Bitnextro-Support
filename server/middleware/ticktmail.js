@@ -74,7 +74,7 @@ const sendeticketmail = async (sendtoemail, ticketNO,userName) => {
         </div>
 
         <div class="btn-container">
-          <a href="https://support.bitnextro.com/${ticketNO}" class="btn">View Ticket Status</a>
+          <a href="https://support.bitnextro.com/checkticket" class="btn">View Ticket Status</a>
         </div>
         
         <p class="text-secondary">

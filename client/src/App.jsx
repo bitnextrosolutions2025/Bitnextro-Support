@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
@@ -8,6 +8,8 @@ import {
   BrowserRouter,
   Routes,
   Route,
+  useNavigate,
+  useLocation,
 } from "react-router-dom";
 import { ToastContainer,Flip } from 'react-toastify'
 import SupportPortal from './components/Support'
@@ -15,12 +17,12 @@ import TicktSubmit from './pages/TicktSubmit'
 import TickeCheck from './pages/TiecktCheck'
 import Navbar from './components/Navbar'
 function App() {
-
+// const location=useLocation()
   return (
     <>
     <BrowserRouter>
     <ToastContainer transition={Flip}/>
-    <Navbar/>
+     <Navbar/>
     <Routes>
       <Route path='/' element={<LoginComponent/>}/>
       <Route path='/adminbitnextro' element={<RegisterPage/>}/>
