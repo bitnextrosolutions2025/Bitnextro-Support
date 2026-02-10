@@ -16,6 +16,7 @@ const TicketResult = ({ ticketdata }) => {
     // Safe date formatting
     let formattedDate = "N/A";
     let shortDate = "N/A";
+    let shortUDate="N/A"
 
     if (ticketdata?.createdAt) {
         formattedDate = new Date(ticketdata.createdAt).toLocaleString("en-IN", {
@@ -29,12 +30,25 @@ const TicketResult = ({ ticketdata }) => {
         // safely extract first two parts for short date
         shortDate = formattedDate.split(" ").slice(0, 2).join(" ");
     }
+    if (ticketdata?.updatedAt) {
+        formattedDate = new Date(ticketdata.updatedAt).toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+        // safely extract first two parts for short date
+        shortUDate = formattedDate.split(" ").slice(0, 2).join(" ");
+    }
 
     const steps = [
         { title: 'Ticket Created', date: formattedDate, status: 'completed' },
         { title: 'Forward to Admin Panel', date: shortDate, status: 'completed' },
-        { title: 'Check by Admin', date: 'Pending', status: 'pending' },
-        // { title: 'Resolved', date: 'Estimated Oct 28', status: 'pending' },
+        { title: 'Check by Admin', date:ticketdata.t_status==="Tickt is forword to Admin panel."?'Pending':shortUDate, status: ticketdata.t_status==="Tickt is forword to Admin panel."? 'pending':"completed" },
+        ticketdata.t_status==="Checked by admin and work in Process if need our team get you soon"?
+        { title: 'Resolved', date: "pending", status: 'pending' }:"",
     ];
 
     return (

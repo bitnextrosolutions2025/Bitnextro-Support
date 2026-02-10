@@ -16,9 +16,9 @@ ticketRouter.post("/gen-ticket", async (req, res) => {
 
             return ticket;
         }
-        const ticket =generateReadableTicket(7);
+        const ticket = generateReadableTicket(7);
         const newTickt = new Ticket({
-            t_uid: ticket ,
+            t_uid: ticket,
             c_name_f: firstName,
             c_name_l: lastName,
             c_email: email,
@@ -27,20 +27,20 @@ ticketRouter.post("/gen-ticket", async (req, res) => {
             t_priority: priority,
             t_subject: subject,
             t_disc: description,
-            t_status:"Tickt is forword to Admin panel."
+            t_status: "Tickt is forword to Admin panel."
         })
         newTickt.save();
-     return res.status(200).json({"status":true,"message":"Ticket is done","Ticket_No":ticket})
+        return res.status(200).json({ "status": true, "message": "Ticket is done", "Ticket_No": ticket })
     } catch (error) {
-         console.log(error)
-        return res.status(505).json({"status":false, "error": "Internal server error" })
+        console.log(error)
+        return res.status(505).json({ "status": false, "error": "Internal server error" })
     }
 
 });
 ticketRouter.post("/sendemail", async (req, res) => {
     try {
-        const { email, ticketNO,username} = req.body;
-        const send = await sendeticketmail(email,ticketNO,username)
+        const { email, ticketNO, username } = req.body;
+        const send = await sendeticketmail(email, ticketNO, username)
         console.log("✅ Email Response:", send);
 
         return res.status(200).json({ "message": "send was mail", "status": true })
@@ -50,22 +50,34 @@ ticketRouter.post("/sendemail", async (req, res) => {
         return res.status(505).json({ "error": "Internal server error" })
     }
 });
-ticketRouter.post("/findtikctstatus",async(req,res)=>{
+ticketRouter.post("/findtikctstatus", async (req, res) => {
     try {
-        const {ticket}=req.body;
-        const findticket=await Ticket.findOne({t_uid:ticket})
-        if(!findticket){
-            return res.status(404).json({"status":false})
+        const { ticket } = req.body;
+        const findticket = await Ticket.findOne({ t_uid: ticket })
+        if (!findticket) {
+            return res.status(404).json({ "status": false })
         }
-        return res.status(200).json({"status":true,"ticketdata":findticket});
-        
+        return res.status(200).json({ "status": true, "ticketdata": findticket });
+
     } catch (error) {
         console.log(error)
         return res.status(505).json({ "error": "Internal server error" })
     }
 })
-ticketRouter.get("/allticket", async(req,res)=>{
-    const allticket= await Ticket.find({})
-    return res.status(200).json({allticket})
+ticketRouter.get("/allticket", async (req, res) => {
+    const allticket = await Ticket.find({})
+    return res.status(200).json({ allticket })
+})
+ticketRouter.put("/updateticket/:id", async (req, res) => {
+    try {
+
+        const updateTicket = {}
+        updateTicket.t_status = "Checked by admin and work in Process if need our team get you soon"
+        let newTicktStatus = await Ticket.findByIdAndUpdate(req.params.id, { $set: updateTicket }, { new: true })
+        return res.status(200).json({ "status": true });
+    } catch (error) {
+        console.log(error)
+        return res.status(400).json({ "status": false, message: "Network server error" })
+    }
 })
 export default ticketRouter;

@@ -11,25 +11,34 @@ import {
   ChevronRight,
   CheckCircle2
 } from 'lucide-react';
-import { handleError } from './ErrorMessage';
+import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
 
 export default function AdminTicketCheck() {
   const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
+  const [adminCheck,setadminCheck]=useState([])
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [doneuser, setdoneuser] = useState(false)
+  const [loder, setloder] = useState(false)
   const naviget = useNavigate()
   useEffect(() => {
     const getoken = async () => {
       if (user.email === "bitnextrosolutions@gmail.com") {
+        setdoneuser(true)
         return;
       }
       handleError("Invalid admin")
       return naviget("/adminbitnextro")
     }
     getoken();
+
+
+
+  }, [user]);
+  useEffect(() => {
     const fetchTickets = async () => {
       try {
         const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/allticket`;
@@ -45,7 +54,21 @@ export default function AdminTicketCheck() {
         const data = await res.json();
 
         if (data.allticket) {
-          setTickets(data.allticket);
+          // setTickets(data.allticket);
+          const newticket = []
+          const admincheckticket=[];
+          for (const i in data.allticket) {
+            // console.log(data.allticket[i]);
+            if (data.allticket[i].t_status === "Tickt is forword to Admin panel.") {
+              newticket.push(data.allticket[i])
+            }
+            if (data.allticket[i].t_status==="Checked by admin and work in Process if need our team get you soon"){
+                 admincheckticket.push(data.allticket[i])
+            }
+          }
+            setTickets(newticket)
+            setadminCheck(admincheckticket)
+          // console.log(newticket)
         }
       } catch (error) {
         console.error("Error fetching tickets:", error);// Fallback for demo purposes
@@ -54,9 +77,9 @@ export default function AdminTicketCheck() {
         setLoading(false);
       }
     };
-
     fetchTickets();
-  }, [user]);
+
+  }, [doneuser,])
 
   // Format Date Helper
   const formatDate = (dateString) => {
@@ -68,7 +91,37 @@ export default function AdminTicketCheck() {
       minute: '2-digit'
     });
   };
+  const adminupdate = async (e, id) => {
+    e.preventDefault();
+    try {
 
+
+      setloder(true)
+      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/updateticket/${id}`
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          "Content-Type": "application/json"
+        },
+      });
+      const data = await res.json();
+      if (data.status) {
+        setloder(false)
+        return handleSuccess("Update the ticket status done.")
+      }
+      setloder(false)
+      return handleError("Some error occour try again!")
+    } catch (error) {
+      setloder(false)
+      console.log(error);
+      return handleError("Server Error")
+    }
+
+  }
+  const adminupdatereslove=async(e,id)=>{
+    e.preventDefault();
+    console.log(id)
+  }
   // Priority Color Helper
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
@@ -90,7 +143,7 @@ export default function AdminTicketCheck() {
           </div>
           Admin Ticket Dashboard
         </h1>
-        <p className="mt-2 text-slate-500 ml-16">Overview of all active support tickets currently in the system.</p>
+        <p className="mt-2 text-slate-500 ml-16 text-2xl">All new ticket </p>
       </div>
 
       {/* Main Grid Content */}
@@ -104,6 +157,63 @@ export default function AdminTicketCheck() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tickets.map((ticket) => (
+              <div
+                key={ticket._id}
+                className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-sky-100 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+              >
+                {/* Card Header */}
+                <div className="p-6 pb-4 border-b border-slate-50">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                      ID: {ticket.t_uid}
+                    </span>
+                    <span className={`px-3 py-1 text-xs font-bold rounded-full border uppercase ${getPriorityColor(ticket.t_priority)}`}>
+                      {ticket.t_priority}
+                    </span>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-1 group-hover:text-sky-600 transition-colors">
+                    {ticket.t_subject}
+                  </h3>
+
+                  <div className="flex items-center gap-2 text-slate-500 text-sm mb-3">
+                    <User className="w-4 h-4 text-sky-400" />
+                    <span className="font-medium capitalize">
+                      {ticket.c_name_f} {ticket.c_name_l}
+                    </span>
+                  </div>
+
+                  <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    {ticket.t_disc}
+                  </p>
+                </div>
+
+                {/* Card Footer / Action */}
+                <div className="p-4 bg-slate-50/50 mt-auto">
+                  <button
+                    onClick={() => setSelectedTicket(ticket)}
+                    className="w-full flex items-center justify-center gap-2 bg-white text-sky-600 font-semibold py-3 rounded-xl border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-transparent transition-all duration-200 group-focus:ring-2 ring-sky-200"
+                  >
+                    Details <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className='w-full border-dashed border-2 border-green-500 mt-8'></div>
+      <p className="mt-2 text-slate-500 ml-16 text-2xl mb-6">All the ticket that checked by admin. </p>
+      <div className="max-w-7xl mx-auto">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-64 bg-white rounded-2xl shadow-sm animate-pulse"></div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {adminCheck.map((ticket) => (
               <div
                 key={ticket._id}
                 className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-sky-100 transition-all duration-300 flex flex-col justify-between overflow-hidden"
@@ -288,12 +398,17 @@ export default function AdminTicketCheck() {
               >
                 Close Details
               </button>
-              <button
-                onClick={() => setSelectedTicket(null)}
+             {selectedTicket.t_status==="Checked by admin and work in Process if need our team get you soon"?<button
+                onClick={(e) => adminupdatereslove(e, selectedTicket._id)}
+                className="px-6 py-2.5 ml-3 bg-green-400 text-white text-sm font-semibold rounded-xl hover:bg-green-500 transition-colors shadow-lg shadow-slate-200"
+              >
+                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> :"Reslove"}
+              </button>: <button
+                onClick={(e) => adminupdate(e, selectedTicket._id)}
                 className="px-6 py-2.5 ml-3 bg-green-800 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-lg shadow-slate-200"
               >
-                Checked by admin
-              </button>
+                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> :"Checked by admin"}
+              </button>}
             </div>
 
           </div>
