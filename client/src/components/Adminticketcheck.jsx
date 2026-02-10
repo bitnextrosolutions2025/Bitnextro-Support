@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router';
 export default function AdminTicketCheck() {
   const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
-  const [adminCheck,setadminCheck]=useState([])
+  const [adminCheck, setadminCheck] = useState([])
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [doneuser, setdoneuser] = useState(false)
@@ -26,17 +26,19 @@ export default function AdminTicketCheck() {
   const naviget = useNavigate()
   useEffect(() => {
     const getoken = async () => {
-      if (user.email === "bitnextrosolutions@gmail.com") {
-        setdoneuser(true)
-        return;
+      console.log("Helloo")
+      try {
+        if (user.email === "bitnextrosolutions@gmail.com") {
+          setdoneuser(true)
+          return;
+        }
+      } catch (error) {
+        handleError("Invalid admin")
+        return naviget("/adminbitnextro")
+
       }
-      handleError("Invalid admin")
-      return naviget("/adminbitnextro")
     }
     getoken();
-
-
-
   }, [user]);
   useEffect(() => {
     const fetchTickets = async () => {
@@ -56,18 +58,18 @@ export default function AdminTicketCheck() {
         if (data.allticket) {
           // setTickets(data.allticket);
           const newticket = []
-          const admincheckticket=[];
+          const admincheckticket = [];
           for (const i in data.allticket) {
             // console.log(data.allticket[i]);
             if (data.allticket[i].t_status === "Tickt is forword to Admin panel.") {
               newticket.push(data.allticket[i])
             }
-            if (data.allticket[i].t_status==="Checked by admin and work in Process if need our team get you soon"){
-                 admincheckticket.push(data.allticket[i])
+            if (data.allticket[i].t_status === "Checked by admin and work in Process if need our team get you soon") {
+              admincheckticket.push(data.allticket[i])
             }
           }
-            setTickets(newticket)
-            setadminCheck(admincheckticket)
+          setTickets(newticket)
+          setadminCheck(admincheckticket)
           // console.log(newticket)
         }
       } catch (error) {
@@ -118,7 +120,7 @@ export default function AdminTicketCheck() {
     }
 
   }
-  const adminupdatereslove=async(e,id)=>{
+  const adminupdatereslove = async (e, id) => {
     e.preventDefault();
     console.log(id)
   }
@@ -398,16 +400,16 @@ export default function AdminTicketCheck() {
               >
                 Close Details
               </button>
-             {selectedTicket.t_status==="Checked by admin and work in Process if need our team get you soon"?<button
+              {selectedTicket.t_status === "Checked by admin and work in Process if need our team get you soon" ? <button
                 onClick={(e) => adminupdatereslove(e, selectedTicket._id)}
                 className="px-6 py-2.5 ml-3 bg-green-400 text-white text-sm font-semibold rounded-xl hover:bg-green-500 transition-colors shadow-lg shadow-slate-200"
               >
-                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> :"Reslove"}
-              </button>: <button
+                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Reslove"}
+              </button> : <button
                 onClick={(e) => adminupdate(e, selectedTicket._id)}
                 className="px-6 py-2.5 ml-3 bg-green-800 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-lg shadow-slate-200"
               >
-                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> :"Checked by admin"}
+                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Checked by admin"}
               </button>}
             </div>
 
