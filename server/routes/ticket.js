@@ -64,4 +64,8 @@ ticketRouter.post("/findtikctstatus",async(req,res)=>{
         return res.status(505).json({ "error": "Internal server error" })
     }
 })
+ticketRouter.get("/allticket", async(req,res)=>{
+    const allticket= await Ticket.find({})
+    return res.status(200).json({allticket})
+})
 export default ticketRouter;

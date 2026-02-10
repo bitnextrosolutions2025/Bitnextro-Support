@@ -20,12 +20,12 @@ export default function Navbar() {
                     </Link>
 
                     {/* Desktop Navigation (Hidden on mobile) */}
-                    {location.pathname==="/adminbitnextro"?
+                    {location.pathname==="/adminbitnextro" ||location.pathname==="/adminticktcheck" ?
                     <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
                         <Link to="/adminbitnextro" className="hover:text-emerald-600 transition-colors">
                             Creat user
                         </Link>
-                        <Link to="/checkticket" className="text-emerald-600 hover:text-emerald-700 transition-colors">
+                        <Link to="/adminticktcheck" className="text-emerald-600 hover:text-emerald-700 transition-colors">
                             Check new Ticket
                         </Link>
                     </div>

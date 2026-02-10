@@ -16,6 +16,7 @@ import SupportPortal from './components/Support'
 import TicktSubmit from './pages/TicktSubmit'
 import TickeCheck from './pages/TiecktCheck'
 import Navbar from './components/Navbar'
+import Adminticketcheck from './components/Adminticketcheck'
 function App() {
 // const location=useLocation()
   return (
@@ -29,6 +30,7 @@ function App() {
       <Route path='/support' element={<SupportPortal/>}/>
       <Route path='/ticket' element={<TicktSubmit/>}/>
       <Route path='/checkticket' element={<TickeCheck/>}/>
+      <Route path='/adminticktcheck' element={<Adminticketcheck/>}/>
       
 
     </Routes>
