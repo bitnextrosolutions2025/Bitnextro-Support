@@ -48,7 +48,7 @@ const TicketResult = ({ ticketdata }) => {
         { title: 'Forward to Admin Panel', date: shortDate, status: 'completed' },
         { title: 'Check by Admin', date:ticketdata.t_status==="Tickt is forword to Admin panel."?'Pending':shortUDate, status: ticketdata.t_status==="Tickt is forword to Admin panel."? 'pending':"completed" },
         ticketdata.t_status==="Checked by admin and work in Process if need our team get you soon"?
-        { title: 'Resolved', date: "pending", status: 'pending' }:"",
+        { title: 'Resolved', date: "pending", status: 'pending' }:{ title: 'Resolved', date: ticketdata.t_reslove_date, status: 'completed' },
     ];
 
     return (
