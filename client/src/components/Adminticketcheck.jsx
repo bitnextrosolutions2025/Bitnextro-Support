@@ -32,6 +32,8 @@ export default function AdminTicketCheck() {
           setdoneuser(true)
           return;
         }
+        handleError("Invalid admin")
+        return naviget("/adminbitnextro")
       } catch (error) {
         handleError("Invalid admin")
         return naviget("/adminbitnextro")
