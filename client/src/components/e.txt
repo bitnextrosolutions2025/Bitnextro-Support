@@ -25,7 +25,6 @@
                 />
               </div>
             </div>
-
             {/* Password Input */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -63,7 +62,6 @@
                 </button>
               </div>
             </div>
-
             {/* Remember Me & Terms */}
             <div className="flex items-center">
               <input
