@@ -15,21 +15,6 @@ export default function LoginComponent() {
     });
  const [loder,setLoder]=useState(false)
  const naviget=useNavigate()
-//    useEffect(() => {
-//      const fecthuser = async () => {
-//        // const user1 = await user; 
-//        const token = await user
-//      //    const token = await auth.currentUser.getIdToken();
-//      // console.log(token)
-//        console.log(token)
-//        // if (user) {
-//        //   const email = user.email;
-//        //   console.log(email);
-//        // }
-//      }
-//      fecthuser()
- 
-//    }, [])
  useEffect(()=>{
      const fecthuser=()=>{
         const token=secureLocalStorage.getItem("auth-token");
