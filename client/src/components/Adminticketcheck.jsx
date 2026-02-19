@@ -9,7 +9,9 @@ import {
   AlertCircle,
   X,
   ChevronRight,
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  MessageSquare
 } from 'lucide-react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
@@ -24,6 +26,10 @@ export default function AdminTicketCheck() {
   const [doneuser, setdoneuser] = useState(false)
   const [loder, setloder] = useState(false)
   const naviget = useNavigate()
+  const [resolvemodal, setresolvemodal] = useState(false)
+  const [resolveDate, setResolveDate] = useState(new Date().toISOString().split('T')[0]); // Defaults to today's date
+  const [resolveMessage, setResolveMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     const getoken = async () => {
       console.log("Helloo")
@@ -124,8 +130,35 @@ export default function AdminTicketCheck() {
   }
   const adminupdatereslove = async (e, id) => {
     e.preventDefault();
-    console.log(id)
-  }
+    setresolvemodal(true);
+    console.log("Opening modal for Ticket ID:", id);
+  };
+
+  // --- Function to handle the final submission ---
+  const handleFinalResolve = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Simulating an API call
+    console.log("Processing resolution for ID:", selectedTicket._id);
+    console.log("Date:", resolveDate);
+    console.log("Message:", resolveMessage);
+    const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/update-resolve`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: selectedTicket._id, date: resolveDate, message: resolveMessage })
+    });
+    const data = await res.json();
+    console.log(data);
+    setIsSubmitting(false);
+    setresolvemodal(false);
+    setResolveMessage(''); // Reset message after success
+    handleSuccess("Ticket resolved successfully!");
+
+  };
   // Priority Color Helper
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
@@ -394,6 +427,7 @@ export default function AdminTicketCheck() {
               </div>
             </div>
 
+
             {/* Modal Footer */}
             <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 flex justify-end">
               <button
@@ -406,7 +440,7 @@ export default function AdminTicketCheck() {
                 onClick={(e) => adminupdatereslove(e, selectedTicket._id)}
                 className="px-6 py-2.5 ml-3 bg-green-400 text-white text-sm font-semibold rounded-xl hover:bg-green-500 transition-colors shadow-lg shadow-slate-200"
               >
-                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Reslove"}
+                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <div> Reslove</div>}
               </button> : <button
                 onClick={(e) => adminupdate(e, selectedTicket._id)}
                 className="px-6 py-2.5 ml-3 bg-green-800 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-lg shadow-slate-200"
@@ -414,6 +448,82 @@ export default function AdminTicketCheck() {
                 {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Checked by admin"}
               </button>}
             </div>
+
+          </div>
+        </div>
+      )}
+      {resolvemodal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+
+          {/* Modal Container */}
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-800">Resolve Ticket</h3>
+              <button
+                onClick={() => setresolvemodal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body / Form */}
+            <form onSubmit={handleFinalResolve} className="p-6 space-y-5">
+
+              {/* Date Input */}
+              <div className="space-y-1.5">
+                <label className="flex items-center text-sm font-semibold text-slate-700">
+                  <Calendar className="w-4 h-4 mr-1.5 text-slate-400" />
+                  Resolution Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={resolveDate}
+                  onChange={(e) => setResolveDate(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-400 focus:border-green-400 outline-none transition-all text-slate-700"
+                />
+              </div>
+
+              {/* Message Input */}
+              <div className="space-y-1.5">
+                <label className="flex items-center text-sm font-semibold text-slate-700">
+                  <MessageSquare className="w-4 h-4 mr-1.5 text-slate-400" />
+                  Resolution Message
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  placeholder="Explain how this issue was resolved..."
+                  value={resolveMessage}
+                  onChange={(e) => setResolveMessage(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-400 focus:border-green-400 outline-none transition-all resize-none text-slate-700"
+                />
+              </div>
+
+              {/* Modal Footer / Actions */}
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setresolvemodal(false)}
+                  className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2.5 bg-green-500 text-white text-sm font-semibold rounded-xl hover:bg-green-600 transition-colors shadow-lg shadow-green-200/50 flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  ) : null}
+                  {isSubmitting ? "Resolving..." : "Final Resolve"}
+                </button>
+              </div>
+            </form>
 
           </div>
         </div>

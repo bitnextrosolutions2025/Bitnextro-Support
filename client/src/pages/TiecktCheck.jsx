@@ -15,8 +15,10 @@ import { useNavigate } from 'react-router';
 const TicketResult = ({ ticketdata }) => {
     // Safe date formatting
     let formattedDate = "N/A";
+    let formattedDateR = "N/A";
+
     let shortDate = "N/A";
-    let shortUDate="N/A"
+    let shortUDate = "N/A"
 
     if (ticketdata?.createdAt) {
         formattedDate = new Date(ticketdata.createdAt).toLocaleString("en-IN", {
@@ -42,13 +44,25 @@ const TicketResult = ({ ticketdata }) => {
         // safely extract first two parts for short date
         shortUDate = formattedDate.split(" ").slice(0, 2).join(" ");
     }
+    if (ticketdata.t_reslove_date) {
+        formattedDateR = new Date(ticketdata.t_reslove_date).toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    }
 
     const steps = [
         { title: 'Ticket Created', date: formattedDate, status: 'completed' },
         { title: 'Forward to Admin Panel', date: shortDate, status: 'completed' },
-        { title: 'Check by Admin', date:ticketdata.t_status==="Tickt is forword to Admin panel."?'Pending':shortUDate, status: ticketdata.t_status==="Tickt is forword to Admin panel."? 'pending':"completed" },
-        ticketdata.t_status==="Checked by admin and work in Process if need our team get you soon"?
-        { title: 'Resolved', date: "pending", status: 'pending' }:{ title: 'Resolved', date: ticketdata.t_reslove_date, status: 'completed' },
+        { title: 'Check by Admin', date: ticketdata.t_status === "Tickt is forword to Admin panel." ? 'Pending' : shortUDate, status: ticketdata.t_status === "Tickt is forword to Admin panel." ? 'pending' : "completed" },
+        ticketdata.t_status === "Checked by admin and work in Process if need our team get you soon" ?
+        { title: 'Resolved', date: "pending", status: 'pending' } :ticketdata.t_status==="Resolve"?
+        { title: 'Resolved', date: formattedDateR, status: 'completed' }:"",
+        
     ];
 
     return (
@@ -130,7 +144,7 @@ export default function TicketCheck() {
     }, [navigate]);
 
     const handleSearch = async (e) => {
-        if(e) e.preventDefault();
+        if (e) e.preventDefault();
         if (!searchTerm) return;
 
         setLoading(true);
@@ -151,13 +165,13 @@ export default function TicketCheck() {
 
             if (!data.status) {
                 setLoading(false);
-                try { handleError("Ticket number not found."); } catch(e) { alert("Ticket number not found."); }
+                try { handleError("Ticket number not found."); } catch (e) { alert("Ticket number not found."); }
                 return;
             }
             setTicketResult(searchTerm);
         } catch (error) {
             console.error(error);
-            try { handleError("Network Error"); } catch(e) { alert("Network Error"); }
+            try { handleError("Network Error"); } catch (e) { alert("Network Error"); }
         } finally {
             setLoading(false);
         }
@@ -165,14 +179,14 @@ export default function TicketCheck() {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 flex flex-col">
-            
+
             {/* Main Content */}
             <main className="grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-                
+
                 {/* Dynamic Content Area */}
                 <div className="transition-all duration-500 ease-in-out">
                     <div className="max-w-2xl mx-auto w-full">
-                        
+
                         {/* Search Box */}
                         <div className="bg-white p-2 rounded-2xl shadow-lg border border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center mb-8 focus-within:ring-4 focus-within:ring-emerald-100 transition-shadow">
                             <div className="pl-4 py-3 sm:py-0 text-slate-400 hidden sm:block">
@@ -191,7 +205,7 @@ export default function TicketCheck() {
                                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 m-1 shadow-sm hover:shadow-md active:scale-95"
                             >
                                 {loading ? (
-                                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                 ) : (
                                     <>
                                         <span>Check</span>

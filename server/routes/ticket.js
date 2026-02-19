@@ -79,5 +79,23 @@ ticketRouter.put("/updateticket/:id", async (req, res) => {
         console.log(error)
         return res.status(400).json({ "status": false, message: "Network server error" })
     }
+});
+ticketRouter.post("/update-resolve", async (req, res) => {
+    try {
+
+
+        const { id, date, message } = req.body;
+        const updateTicket = {}
+        updateTicket.t_status = "Resolve"
+        updateTicket.t_reslove_date = date;
+        updateTicket.t_reslove_message = message;
+        let newTicktStatus = await Ticket.findByIdAndUpdate(id, { $set: updateTicket }, { new: true })
+        return res.status(200).json({ "status": true });
+    } catch (error) {
+        console.log(error)
+        return res.status(400).json({ "status": false, message: "Network server error" })
+
+    }
+
 })
 export default ticketRouter;

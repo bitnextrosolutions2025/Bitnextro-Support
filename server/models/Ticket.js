@@ -1,6 +1,4 @@
 import mongoose from "mongoose";
-
-
 const ticktSchema = new mongoose.Schema({
     t_uid: {
         type: String,
@@ -46,7 +44,10 @@ const ticktSchema = new mongoose.Schema({
         required: true,
     },
     t_reslove_date: {
-        type: String,
+        type: Date,
+    },
+    t_reslove_message:{
+        type:String,
     }
 }, { timestamps: true })
 const Ticket = mongoose.model("Ticket", ticktSchema);
