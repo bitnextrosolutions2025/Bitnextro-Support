@@ -51,7 +51,7 @@ const SupportPortal = () => {
           </p>
 
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto relative group mt-8">
+          {/* <div className="max-w-2xl mx-auto relative group mt-8">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             </div>
@@ -63,7 +63,7 @@ const SupportPortal = () => {
             <button className="absolute right-2 top-2 bottom-2 bg-linear-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 text-white px-6 rounded-xl font-medium transition-all duration-200 shadow-md hover:shadow-lg">
               Search
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Main Action Cards */}
@@ -95,17 +95,7 @@ const SupportPortal = () => {
           </div>
 
           {/* Card 3: Live Chat */}
-          <div className="group relative bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 border border-slate-100 transition-all duration-300 cursor-pointer overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-linear-to-b from-indigo-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="h-14 w-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <MessageCircle className="h-7 w-7 text-indigo-600" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">Live Chat</h3>
-            <p className="text-slate-500 mb-6">Need immediate assistance? Chat with one of our support agents now.</p>
-            <div className="flex items-center text-indigo-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
-              Start Chat <ArrowRight className="h-4 w-4 ml-2" />
-            </div>
-          </div>
+          
         </div>
 
         {/* Quick Links / Featured Sections */}

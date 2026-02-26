@@ -4,8 +4,15 @@ import logo from "../assets/logo.jpg";
 import { Link, useLocation } from 'react-router'; // or 'react-router-dom' depending on your version
 
 export default function Navbar() {
+    const location = useLocation() 
+    const adminRoutes = [
+  "/adminbitnextro",
+  "/adminticktcheck",
+  "/billing"
+];
+
+const isAdminRoute = adminRoutes.includes(location.pathname);
     const [isOpen, setIsOpen] = useState(false);
-    const location = useLocation()
     return (
         <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -18,15 +25,17 @@ export default function Navbar() {
                             Bitnextro<span className="text-emerald-600"> Support</span>
                         </span>
                     </Link>
-
                     {/* Desktop Navigation (Hidden on mobile) */}
-                    {location.pathname==="/adminbitnextro" ||location.pathname==="/adminticktcheck" ?
+                    {isAdminRoute ?
                     <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
                         <Link to="/adminbitnextro" className="hover:text-emerald-600 transition-colors">
                             Creat user
                         </Link>
                         <Link to="/adminticktcheck" className="text-emerald-600 hover:text-emerald-700 transition-colors">
                             Check new Ticket
+                        </Link>
+                        <Link to="/billing" className="hover:text-emerald-700 transition-colors">
+                            Generate Bill
                         </Link>
                     </div>
                     :<div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
@@ -85,6 +94,7 @@ export default function Navbar() {
                         >
                             Knowledge Base
                         </Link>
+        
                     </div>
                 </div>
             )}
