@@ -241,7 +241,7 @@ const generateHTML = (data) => {
                     <p class="font-bold mb-1">Notes:</p>
                     <p>Thank you for the Business</p>
                 </div>
-                <div class="w-1/5 p-2">
+                <div class="p-2">
                     <p class="font-bold mb-1">Terms and Conditions:</p>
                     <ol class="list-decimal pl-4 leading-relaxed">
                         <li>All services will be provided as per the scope mentioned in this invoice.</li>
