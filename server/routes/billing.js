@@ -33,7 +33,7 @@ const generateHTML = (data) => {
     const compGST = "19AAOCB2081P1ZO";
     const compPhone = "+91 9330855877";
     const bankDetails = {
-        bank: "Union Bank of India",
+        bank: "UNION BANK OF INDIA",
         AH:"BITNEXTRO SOLUTIONS PRIVATE LIMITED",
         acc: "436901010039787",
         ifsc: "UBIN0543691",
@@ -219,9 +219,8 @@ const generateHTML = (data) => {
             <div class="flex border-b border-black">
                 <div class="w-1/3 border-r border-black p-2 text-[11px] leading-relaxed">
                     <p class="font-bold mb-1">Bank Details:</p>
-                    <div class="flex"><span class="w-20">Bank:</span> <strong>${bankDetails.bank}</strong></div>
-                    <div class="flex"><span class="w-20">Bank:</span> <strong>${bankDetails.AH}</strong></div>
-                    <div class="flex"><span class="w-20">Account #:</span> <strong>${bankDetails.acc}</strong></div>
+                    <div class="flex"><span class="w-20">Bank:</span><strong>${bankDetails.bank}</strong></div>
+                    <div class="flex"><span class="w-20">Account #:</span <strong>${bankDetails.acc}</strong></div>
                     <div class="flex"><span class="w-20">IFSC:</span> <strong>${bankDetails.ifsc}</strong></div>
                     <div class="flex"><span class="w-20">Branch:</span> <strong>${bankDetails.branch}</strong></div>
                 </div>
@@ -238,7 +237,7 @@ const generateHTML = (data) => {
 
             <!-- Terms and Notes -->
             <div class="flex text-[10px] h-28">
-                <div class="w-1/2 border-r border-black p-2">
+                <div class="w-1/3 border-r border-black p-2">
                     <p class="font-bold mb-1">Notes:</p>
                     <p>Thank you for the Business</p>
                 </div>
@@ -246,10 +245,9 @@ const generateHTML = (data) => {
                     <p class="font-bold mb-1">Terms and Conditions:</p>
                     <ol class="list-decimal pl-4 leading-relaxed">
                         <li>All services will be provided as per the scope mentioned in this invoice.</li>
-                        <li> Work delivery and credential handover will be completed after full payment.</li>
-                        <li> No refunds will be applicable once services are activated.</li>
+                        <li>Work delivery and credential handover will be completed after full payment.</li>
+                        <li>No refunds will be applicable once services are activated.</li>
                         <li>Any additional requirements beyond the invoice scope will be charged separately.</li>
-                        <li> All disputes, if any, shall be subject to Kolkata jurisdiction.</li>
                     </ol>
                 </div>
             </div>
