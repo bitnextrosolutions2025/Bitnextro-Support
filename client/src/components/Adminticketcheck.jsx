@@ -11,7 +11,8 @@ import {
   ChevronRight,
   CheckCircle2,
   Calendar,
-  MessageSquare
+  MessageSquare,
+  Search
 } from 'lucide-react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
@@ -20,34 +21,35 @@ import { useNavigate } from 'react-router';
 export default function AdminTicketCheck() {
   const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
-  const [adminCheck, setadminCheck] = useState([])
+  const [adminCheck, setAdminCheck] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [doneuser, setdoneuser] = useState(false)
-  const [loder, setloder] = useState(false)
-  const naviget = useNavigate()
-  const [resolvemodal, setresolvemodal] = useState(false)
-  const [resolveDate, setResolveDate] = useState(new Date().toISOString().split('T')[0]); // Defaults to today's date
+  const [doneUser, setDoneUser] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const navigate = useNavigate();
+  
+  const [resolveModal, setResolveModal] = useState(false);
+  const [resolveDate, setResolveDate] = useState(new Date().toISOString().split('T')[0]);
   const [resolveMessage, setResolveMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
-    const getoken = async () => {
-      console.log("Helloo")
+    const getToken = async () => {
       try {
-        if (user.email === "bitnextrosolutions@gmail.com") {
-          setdoneuser(true)
+        if (user?.email === "bitnextrosolutions@gmail.com") {
+          setDoneUser(true);
           return;
         }
-        handleError("Invalid admin")
-        return naviget("/adminbitnextro")
+        handleError("Unauthorized access.");
+        return navigate("/adminbitnextro");
       } catch (error) {
-        handleError("Invalid admin")
-        return naviget("/adminbitnextro")
-
+        handleError("Authentication error.");
+        return navigate("/adminbitnextro");
       }
-    }
-    getoken();
-  }, [user]);
+    };
+    getToken();
+  }, [user, navigate]);
+
   useEffect(() => {
     const fetchTickets = async () => {
       try {
@@ -64,34 +66,33 @@ export default function AdminTicketCheck() {
         const data = await res.json();
 
         if (data.allticket) {
-          // setTickets(data.allticket);
-          const newticket = []
-          const admincheckticket = [];
-          for (const i in data.allticket) {
-            // console.log(data.allticket[i]);
-            if (data.allticket[i].t_status === "Tickt is forword to Admin panel.") {
-              newticket.push(data.allticket[i])
+          const newTickets = [];
+          const adminCheckTickets = [];
+          
+          for (const ticket of data.allticket) {
+            if (ticket.t_status === "Tickt is forword to Admin panel.") {
+              newTickets.push(ticket);
             }
-            if (data.allticket[i].t_status === "Checked by admin and work in Process if need our team get you soon") {
-              admincheckticket.push(data.allticket[i])
+            if (ticket.t_status === "Checked by admin and work in Process if need our team get you soon") {
+              adminCheckTickets.push(ticket);
             }
           }
-          setTickets(newticket)
-          setadminCheck(admincheckticket)
-          // console.log(newticket)
+          setTickets(newTickets);
+          setAdminCheck(adminCheckTickets);
         }
       } catch (error) {
-        console.error("Error fetching tickets:", error);// Fallback for demo purposes
-        return handleError("Some error happen !! refresh again")
+        console.error("Error fetching tickets:", error);
+        return handleError("Unable to load tickets. Please refresh.");
       } finally {
         setLoading(false);
       }
     };
-    fetchTickets();
+    
+    if (doneUser) {
+      fetchTickets();
+    }
+  }, [doneUser]);
 
-  }, [doneuser,])
-
-  // Format Date Helper
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -101,325 +102,341 @@ export default function AdminTicketCheck() {
       minute: '2-digit'
     });
   };
-  const adminupdate = async (e, id) => {
+
+  const adminUpdate = async (e, id) => {
     e.preventDefault();
     try {
-
-
-      setloder(true)
-      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/updateticket/${id}`
+      setIsUpdating(true);
+      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/updateticket/${id}`;
       const res = await fetch(url, {
         method: 'PUT',
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
+      
       if (data.status) {
-        setloder(false)
-        return handleSuccess("Update the ticket status done.")
+        handleSuccess("Ticket status updated successfully.");
+        // Re-fetch or locally update state here if needed
+      } else {
+        handleError("Failed to update ticket status.");
       }
-      setloder(false)
-      return handleError("Some error occour try again!")
     } catch (error) {
-      setloder(false)
-      console.log(error);
-      return handleError("Server Error")
+      console.error(error);
+      handleError("Server Connection Error");
+    } finally {
+      setIsUpdating(false);
     }
-
-  }
-  const adminupdatereslove = async (e, id) => {
-    e.preventDefault();
-    setresolvemodal(true);
-    console.log("Opening modal for Ticket ID:", id);
   };
 
-  // --- Function to handle the final submission ---
+  const adminUpdateResolve = async (e, id) => {
+    e.preventDefault();
+    setResolveModal(true);
+  };
+
   const handleFinalResolve = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulating an API call
-    console.log("Processing resolution for ID:", selectedTicket._id);
-    console.log("Date:", resolveDate);
-    console.log("Message:", resolveMessage);
-    const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/update-resolve`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ id: selectedTicket._id, date: resolveDate, message: resolveMessage })
-    });
-    const data = await res.json();
-    console.log(data);
-    setIsSubmitting(false);
-    setresolvemodal(false);
-    setResolveMessage(''); // Reset message after success
-    handleSuccess("Ticket resolved successfully!");
-
-  };
-  // Priority Color Helper
-  const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case 'high': return 'bg-red-50 text-red-600 border-red-100';
-      case 'medium': return 'bg-orange-50 text-orange-600 border-orange-100';
-      case 'low': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      default: return 'bg-slate-50 text-slate-600 border-slate-100';
+    try {
+      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/update-resolve`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selectedTicket._id, date: resolveDate, message: resolveMessage })
+      });
+      const data = await res.json();
+      
+      handleSuccess("Ticket resolved successfully!");
+      setResolveModal(false);
+      setResolveMessage('');
+      setSelectedTicket(null);
+    } catch (error) {
+      handleError("Failed to resolve ticket.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const getPriorityBadge = (priority) => {
+    const p = priority?.toLowerCase();
+    const baseClasses = "px-2.5 py-0.5 text-xs font-semibold rounded-md border uppercase tracking-wide";
+    
+    switch (p) {
+      case 'high': return `${baseClasses} bg-red-50 text-red-700 border-red-200`;
+      case 'medium': return `${baseClasses} bg-amber-50 text-amber-700 border-amber-200`;
+      case 'low': return `${baseClasses} bg-green-50 text-green-700 border-green-200`;
+      default: return `${baseClasses} bg-gray-50 text-gray-700 border-gray-200`;
+    }
+  };
+
+  const TicketSkeleton = () => (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm animate-pulse h-56 flex flex-col justify-between">
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <div className="h-4 bg-gray-200 rounded w-20"></div>
+          <div className="h-5 bg-gray-200 rounded w-16"></div>
+        </div>
+        <div className="h-5 bg-gray-200 rounded w-3/4 mb-3"></div>
+        <div className="h-4 bg-gray-100 rounded w-1/2 mb-4"></div>
+        <div className="h-10 bg-gray-50 rounded-lg w-full"></div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-slate-50 p-6 font-sans">
-
-      {/* Header Section */}
-      <div className="max-w-7xl mx-auto mb-10">
-        <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-          <div className="p-3 bg-linear-to-br from-emerald-400 to-sky-500 rounded-xl shadow-lg shadow-sky-200">
-            <Ticket className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-[#F8FAFC] font-sans pb-12">
+      
+      {/* Top Navigation / Header */}
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-600 rounded-lg shadow-sm">
+              <Ticket className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Support Desk</h1>
           </div>
-          Admin Ticket Dashboard
-        </h1>
-        <p className="mt-2 text-slate-500 ml-16 text-2xl">All new ticket </p>
-      </div>
-
-      {/* Main Grid Content */}
-      <div className="max-w-7xl mx-auto">
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-64 bg-white rounded-2xl shadow-sm animate-pulse"></div>
-            ))}
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center px-3 py-1.5 bg-gray-100 rounded-md text-sm text-gray-600">
+              <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+              System Operational
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tickets.map((ticket) => (
-              <div
-                key={ticket._id}
-                className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-sky-100 transition-all duration-300 flex flex-col justify-between overflow-hidden"
-              >
-                {/* Card Header */}
-                <div className="p-6 pb-4 border-b border-slate-50">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                      ID: {ticket.t_uid}
-                    </span>
-                    <span className={`px-3 py-1 text-xs font-bold rounded-full border uppercase ${getPriorityColor(ticket.t_priority)}`}>
-                      {ticket.t_priority}
-                    </span>
-                  </div>
+        </div>
+      </header>
 
-                  <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-1 group-hover:text-sky-600 transition-colors">
-                    {ticket.t_subject}
-                  </h3>
+      <main className="max-w-7xl mx-auto px-6 pt-8 space-y-12">
+        
+        {/* Section: New Tickets */}
+        <section>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Requires Action</h2>
+            <p className="text-sm text-gray-500 mt-1">New tickets awaiting initial administrative review.</p>
+          </div>
 
-                  <div className="flex items-center gap-2 text-slate-500 text-sm mb-3">
-                    <User className="w-4 h-4 text-sky-400" />
-                    <span className="font-medium capitalize">
-                      {ticket.c_name_f} {ticket.c_name_l}
-                    </span>
-                  </div>
-
-                  <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    {ticket.t_disc}
-                  </p>
-                </div>
-
-                {/* Card Footer / Action */}
-                <div className="p-4 bg-slate-50/50 mt-auto">
-                  <button
-                    onClick={() => setSelectedTicket(ticket)}
-                    className="w-full flex items-center justify-center gap-2 bg-white text-sky-600 font-semibold py-3 rounded-xl border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-transparent transition-all duration-200 group-focus:ring-2 ring-sky-200"
-                  >
-                    Details <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {loading ? (
+              [1, 2, 3].map((i) => <TicketSkeleton key={i} />)
+            ) : tickets.length === 0 ? (
+              <div className="col-span-full py-12 bg-white border border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-500">
+                <CheckCircle2 className="w-10 h-10 text-gray-300 mb-3" />
+                <p>No new tickets requires action.</p>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-      <div className='w-full border-dashed border-2 border-green-500 mt-8'></div>
-      <p className="mt-2 text-slate-500 ml-16 text-2xl mb-6">All the ticket that checked by admin. </p>
-      <div className="max-w-7xl mx-auto">
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-64 bg-white rounded-2xl shadow-sm animate-pulse"></div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {adminCheck.map((ticket) => (
-              <div
-                key={ticket._id}
-                className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-sky-100 transition-all duration-300 flex flex-col justify-between overflow-hidden"
-              >
-                {/* Card Header */}
-                <div className="p-6 pb-4 border-b border-slate-50">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                      ID: {ticket.t_uid}
-                    </span>
-                    <span className={`px-3 py-1 text-xs font-bold rounded-full border uppercase ${getPriorityColor(ticket.t_priority)}`}>
-                      {ticket.t_priority}
-                    </span>
+            ) : (
+              tickets.map((ticket) => (
+                <div key={ticket._id} className="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 flex flex-col justify-between">
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-xs font-medium text-gray-500 tracking-wider">
+                        #{ticket.t_uid}
+                      </span>
+                      <span className={getPriorityBadge(ticket.t_priority)}>
+                        {ticket.t_priority}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                      {ticket.t_subject}
+                    </h3>
+
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
+                      <User className="w-4 h-4 text-gray-400" />
+                      <span className="font-medium capitalize truncate">
+                        {ticket.c_name_f} {ticket.c_name_l}
+                      </span>
+                    </div>
+
+                    <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
+                      {ticket.t_disc}
+                    </p>
                   </div>
 
-                  <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-1 group-hover:text-sky-600 transition-colors">
-                    {ticket.t_subject}
-                  </h3>
+                  <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/50 rounded-b-xl">
+                    <button
+                      onClick={() => setSelectedTicket(ticket)}
+                      className="w-full flex items-center justify-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 py-1.5 transition-colors"
+                    >
+                      Review Ticket <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
 
-                  <div className="flex items-center gap-2 text-slate-500 text-sm mb-3">
-                    <User className="w-4 h-4 text-sky-400" />
-                    <span className="font-medium capitalize">
-                      {ticket.c_name_f} {ticket.c_name_l}
-                    </span>
+        {/* Section Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+        </div>
+
+        {/* Section: Admin Checked / In Progress */}
+        <section>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">In Progress</h2>
+            <p className="text-sm text-gray-500 mt-1">Tickets currently being processed by the team.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {loading ? (
+              [1, 2, 3].map((i) => <TicketSkeleton key={i} />)
+            ) : adminCheck.length === 0 ? (
+               <div className="col-span-full py-12 bg-white border border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-500">
+               <Briefcase className="w-10 h-10 text-gray-300 mb-3" />
+               <p>No tickets currently in progress.</p>
+             </div>
+            ) : (
+              adminCheck.map((ticket) => (
+                <div key={ticket._id} className="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 flex flex-col justify-between opacity-90">
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-xs font-medium text-gray-500 tracking-wider">
+                        #{ticket.t_uid}
+                      </span>
+                      <span className={getPriorityBadge(ticket.t_priority)}>
+                        {ticket.t_priority}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+                      {ticket.t_subject}
+                    </h3>
+
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
+                      <User className="w-4 h-4 text-gray-400" />
+                      <span className="font-medium capitalize truncate">
+                        {ticket.c_name_f} {ticket.c_name_l}
+                      </span>
+                    </div>
+
+                    <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
+                      {ticket.t_disc}
+                    </p>
                   </div>
 
-                  <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    {ticket.t_disc}
-                  </p>
+                  <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/50 rounded-b-xl">
+                    <button
+                      onClick={() => setSelectedTicket(ticket)}
+                      className="w-full flex items-center justify-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-700 py-1.5 transition-colors"
+                    >
+                      Manage Resolution <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-
-                {/* Card Footer / Action */}
-                <div className="p-4 bg-slate-50/50 mt-auto">
-                  <button
-                    onClick={() => setSelectedTicket(ticket)}
-                    className="w-full flex items-center justify-center gap-2 bg-white text-sky-600 font-semibold py-3 rounded-xl border border-sky-100 hover:bg-sky-500 hover:text-white hover:border-transparent transition-all duration-200 group-focus:ring-2 ring-sky-200"
-                  >
-                    Details <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        )}
-      </div>
+        </section>
 
-      {/* Details Modal */}
+      </main>
+
+      {/* Primary Details Modal */}
       {selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
-            onClick={() => setSelectedTicket(null)}
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 sm:p-6">
+          <div 
+            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
+            onClick={() => !resolveModal && setSelectedTicket(null)}
           ></div>
 
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200 border border-slate-100">
-
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
             {/* Modal Header */}
-            <div className="bg-linear-to-r from-slate-50 to-white px-8 py-6 border-b border-slate-100 sticky top-0 flex justify-between items-start z-10">
+            <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-start bg-gray-50/50">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold text-slate-800">Ticket Details</h2>
-                  <span className={`px-3 py-1 text-xs font-bold rounded-full border uppercase ${getPriorityColor(selectedTicket.t_priority)}`}>
-                    {selectedTicket.t_priority} Priority
+                <div className="flex items-center gap-3 mb-1">
+                  <h2 className="text-xl font-bold text-gray-900">Ticket Details</h2>
+                  <span className={getPriorityBadge(selectedTicket.t_priority)}>
+                    {selectedTicket.t_priority}
                   </span>
                 </div>
-                <p className="text-slate-500 text-sm flex items-center gap-2">
-                  Ticket ID: <span className="font-mono text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{selectedTicket.t_uid}</span>
-                </p>
+                <p className="text-sm text-gray-500 font-mono">ID: {selectedTicket.t_uid}</p>
               </div>
               <button
                 onClick={() => setSelectedTicket(null)}
-                className="p-2 bg-white rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors border border-slate-200"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-8 space-y-8">
-
-              {/* Subject & Description */}
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Subject</label>
-                  <h3 className="text-xl font-semibold text-slate-800 mt-1">{selectedTicket.t_subject}</h3>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Description</label>
-                  <div className="mt-2 p-4 bg-slate-50 rounded-xl border border-slate-100 text-slate-600 leading-relaxed">
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex-1 bg-white">
+              
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Issue Description</h3>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">{selectedTicket.t_subject}</h4>
+                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm">
                     {selectedTicket.t_disc}
-                  </div>
+                  </p>
                 </div>
               </div>
 
-              {/* Grid Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                {/* Left Column: User Info */}
+                {/* Client Info Card */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-sky-600 flex items-center gap-2 pb-2 border-b border-sky-100">
-                    <User className="w-4 h-4" /> Client Information
-                  </h4>
-
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-500 shrink-0">
+                  <h4 className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2">Client Information</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                         <User className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400">Full Name</p>
-                        <p className="text-slate-700 font-medium capitalize">{selectedTicket.c_name_f} {selectedTicket.c_name_l}</p>
+                        <p className="text-xs text-gray-500">Name</p>
+                        <p className="text-sm font-medium text-gray-900 capitalize">{selectedTicket.c_name_f} {selectedTicket.c_name_l}</p>
                       </div>
                     </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                         <Mail className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400">Email Address</p>
-                        <p className="text-slate-700 font-medium">{selectedTicket.c_email}</p>
+                        <p className="text-xs text-gray-500">Email</p>
+                        <p className="text-sm font-medium text-gray-900">{selectedTicket.c_email}</p>
                       </div>
                     </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                         <Phone className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400">Phone Number</p>
-                        <p className="text-slate-700 font-medium">+{selectedTicket.c_phone}</p>
+                        <p className="text-xs text-gray-500">Phone</p>
+                        <p className="text-sm font-medium text-gray-900">+{selectedTicket.c_phone}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Column: Ticket Metadata */}
+                {/* Metadata Card */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-emerald-600 flex items-center gap-2 pb-2 border-b border-emerald-100">
-                    <Briefcase className="w-4 h-4" /> Status & Metadata
-                  </h4>
-
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
+                  <h4 className="text-sm font-semibold text-gray-900 border-b border-gray-200 pb-2">System Metadata</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gray-100 text-gray-600 rounded-lg">
                         <AlertCircle className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400">Department</p>
-                        <p className="text-slate-700 font-medium uppercase">{selectedTicket.c_department}</p>
+                        <p className="text-xs text-gray-500">Department</p>
+                        <p className="text-sm font-medium text-gray-900 uppercase">{selectedTicket.c_department}</p>
                       </div>
                     </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gray-100 text-gray-600 rounded-lg">
                         <CheckCircle2 className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400">Current Status</p>
-                        <p className="text-slate-700 font-medium">{selectedTicket.t_status}</p>
+                        <p className="text-xs text-gray-500">Current Status</p>
+                        <p className="text-sm font-medium text-gray-900">{selectedTicket.t_status}</p>
                       </div>
                     </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gray-100 text-gray-600 rounded-lg">
                         <Clock className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400">Created At</p>
-                        <p className="text-slate-700 font-medium">{formatDate(selectedTicket.createdAt)}</p>
+                        <p className="text-xs text-gray-500">Submitted On</p>
+                        <p className="text-sm font-medium text-gray-900">{formatDate(selectedTicket.createdAt)}</p>
                       </div>
                     </div>
                   </div>
@@ -427,55 +444,58 @@ export default function AdminTicketCheck() {
               </div>
             </div>
 
-
-            {/* Modal Footer */}
-            <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 flex justify-end">
+            {/* Modal Footer Actions */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-3">
               <button
                 onClick={() => setSelectedTicket(null)}
-                className="px-6 py-2.5 bg-slate-800 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition-colors shadow-lg shadow-slate-200"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
               >
-                Close Details
+                Close
               </button>
-              {selectedTicket.t_status === "Checked by admin and work in Process if need our team get you soon" ? <button
-                onClick={(e) => adminupdatereslove(e, selectedTicket._id)}
-                className="px-6 py-2.5 ml-3 bg-green-400 text-white text-sm font-semibold rounded-xl hover:bg-green-500 transition-colors shadow-lg shadow-slate-200"
-              >
-                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <div> Reslove</div>}
-              </button> : <button
-                onClick={(e) => adminupdate(e, selectedTicket._id)}
-                className="px-6 py-2.5 ml-3 bg-green-800 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors shadow-lg shadow-slate-200"
-              >
-                {loder ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Checked by admin"}
-              </button>}
+              
+              {selectedTicket.t_status === "Checked by admin and work in Process if need our team get you soon" ? (
+                <button
+                  onClick={(e) => adminUpdateResolve(e, selectedTicket._id)}
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors shadow-sm min-w-30"
+                >
+                  Mark Resolved
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => adminUpdate(e, selectedTicket._id)}
+                  disabled={isUpdating}
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm min-w-40 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isUpdating ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : "Acknowledge & Process"}
+                </button>
+              )}
             </div>
-
           </div>
         </div>
       )}
-      {resolvemodal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
 
-          {/* Modal Container */}
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-800">Resolve Ticket</h3>
+      {/* Resolution Dialog / Secondary Modal */}
+      {resolveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
+          
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Finalize Resolution</h3>
               <button
-                onClick={() => setresolvemodal(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                onClick={() => setResolveModal(false)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Body / Form */}
             <form onSubmit={handleFinalResolve} className="p-6 space-y-5">
-
-              {/* Date Input */}
-              <div className="space-y-1.5">
-                <label className="flex items-center text-sm font-semibold text-slate-700">
-                  <Calendar className="w-4 h-4 mr-1.5 text-slate-400" />
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+                  <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                   Resolution Date
                 </label>
                 <input
@@ -483,48 +503,45 @@ export default function AdminTicketCheck() {
                   required
                   value={resolveDate}
                   onChange={(e) => setResolveDate(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-400 focus:border-green-400 outline-none transition-all text-slate-700"
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                 />
               </div>
 
-              {/* Message Input */}
-              <div className="space-y-1.5">
-                <label className="flex items-center text-sm font-semibold text-slate-700">
-                  <MessageSquare className="w-4 h-4 mr-1.5 text-slate-400" />
-                  Resolution Message
+              <div>
+                <label className="flex items-center text-sm font-medium text-gray-700 mb-1.5">
+                  <MessageSquare className="w-4 h-4 mr-2 text-gray-400" />
+                  Closing Remarks
                 </label>
                 <textarea
                   required
                   rows={4}
-                  placeholder="Explain how this issue was resolved..."
+                  placeholder="Detail the steps taken to resolve this issue..."
                   value={resolveMessage}
                   onChange={(e) => setResolveMessage(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-400 focus:border-green-400 outline-none transition-all resize-none text-slate-700"
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm resize-none text-gray-900"
                 />
               </div>
 
-              {/* Modal Footer / Actions */}
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 mt-6">
+              <div className="pt-4 flex items-center justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setresolvemodal(false)}
-                  className="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
+                  onClick={() => setResolveModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-green-500 text-white text-sm font-semibold rounded-xl hover:bg-green-600 transition-colors shadow-lg shadow-green-200/50 flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors shadow-sm min-w-32.5 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                   ) : null}
-                  {isSubmitting ? "Resolving..." : "Final Resolve"}
+                  {isSubmitting ? "Resolving..." : "Submit Resolution"}
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       )}
