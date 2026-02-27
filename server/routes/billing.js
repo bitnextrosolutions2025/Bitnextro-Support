@@ -7,7 +7,7 @@ const billingRoute = express.Router();
 function numberToWords(num) {
     const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
     const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-    
+
     if ((num = num.toString()).length > 9) return 'overflow';
     let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
     if (!n) return;
@@ -26,7 +26,7 @@ const generateHTML = (data) => {
     const companyName = "Bitnextro solution Pvt. Ltd.";
     const companyLogo = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772130931/user_profiles/iasw8ry0br2wgwprakxg.jpg";
     const authStamp = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png";
-    
+
     // Fallbacks from your image requirements
     const compAddress = "Nigadi Bhosari Road, PIMPRI<br>Pune, MAHARASHTRA, 411018";
     const compGST = "27AAACT2727Q1ZW";
@@ -47,7 +47,7 @@ const generateHTML = (data) => {
         const rate = parseFloat(p.rate);
         const qty = parseInt(p.quantity);
         const taxable = rate * qty;
-        
+
         let taxPercent = data.isGstApplied ? 18 : 0;
         let taxVal = data.isGstApplied ? (taxable * 0.18) : 0;
         let finalAmount = taxable + taxVal;
@@ -71,7 +71,7 @@ const generateHTML = (data) => {
 
     const grandTotal = totalTaxable + totalTaxAmount;
     const amountInWords = numberToWords(Math.round(grandTotal));
-    
+
     // Generate UPI QR dynamically based on amount
     const upiString = `upi://pay?pa=${bankDetails.acc}@yesbank&pn=${encodeURIComponent(companyName)}&am=${grandTotal.toFixed(2)}&cu=INR`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(upiString)}`;
@@ -148,7 +148,7 @@ const generateHTML = (data) => {
             <div class="flex border-b border-black">
                 <div class="w-1/2 border-r border-black p-2 text-[11px] leading-tight">
                     <p class="font-bold mb-1">Customer Details:</p>
-                    <p>Natarajan Chandrasekaran</p>
+                    <p>${data.user}</p>
                     <p class="font-bold mt-1">Billing address:</p>
                     <p>${data.shippingAddress || 'N/A'}</p>
                 </div>
@@ -181,32 +181,24 @@ const generateHTML = (data) => {
                         <td class="border-r border-black"></td><td class="border-r border-black"></td>
                         <td class="border-r border-black"></td><td></td>
                     </tr>
+                    
+                    <!-- Totals Section integrated directly into table for perfect column alignment -->
+                    <tr class="border-t border-black text-xs">
+                        <td colspan="5" class="border-r border-black p-1 px-2 font-medium text-left">Total Items / Qty : ${data.products.length} / ${data.products.reduce((acc, p) => acc + parseFloat(p.quantity || 0), 0)}</td>
+                        <td colspan="2" class="border-r border-black p-1 font-bold text-right">Taxable Amount</td>
+                        <td class="p-1 font-bold text-right">₹${totalTaxable.toFixed(2)}</td>
+                    </tr>
+                    ${data.isGstApplied ? `
+                    <tr class="border-t border-black text-xs">
+                        <td colspan="7" class="border-r border-black p-1 text-right">IGST 18.0%</td>
+                        <td class="p-1 text-right">₹${totalTaxAmount.toFixed(2)}</td>
+                    </tr>` : ''}
+                    <tr class="border-t border-black font-bold text-sm bg-gray-100">
+                        <td colspan="7" class="border-r border-black p-1 text-right uppercase">Total</td>
+                        <td class="p-1 text-right text-base">₹${grandTotal.toFixed(2)}</td>
+                    </tr>
                 </tbody>
             </table>
-
-            <!-- Totals Section -->
-            <div class="flex flex-col border-b border-black text-xs">
-                <div class="flex border-b border-black justify-between">
-                    <div class="w-3/4 border-r border-black p-1 px-2 font-medium">Total Items / Qty : ${data.products.length} / ${data.products.reduce((acc, p) => acc + parseInt(p.quantity), 0)}</div>
-                    <div class="w-1/4 flex">
-                        <div class="w-2/3 p-1 font-bold text-right">Taxable Amount</div>
-                        <div class="w-1/3 p-1 font-bold text-right pr-2">₹${totalTaxable.toFixed(2)}</div>
-                    </div>
-                </div>
-                ${data.isGstApplied ? `
-                <div class="flex border-b border-black justify-end">
-                    <div class="w-1/4 flex">
-                        <div class="w-2/3 p-1 text-right">IGST 18.0%</div>
-                        <div class="w-1/3 p-1 text-right pr-2">₹${totalTaxAmount.toFixed(2)}</div>
-                    </div>
-                </div>` : ''}
-                <div class="flex justify-end bg-gray-100 font-bold text-sm">
-                    <div class="w-1/4 flex items-center">
-                        <div class="w-2/3 p-1 text-right uppercase">Total</div>
-                        <div class="w-1/3 p-1 text-right pr-2 text-base">₹${grandTotal.toFixed(2)}</div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Amount in Words -->
             <div class="border-b border-black p-1 px-2 text-[11px] font-medium bg-gray-100">
@@ -232,9 +224,9 @@ const generateHTML = (data) => {
                 </thead>
                 <tbody>
                     ${data.products.map(p => {
-                        let tVal = parseFloat(p.rate) * parseInt(p.quantity);
-                        let tAmt = data.isGstApplied ? tVal * 0.18 : 0;
-                        return `
+        let tVal = parseFloat(p.rate) * parseInt(p.quantity);
+        let tAmt = data.isGstApplied ? tVal * 0.18 : 0;
+        return `
                         <tr>
                             <td class="border-r border-black p-1 font-semibold text-left">${p.hsn || '-'}</td>
                             <td class="border-r border-black p-1">${tVal.toFixed(2)}</td>
@@ -243,7 +235,7 @@ const generateHTML = (data) => {
                             <td class="p-1">${tAmt.toFixed(2)}</td>
                         </tr>
                         `;
-                    }).join('')}
+    }).join('')}
                     <tr class="border-t border-black font-bold bg-gray-100">
                         <td class="border-r border-black p-1 text-right">TOTAL</td>
                         <td class="border-r border-black p-1">${totalTaxable.toFixed(2)}</td>
@@ -255,13 +247,23 @@ const generateHTML = (data) => {
             </table>
 
             <!-- Amount Paid Status -->
-            <div class="text-right text-[11px] font-bold text-green-700 p-1 border-b border-black">
+           ${data.isPaymentdone ? `<div class="text-right text-[11px] font-bold text-green-700 p-1 border-b border-black">
                 <span class="inline-flex items-center gap-1">
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
                     Amount Paid
                 </span>
-            </div>
 
+            </div>`: `<div class="text-right text-[11px] font-bold text-yellow-700 p-1 border-b border-black">
+                <span class="inline-flex items-center gap-1 text-yellow-500">
+  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+    <path fill-rule="evenodd" 
+      d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11a.75.75 0 00-1.5 0v3.25c0 .2.08.39.22.53l2.5 2.5a.75.75 0 101.06-1.06L10.75 10.2V7z" 
+      clip-rule="evenodd">
+    </path>
+  </svg>
+  Due
+</span>
+            </div>`}
             <!-- Footer Grid (Bank, QR, Sign) -->
             <div class="flex border-b border-black">
                 <div class="w-1/3 border-r border-black p-2 text-[11px] leading-relaxed">
@@ -311,10 +313,10 @@ const generateHTML = (data) => {
 };
 
 // --- API ROUTE ---
-billingRoute.post("/billing-work", async (req, res) => { 
+billingRoute.post("/billing-work", async (req, res) => {
     try {
         const alldata = req.body;
-        
+
         if (!alldata) {
             return res.status(400).json({ "message": "Missing alldata" });
         }
@@ -325,19 +327,19 @@ billingRoute.post("/billing-work", async (req, res) => {
         const htmlContent = generateHTML(alldata);
 
         // 2. Launch Puppeteer
-        const browser = await puppeteer.launch({ 
+        const browser = await puppeteer.launch({
             headless: "new",
-            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
-        
+
         const page = await browser.newPage();
-        
+
         // Wait until all network requests (like images/Tailwind CDN) are finished
         await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-        
+
         // 3. Generate PDF Buffer
-        const pdfBuffer = await page.pdf({ 
-            format: 'A4', 
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
             printBackground: true, // Crucial for showing Tailwind background colors
             margin: { top: '20px', bottom: '20px' }
         });
@@ -360,4 +362,4 @@ billingRoute.post("/billing-work", async (req, res) => {
     }
 });
 
-export default billingRoute; 
+export default billingRoute;

@@ -29,9 +29,11 @@ export default function Adminbilling() {
     invoiceNumber: '',
     supplyPlace: '',
     email:"",
+    user:"",
     shippingAddress: '',
     isGstApplied: true,
     isStampApplied: true,
+    isPaymentdone:true
   });
 
   // State for dynamic products list
@@ -181,6 +183,17 @@ try {
               </div>
 
               <div className="sm:col-span-2">
+                <label className="block text-sm font-medium leading-6 text-slate-900">Customar Name</label>
+                <div className="mt-2">
+                  <input
+                    name="user"
+                    required
+                    placeholder="Enter Customar name"
+                    value={details.user}
+                    onChange={handleDetailChange}
+                    className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
                 <label className="block text-sm font-medium leading-6 text-slate-900">Customar email</label>
                 <div className="mt-2">
                   <input
@@ -337,6 +350,22 @@ try {
                     name="isStampApplied"
                     className="sr-only peer" 
                     checked={details.isStampApplied}
+                    onChange={handleDetailChange}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </div>
+              </label>
+              <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                <div>
+                  <p className="text-sm font-medium text-slate-900">Payment</p>
+                  <p className="text-xs text-slate-500 mt-1">Is payment done</p>
+                </div>
+                <div className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    name="isPaymentdone"
+                    className="sr-only peer" 
+                    checked={details.isPaymentdone}
                     onChange={handleDetailChange}
                   />
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
