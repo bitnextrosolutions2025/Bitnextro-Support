@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router';
 import { Plus, Trash2, FileText, Settings2, Receipt } from 'lucide-react';
 export default function Adminbilling() {
         const { user } = useAuth();
+        const [Isload,setIsload]=useState(false)
     const naviget=useNavigate();
   useEffect(() => {
     const getoken = async () => {
@@ -70,7 +71,7 @@ export default function Adminbilling() {
   // Submit Handler
   const handleSubmit = async(e) => {
     e.preventDefault();
-    
+    setIsload(true);
     // This is the structured payload ready to be sent to your MERN backend
     const payload = {
       ...details,
@@ -78,8 +79,8 @@ export default function Adminbilling() {
       totalAmount: products.reduce((sum, p) => sum + (Number(p.rate) * Number(p.quantity) || 0), 0)
     };
 
-    console.log("Data ready for backend:", payload);
-    alert("Invoice data logged to console! Ready to send to backend.");
+    // console.log("Data ready for backend:", payload);
+    // alert("Invoice data logged to console! Ready to send to backend.");
 const url = `${import.meta.env.VITE_BACKEND_URL}/api/v3/bill/billing-work`;
 
 try {
@@ -120,8 +121,10 @@ try {
     // 3. Clean up the DOM and memory
     link.parentNode.removeChild(link);
     window.URL.revokeObjectURL(pdfUrl);
+    setIsload(false)
 
 } catch (error) {
+  setIsload(false)
     console.error("Error generating PDF:", error);
     alert("Failed to generate invoice. Please check the console.");
 }
@@ -386,7 +389,7 @@ try {
               type="submit"
               className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
             >
-              Generate Billing PDF
+              {Isload?<div className='w-4 h-4 border-2 border-white rounded-sm animate-spin'></div>:"Generate Billing PDF"}
             </button>
           </div>
         </form>
