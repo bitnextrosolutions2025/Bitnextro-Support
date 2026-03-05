@@ -29,7 +29,7 @@ const generateHTML = (data) => {
     const authStamp = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png";
     
     // Fallbacks from your image requirements
-    const compAddress = "5, Park Lane , Parkstreet, Kolkata, West Bengal, 700016";
+    const compAddress = "5, Park Lane, Parkstreet, Kolkata, West Bengal, 700016";
     const compGST = "19AAOCB2081P1ZO";
     const compPhone = "+91 9330855877";
     const bankDetails = {
@@ -194,7 +194,7 @@ const generateHTML = (data) => {
                     ${data.isGstApplied ? `
                     <tr class="border-t border-black text-xs">
                         <td colspan="7" class="border-r border-black p-1 text-right">SGST 9.0%</td>
-                        <td class="p-1 text-right">₹${(totalTaxAmount).toFixed(2)}</td>
+                        <td class="p-1 text-right">₹${(totalTaxAmount/2).toFixed(2)}</td>
                     </tr>
                     <tr class="border-t border-black text-xs">
                         <td colspan="7" class="border-r border-black p-1 text-right">CGST 9.0%</td>
