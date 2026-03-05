@@ -233,7 +233,7 @@ try {
 
             {/* Desktop Header Row */}
             <div className="hidden sm:grid sm:grid-cols-12 gap-4 mb-3 px-2 text-sm font-medium text-slate-500">
-              <div className="col-span-5">Product Name</div>
+              <div className="col-span-5">Product / Service Name</div>
               <div className="col-span-2">HSN/SAC</div>
               <div className="col-span-2">Rate (₹)</div>
               <div className="col-span-2">Qty</div>

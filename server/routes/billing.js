@@ -24,7 +24,7 @@ function numberToWords(num) {
 // Helper to generate the exact HTML Template
 const generateHTML = (data) => {
     // --- Configuration & Fallbacks ---
-    const companyName = "Bitnextro solution Pvt. Ltd.";
+    const companyName = "Bitnextro Solution Pvt. Ltd.";
     const companyLogo = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772130931/user_profiles/iasw8ry0br2wgwprakxg.jpg";
     const authStamp = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png";
     
