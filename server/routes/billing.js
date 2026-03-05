@@ -24,12 +24,12 @@ function numberToWords(num) {
 // Helper to generate the exact HTML Template
 const generateHTML = (data) => {
     // --- Configuration & Fallbacks ---
-    const companyName = "Bitnextro Solution Pvt. Ltd.";
+    const companyName = "BITNEXTRO SOLUTIONS PVT. LTD.";
     const companyLogo = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772130931/user_profiles/iasw8ry0br2wgwprakxg.jpg";
     const authStamp = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png";
     
     // Fallbacks from your image requirements
-    const compAddress = "5, PARK LANE PARKSTREET, Kolkata, WEST BENGAL, 700016";
+    const compAddress = "5, Park Lane , Parkstreet, Kolkata, West Bengal, 700016";
     const compGST = "19AAOCB2081P1ZO";
     const compPhone = "+91 9330855877";
     const bankDetails = {
@@ -127,21 +127,21 @@ const generateHTML = (data) => {
                     <div class="flex border-b border-black h-1/2">
                         <div class="w-1/2 border-r border-black p-2 text-[11px]">
                             <p class="text-gray-600 mb-1">Invoice #:</p>
-                            <p class="font-bold text-sm">${data.invoiceNumber || 'N/A'}</p>
+                            <p class="text-sm">${data.invoiceNumber || 'N/A'}</p>
                         </div>
                         <div class="w-1/2 p-2 text-[11px]">
                             <p class="text-gray-600 mb-1">Invoice Date:</p>
-                            <p class="font-bold">${today}</p>
+                            <p class="">${today}</p>
                         </div>
                     </div>
                     <div class="flex h-1/2">
                         <div class="w-1/2 border-r border-black p-2 text-[11px]">
                             <p class="text-gray-600 mb-1">Place of Supply:</p>
-                            <p class="font-bold uppercase">${data.supplyPlace || 'N/A'}</p>
+                            <p class=" uppercase">${data.supplyPlace || 'N/A'}</p>
                         </div>
                         <div class="w-1/2 p-2 text-[11px]">
                             <p class="text-gray-600 mb-1">Due Date:</p>
-                            <p class="font-bold">${today}</p>
+                            <p class="">${today}</p>
                         </div>
                     </div>
                 </div>
@@ -150,13 +150,13 @@ const generateHTML = (data) => {
             <!-- Customer Details Row -->
             <div class="flex border-b border-black">
                 <div class="w-1/2 border-r border-black p-2 text-[11px] leading-tight">
-                    <p class="font-bold mb-1">Customer Details:</p>
+                    <p class="font-bold mb-1">CUSTOMER DETAILS:</p>
                     <p>${data.user}</p>
-                    <p class="font-bold mt-1">Billing address:</p>
+                    <p class="font-bold mt-1">BILLING ADDRESS:</p>
                     <p>${data.shippingAddress || 'N/A'}</p>
                 </div>
                 <div class="w-1/2 p-2 text-[11px] leading-tight">
-                    <p class="font-bold mb-1">Shipping address:</p>
+                    <p class="font-bold mb-1">SHIPPING ADDRESS</p>
                     <p>${data.shippingAddress || 'N/A'}</p>
                 </div>
             </div>
@@ -193,9 +193,14 @@ const generateHTML = (data) => {
                     </tr>
                     ${data.isGstApplied ? `
                     <tr class="border-t border-black text-xs">
-                        <td colspan="7" class="border-r border-black p-1 text-right">IGST 18.0%</td>
-                        <td class="p-1 text-right">₹${totalTaxAmount.toFixed(2)}</td>
-                    </tr>` : ''}
+                        <td colspan="7" class="border-r border-black p-1 text-right">SGST 9.0%</td>
+                        <td class="p-1 text-right">₹${(totalTaxAmount).toFixed(2)}</td>
+                    </tr>
+                    <tr class="border-t border-black text-xs">
+                        <td colspan="7" class="border-r border-black p-1 text-right">CGST 9.0%</td>
+                        <td class="p-1 text-right">₹${(totalTaxAmount/2).toFixed(2)}</td>
+                    </tr>
+                    ` : ''}
                     <tr class="border-t border-black font-bold text-sm bg-gray-100">
                         <td colspan="7" class="border-r border-black p-1 text-right uppercase">Total</td>
                         <td class="p-1 text-right text-base">₹${grandTotal.toFixed(2)}</td>
@@ -217,18 +222,18 @@ const generateHTML = (data) => {
 
             <!-- Footer Grid (Bank, QR, Sign) -->
             <div class="flex border-b border-black">
-                <div class="w-1/3 border-r border-black p-2 text-[11px] leading-relaxed">
+                <div class="w-1/2 border-r border-black p-2 text-[11px] leading-relaxed">
                     <p class="font-bold mb-1">Bank Details:</p>
                     <div class="flex"><span class="w-20">Bank:</span><strong>${bankDetails.bank}</strong></div>
                     <div class="flex"><span class="w-20">Account #:</span <strong>${bankDetails.acc}</strong></div>
                     <div class="flex"><span class="w-20">IFSC:</span> <strong>${bankDetails.ifsc}</strong></div>
                     <div class="flex"><span class="w-20">Branch:</span> <strong>${bankDetails.branch}</strong></div>
                 </div>
-                <div class="w-1/3 border-r border-black p-2 flex flex-col items-center justify-center">
+                  <!--  <div class="w-1/3 border-r border-black p-2 flex flex-col items-center justify-center">
                     <p class="text-[11px] w-full text-left font-bold mb-1">Pay using UPI:</p>
                     <img src="${qrUrl}" alt="UPI QR" class="w-20 h-20 object-contain mix-blend-multiply">
-                </div>
-                <div class="w-1/3 p-2 flex flex-col items-end justify-between text-[11px]">
+                </div>-->
+                <div class="w-1/2 p-2 flex flex-col items-end justify-between text-[11px]">
                     <p class="font-bold text-gray-600">For ${companyName.toUpperCase()}</p>
                     ${data.isStampApplied ? `<img src="${authStamp}" alt="Stamp" class="w-24 h-24 object-contain opacity-90 my-2">` : '<div class="h-24"></div>'}
                     <p class="font-medium text-gray-500">Authorized Signatory</p>
