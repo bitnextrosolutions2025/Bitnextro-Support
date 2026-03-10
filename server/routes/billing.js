@@ -75,7 +75,7 @@ const generateHTML = (data) => {
     const amountInWords = numberToWords(Math.round(grandTotal));
     
     // Generate UPI QR dynamically based on amount
-    const upiString = `upi://pay?pa=${bankDetails.acc}@yesbank&pn=${encodeURIComponent(companyName)}&am=${grandTotal.toFixed(2)}&cu=INR`;
+    const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent(companyName)}&am=${grandTotal.toFixed(2)}&cu=INR`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(upiString)}`;
 
     return `
@@ -222,18 +222,18 @@ const generateHTML = (data) => {
 
             <!-- Footer Grid (Bank, QR, Sign) -->
             <div class="flex border-b border-black">
-                <div class="w-1/2 border-r border-black p-2 text-[11px] leading-relaxed">
+                <div class="w-1/3 border-r border-black p-2 text-[11px] leading-relaxed">
                     <p class="font-bold mb-1">Bank Details:</p>
                     <div class="flex"><span class="w-20">Bank:</span><strong>${bankDetails.bank}</strong></div>
                     <div class="flex"><span class="w-20">Account #:</span <strong>${bankDetails.acc}</strong></div>
                     <div class="flex"><span class="w-20">IFSC:</span> <strong>${bankDetails.ifsc}</strong></div>
                     <div class="flex"><span class="w-20">Branch:</span> <strong>${bankDetails.branch}</strong></div>
                 </div>
-                  <!--  <div class="w-1/3 border-r border-black p-2 flex flex-col items-center justify-center">
+                   <div class="w-1/3 border-r border-black p-2 flex flex-col items-center justify-center">
                     <p class="text-[11px] w-full text-left font-bold mb-1">Pay using UPI:</p>
                     <img src="${qrUrl}" alt="UPI QR" class="w-20 h-20 object-contain mix-blend-multiply">
-                </div>-->
-                <div class="w-1/2 p-2 flex flex-col items-end justify-between text-[11px]">
+                </div>
+                <div class="w-1/3 p-2 flex flex-col items-end justify-between text-[11px]">
                     <p class="font-bold text-gray-600">For ${companyName.toUpperCase()}</p>
                     ${data.isStampApplied ? `<img src="${authStamp}" alt="Stamp" class="w-24 h-24 object-contain opacity-90 my-2">` : '<div class="h-24"></div>'}
                     <p class="font-medium text-gray-500">Authorized Signatory</p>
