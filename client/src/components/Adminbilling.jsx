@@ -79,8 +79,6 @@ export default function Adminbilling() {
       totalAmount: products.reduce((sum, p) => sum + (Number(p.rate) * Number(p.quantity) || 0), 0)
     };
 
-    // console.log("Data ready for backend:", payload);
-    // alert("Invoice data logged to console! Ready to send to backend.");
 const url = `${import.meta.env.VITE_BACKEND_URL}/api/v3/bill/billing-work`;
 
 try {

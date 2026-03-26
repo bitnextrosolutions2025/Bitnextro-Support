@@ -5,7 +5,7 @@ import 'dotenv/config'
 import authRouter from "./routes/auth.js"
 import ticketRouter from "./routes/ticket.js"
 import billingRoute from "./routes/billing.js"
-const app = express()
+const app = express();
 app.use(express.json());
 const coresoption = {
     origin: `${process.env.FRONTEND_URL}`,
@@ -24,4 +24,4 @@ app.use("/api/v2/tickt",ticketRouter);
 app.use("/api/v3/bill",billingRoute);
 app.listen(process.env.PORT,()=>{
     console.log(`your app is run in port:${process.env.PORT}`)
-})
+});
