@@ -1,12 +1,13 @@
-import React, { useEffect,useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
 import { Plus, Trash2, FileText, Settings2, Receipt } from 'lucide-react';
 export default function Adminbilling() {
-        const { user } = useAuth();
-        const [Isload,setIsload]=useState(false)
-    const naviget=useNavigate();
+  const { user } = useAuth();
+  const [Isload, setIsload] = useState(false)
+  const [Isload1, setIsload1] = useState(false)
+  const naviget = useNavigate();
   useEffect(() => {
     const getoken = async () => {
       console.log("Helloo")
@@ -29,13 +30,14 @@ export default function Adminbilling() {
   const [details, setDetails] = useState({
     invoiceNumber: '',
     supplyPlace: '',
-    email:"",
-    user:"",
-    gstno:"",
+    email: "",
+    user: "",
+    gstno: "",
+    billingAddress:"",
     shippingAddress: '',
     isGstApplied: true,
     isStampApplied: true,
-    isPaymentdone:true
+    isPaymentdone: true
   });
 
   // State for dynamic products list
@@ -54,7 +56,7 @@ export default function Adminbilling() {
 
   // Handlers for product list
   const handleProductChange = (id, field, value) => {
-    setProducts(products.map(product => 
+    setProducts(products.map(product =>
       product.id === id ? { ...product, [field]: value } : product
     ));
   };
@@ -70,7 +72,7 @@ export default function Adminbilling() {
   };
 
   // Submit Handler
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsload(true);
     // This is the structured payload ready to be sent to your MERN backend
@@ -80,59 +82,117 @@ export default function Adminbilling() {
       totalAmount: products.reduce((sum, p) => sum + (Number(p.rate) * Number(p.quantity) || 0), 0)
     };
 
-const url = `${import.meta.env.VITE_BACKEND_URL}/api/v3/bill/billing-work`;
+    const url = `${import.meta.env.VITE_BACKEND_URL}/api/v3/bill/billing-work`;
 
-try {
-    const response = await fetch(url, {
+    try {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
-            "Content-Type": "application/json"
+          "Content-Type": "application/json"
         },
         // FIX: Send the payload directly instead of wrapping it in an 'alldata' object
         // This matches 'const alldata = req.body;' in your backend
-        body: JSON.stringify(payload) 
-    });
+        body: JSON.stringify(payload)
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
         throw new Error(`Server responded with status: ${response.status}`);
+      }
+
+      // 1. Convert the response to a Blob (Binary Data) instead of JSON
+      const blob = await response.blob();
+
+      // 2. Create a temporary local URL for this file
+      const pdfUrl = window.URL.createObjectURL(blob);
+
+      // ---------------------------------------------------------
+      // OPTION A: Open the PDF in a new browser tab to view it
+      // ---------------------------------------------------------
+      window.open(pdfUrl, '_blank');
+
+      // ---------------------------------------------------------
+      // OPTION B: Automatically download the PDF to the user's PC
+      // ---------------------------------------------------------
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}.pdf`); // Sets the file name
+      document.body.appendChild(link);
+      link.click(); // Simulates a click to start the download
+
+      // 3. Clean up the DOM and memory
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(pdfUrl);
+      setIsload(false)
+
+    } catch (error) {
+      setIsload(false)
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate invoice. Please check the console.");
     }
-
-    // 1. Convert the response to a Blob (Binary Data) instead of JSON
-    const blob = await response.blob();
-
-    // 2. Create a temporary local URL for this file
-    const pdfUrl = window.URL.createObjectURL(blob);
-
-    // ---------------------------------------------------------
-    // OPTION A: Open the PDF in a new browser tab to view it
-    // ---------------------------------------------------------
-    window.open(pdfUrl, '_blank');
-
-    // ---------------------------------------------------------
-    // OPTION B: Automatically download the PDF to the user's PC
-    // ---------------------------------------------------------
-    const link = document.createElement('a');
-    link.href = pdfUrl;
-    link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}.pdf`); // Sets the file name
-    document.body.appendChild(link);
-    link.click(); // Simulates a click to start the download
-    
-    // 3. Clean up the DOM and memory
-    link.parentNode.removeChild(link);
-    window.URL.revokeObjectURL(pdfUrl);
-    setIsload(false)
-
-} catch (error) {
-  setIsload(false)
-    console.error("Error generating PDF:", error);
-    alert("Failed to generate invoice. Please check the console.");
-}
   };
+  const handleofficecopy = async (e) => {
+    e.preventDefault();
+    setIsload1(true);
+    // This is the structured payload ready to be sent to your MERN backend
+    const payload = {
+      ...details,
+      products: products.map(({ id, ...rest }) => rest), // Remove internal UI id
+      totalAmount: products.reduce((sum, p) => sum + (Number(p.rate) * Number(p.quantity) || 0), 0)
+    };
+
+    const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/copybill/billing-work`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        // FIX: Send the payload directly instead of wrapping it in an 'alldata' object
+        // This matches 'const alldata = req.body;' in your backend
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+
+      // 1. Convert the response to a Blob (Binary Data) instead of JSON
+      const blob = await response.blob();
+
+      // 2. Create a temporary local URL for this file
+      const pdfUrl = window.URL.createObjectURL(blob);
+
+      // ---------------------------------------------------------
+      // OPTION A: Open the PDF in a new browser tab to view it
+      // ---------------------------------------------------------
+      window.open(pdfUrl, '_blank');
+
+      // ---------------------------------------------------------
+      // OPTION B: Automatically download the PDF to the user's PC
+      // ---------------------------------------------------------
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}.pdf`); // Sets the file name
+      document.body.appendChild(link);
+      link.click(); // Simulates a click to start the download
+
+      // 3. Clean up the DOM and memory
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(pdfUrl);
+      setIsload1(false)
+
+    } catch (error) {
+      setIsload1(false)
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate invoice. Please check the console.");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 font-sans text-slate-800">
       <div className="max-w-4xl mx-auto space-y-6">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -145,14 +205,14 @@ try {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          
+
           {/* Section 1: General Details */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
             <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-6 border-b pb-4">
               <FileText className="h-5 w-5 text-slate-400" />
               Invoice Details
             </h2>
-            
+
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium leading-6 text-slate-900">Invoice Number</label>
@@ -218,13 +278,25 @@ try {
                     className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                 </div>
+                <label className="block text-sm font-medium leading-6 text-slate-900">Billing Address</label>
+                <div className="mt-2">
+                  <textarea
+                    name="billingAddress"
+                    rows={3}
+                    required
+                    placeholder="Enter complete billing..."
+                    value={details.billingAddress}
+                    onChange={handleDetailChange}
+                    className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
                 <label className="block text-sm font-medium leading-6 text-slate-900">Shipping Address</label>
                 <div className="mt-2">
                   <textarea
                     name="shippingAddress"
                     rows={3}
                     required
-                    placeholder="Enter complete customer address..."
+                    placeholder="Enter complete shipping address..."
                     value={details.shippingAddress}
                     onChange={handleDetailChange}
                     className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
@@ -340,10 +412,10 @@ try {
                   <p className="text-xs text-slate-500 mt-1">Calculate IGST/CGST/SGST on PDF</p>
                 </div>
                 <div className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     name="isGstApplied"
-                    className="sr-only peer" 
+                    className="sr-only peer"
                     checked={details.isGstApplied}
                     onChange={handleDetailChange}
                   />
@@ -358,10 +430,10 @@ try {
                   <p className="text-xs text-slate-500 mt-1">Append digital signature/stamp</p>
                 </div>
                 <div className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     name="isStampApplied"
-                    className="sr-only peer" 
+                    className="sr-only peer"
                     checked={details.isStampApplied}
                     onChange={handleDetailChange}
                   />
@@ -374,10 +446,10 @@ try {
                   <p className="text-xs text-slate-500 mt-1">Is payment done</p>
                 </div>
                 <div className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     name="isPaymentdone"
-                    className="sr-only peer" 
+                    className="sr-only peer"
                     checked={details.isPaymentdone}
                     onChange={handleDetailChange}
                   />
@@ -399,7 +471,13 @@ try {
               type="submit"
               className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
             >
-              {Isload?<div className='w-4 h-4 border-2 border-white rounded-sm animate-spin'></div>:"Generate Billing PDF"}
+              {Isload ? <div className='w-4 h-4 border-2 border-white rounded-sm animate-spin'></div> : "Generate Billing PDF"}
+            </button>
+            <button
+              onClick={handleofficecopy}
+              className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
+            >
+              {Isload1 ? <div className='w-4 h-4 border-2 border-white rounded-sm animate-spin'></div> : "Generate Office copy"}
             </button>
           </div>
         </form>

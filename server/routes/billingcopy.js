@@ -2,7 +2,7 @@ import express from "express";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 
-const billingRoute = express.Router();
+const billingcopyRoute = express.Router();
 
 // Helper function to convert numbers to Indian Rupee Words
 function numberToWords(num) {
@@ -104,7 +104,7 @@ const generateHTML = (data) => {
             <div class="flex justify-between items-center border-b border-black px-2 py-1 text-xs font-bold uppercase tracking-wider">
                 <div class="w-1/3"></div>
                 <div class="w-1/3 text-center text-blue-600 text-sm">TAX INVOICE</div>
-                <div class="w-1/3 text-right">ORIGINAL FOR RECIPIENT</div>
+                <div class="w-1/3 text-right">DUPLICATE FOR SUPPLIER</div>
             </div>
 
             <!-- Top Details Grid -->
@@ -271,7 +271,7 @@ const generateHTML = (data) => {
 };
 
 // --- API ROUTE ---
-billingRoute.post("/billing-work", async (req, res) => { 
+billingcopyRoute.post("/billing-work", async (req, res) => { 
     try {
         const alldata = req.body;
         
@@ -323,4 +323,4 @@ billingRoute.post("/billing-work", async (req, res) => {
     }
 });
 
-export default billingRoute;
+export default billingcopyRoute;
