@@ -104,7 +104,7 @@ const generateHTML = (data) => {
             <div class="flex justify-between items-center border-b border-black px-2 py-1 text-xs font-bold uppercase tracking-wider">
                 <div class="w-1/3"></div>
                 <div class="w-1/3 text-center text-blue-600 text-sm">TAX INVOICE</div>
-                <div class="w-1/3 text-right">DUPLICATE FOR SUPPLIER</div>
+                <div class="w-1/3 text-right">DUPLICATE RECIPIENT</div>
             </div>
 
             <!-- Top Details Grid -->
