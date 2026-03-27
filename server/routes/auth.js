@@ -80,7 +80,7 @@ authRouter.post("/sendemail", async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        return res.status(505).json({ "error": "Internal server error" })
+        return res.status(505).json({ "error": "Internal server error","status": false })
     }
 })
 export default authRouter;

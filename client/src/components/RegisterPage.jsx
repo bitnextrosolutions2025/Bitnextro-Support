@@ -53,16 +53,7 @@ const RegisterPage = () => {
     e.preventDefault();
     setLoder(true)
 
-    const urlmail = `${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/sendemail`
-    const responcemail = await fetch(urlmail, {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email: userdata.gmail, username: userdata.name, password: userdata.password })
-    })
-    const datamail = await responcemail.json();
-    console.log(datamail)
+   
 
     const url = `${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/register`
     const responce = await fetch(url, {
@@ -76,6 +67,20 @@ const RegisterPage = () => {
     if (!resdata.status) {
       handleError("Some Error occured. Try again!")
       return setLoder(false);
+    }
+     const urlmail = `${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/sendemail`
+    const responcemail = await fetch(urlmail, {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email: userdata.gmail, username: userdata.name, password: userdata.password })
+    })
+    const datamail = await responcemail.json();
+    console.log(datamail)
+    if(!datamail.status){
+      handleError("Some Error occured. Try again!")
+      return setLoder(false)
     }
     handleSuccess("Account register is Successfull");
 
