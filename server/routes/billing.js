@@ -151,15 +151,15 @@ const generateHTML = (data) => {
             <div class="flex border-b border-black">
                 <div class="w-1/2 border-r border-black p-2 text-[11px] leading-tight">
                     <p class="font-bold mb-1">CUSTOMER DETAILS:</p>
-                    Name:<p>${data.user}</p> 
-                    Email:<p>${data.email}</p> 
-                    GSTIN:<p>${data.gstno}</p> 
+                    <p>Name:${data.user}</p> 
+                    <p>Email:${data.email}</p> 
+                    <p>GSTIN:${data.gstno}</p> 
                     <p class="font-bold mt-1">BILLING ADDRESS:</p>
                     <p>${data.shippingAddress || 'N/A'}</p>
                 </div>
                 <div class="w-1/2 p-2 text-[11px] leading-tight">
                     <p class="font-bold mb-1">SHIPPING ADDRESS</p>
-                    <p>${data.shippingAddress || 'N/A'}</p>
+                    <!--  <p>${data.shippingAddress || 'N/A'}</p> -->
                 </div>
             </div>
 
