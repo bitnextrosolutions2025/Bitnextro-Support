@@ -31,6 +31,7 @@ export default function Adminbilling() {
     supplyPlace: '',
     email:"",
     user:"",
+    gstno:"",
     shippingAddress: '',
     isGstApplied: true,
     isStampApplied: true,
@@ -202,6 +203,17 @@ try {
                     required
                     placeholder="Enter email"
                     value={details.email}
+                    onChange={handleDetailChange}
+                    className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
+                <label className="block text-sm font-medium leading-6 text-slate-900">Customar GST NO</label>
+                <div className="mt-2">
+                  <input
+                    name="gstno"
+                    required
+                    placeholder="Enter GST NO"
+                    value={details.gstno}
                     onChange={handleDetailChange}
                     className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
