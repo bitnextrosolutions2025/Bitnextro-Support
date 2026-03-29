@@ -8,8 +8,6 @@ const BlogRoute = express.Router();
 
 BlogRoute.post("/add-blog", upload.single('blogimage'), async (req, res) => {
     try {
-
-
         const { blog_title, blog_description } = JSON.parse(req.body.bloginfo);
         let imgurl = ""
         if (req.file) {
@@ -25,12 +23,23 @@ BlogRoute.post("/add-blog", upload.single('blogimage'), async (req, res) => {
             blog_description
         })
         await newblog.save();
-       return res.status(200).json({"message":"Add blog done",status:true})
+        return res.status(200).json({ "message": "Add blog done", status: true })
     } catch (error) {
-       console.log(error);
-       return res.status(500).json({"error":"Server Error",status:false})
+        console.log(error);
+        return res.status(500).json({ "error": "Server Error", status: false })
     }
 
+})
+
+BlogRoute.get("/fetch-all-blog", async (req, res) => {
+    try {
+        const allblog= await Blog.find({})
+        res.status(200).json({"message":"All blog", "blogdata":allblog, status:true})
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ "error": "Server Error", status: false })
+    }
 })
 
 export default BlogRoute;
