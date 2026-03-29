@@ -18,6 +18,7 @@ import TickeCheck from './pages/TiecktCheck'
 import Navbar from './components/Navbar'
 import Adminticketcheck from './components/Adminticketcheck'
 import Adminbilling from './components/Adminbilling'
+import AddBlog from './components/AddBlog'
 function App() {
 // const location=useLocation()
   return (
@@ -33,6 +34,7 @@ function App() {
       <Route path='/checkticket' element={<TickeCheck/>}/>
       <Route path='/adminticktcheck' element={<Adminticketcheck/>}/>
       <Route path='/billing' element={<Adminbilling/>}/>
+      <Route path='/addblog' element={<AddBlog/>}/>
       
 
     </Routes>

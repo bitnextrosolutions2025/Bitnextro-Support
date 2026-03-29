@@ -6,6 +6,7 @@ import authRouter from "./routes/auth.js"
 import ticketRouter from "./routes/ticket.js"
 import billingRoute from "./routes/billing.js"
 import billingcopyRoute from "./routes/billingcopy.js"
+import BlogRoute from "./routes/blog.js"
 const app = express();
 app.use(express.json());
 const coresoption = {
@@ -24,6 +25,7 @@ app.use("/api/v1/auth",authRouter);
 app.use("/api/v2/tickt",ticketRouter);
 app.use("/api/v3/bill",billingRoute);
 app.use("/api/v4/copybill",billingcopyRoute);
+app.use("/api/v5/blog",BlogRoute)
 app.listen(process.env.PORT,()=>{
     console.log(`your app is run in port:${process.env.PORT}`)
 });

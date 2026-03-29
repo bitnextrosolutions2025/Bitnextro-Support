@@ -12,13 +12,16 @@
   "dependencies": {
     "@sparticuz/chromium": "^143.0.4",
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
     "mongoose": "^9.1.5",
+    "multer": "^2.1.1",
     "nodemailer": "^7.0.13",
+    "path": "^0.12.7",
     "puppeteer-core": "^24.37.5",
     "util": "^0.12.5"
   }
