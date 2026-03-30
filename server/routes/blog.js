@@ -33,13 +33,27 @@ BlogRoute.post("/add-blog", upload.single('blogimage'), async (req, res) => {
 
 BlogRoute.get("/fetch-all-blog", async (req, res) => {
     try {
-        const allblog= await Blog.find({})
-        res.status(200).json({"message":"All blog", "blogdata":allblog, status:true})
-        
+        const allblog = await Blog.find({})
+        res.status(200).json({ "message": "All blog", "blogdata": allblog, status: true })
+
     } catch (error) {
         console.log(error);
         return res.status(500).json({ "error": "Server Error", status: false })
     }
 })
+
+
+BlogRoute.get("/details-blog/:id", async (req, res) => {
+    try {
+        const blogdata = await Blog.findById(req.params.id);
+        if (!blogdata) {
+            return res.status(404).json({ "error": "Not found", status: false });
+        }
+        return res.status(200).json({ "message": "Blog found","Blogdata":blogdata,status: true });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ "error": "Server Error", status: false })
+    }
+});
 
 export default BlogRoute;
