@@ -20,7 +20,7 @@ export default function AddBlog() {
 
       try {
         const token = secureLocalStorage.getItem("auth-token");
-        console.log(token)
+        // console.log(token)
         let finaldata;
         if (token) {
           const url = `${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/getuser`;
@@ -33,10 +33,9 @@ export default function AddBlog() {
           });
           const data = await response.json();
           finaldata = data.message;
-          console.log(data.message)
           setuserdata(data.message);
         }
-        console.log(finaldata.email);
+        // console.log(finaldata.email);
         const blockedEmails = [
           "bitnextrosolutions@gmail.com",
           "rijwansk329@gmail.com",
@@ -84,7 +83,7 @@ export default function AddBlog() {
     try {
       e.preventDefault();
       setIsSubmitting(true);
-      console.log(imageFile, title, description)
+      // console.log(imageFile, title, description)
       const formdata = new FormData();
       formdata.append("blogimage", imageFile)
       const bloginfo = {
@@ -99,7 +98,7 @@ export default function AddBlog() {
           "Content-Type": "multipart/form-data",
         },
       });
-      console.log(res)
+      // console.log(res)
       setIsSubmitting(false);
       handleSuccess('Your blog post has been successfully created.')
       setTitle('');

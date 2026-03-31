@@ -65,7 +65,7 @@ export default function TicktSubmit() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setStatus('submitting');
-        console.log(formData)
+        // console.log(formData)
         const url = `${import.meta.env.VITE_BACKEND_URL}/api/v2/tickt/gen-ticket`
         const responce = await fetch(url, {
             method: 'POST',
@@ -84,7 +84,7 @@ export default function TicktSubmit() {
             body: JSON.stringify({ email: formData.email, ticketNO:data.Ticket_No, username: formData.firstName })
         })
         const datamail = await responcemail.json();
-        console.log(datamail)
+        // console.log(datamail)
         if(!data.status || !datamail.status){
             return handleError("Some this is worong !! Try again ")
         }

@@ -1,29 +1,53 @@
-import React, { useEffect } from 'react';
-import  secureLocalStorage  from  "react-secure-storage";
-import { 
-  LifeBuoy, 
-  MessageCircle, 
-  FileText, 
-  Search, 
-  ArrowRight, 
-  ShieldCheck, 
-  Clock, 
+import React, { useEffect, useState } from 'react';
+import secureLocalStorage from "react-secure-storage";
+import {
+  LifeBuoy,
+  MessageCircle,
+  FileText,
+  Search,
+  ArrowRight,
+  ShieldCheck,
+  Clock,
   Zap,
   ChevronRight
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 const SupportPortal = () => {
-  const naviget=useNavigate()
-  useEffect(()=>{
-    const token=secureLocalStorage.getItem("auth-token");
-    if(!token){
-      naviget("/")
+  const [Isvaliduser, setIsvaliduser] = useState(false)
+  const naviget = useNavigate()
+  useEffect(() => {
+    const token = secureLocalStorage.getItem("auth-token");
+
+    const fecthuser = async () => {
+
+      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/getuser`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "auth-token": token
+        },
+      });
+      const data = await response.json();
+      const eamildata= data.message;
+      const blockedEmails = [
+        "bitnextrosolutions@gmail.com",
+        "rijwansk329@gmail.com",
+        "d.bhoumik2020@gmail.com"
+      ];
+      if (blockedEmails.includes(eamildata?.email)) {
+        setIsvaliduser(true);
+      }
+      
     }
-},[])
+    if (token) {
+      fecthuser();
+    }
+  }, [])
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center font-sans selection:bg-emerald-100 selection:text-emerald-900 relative overflow-hidden">
-      
+
       {/* Abstract Background Decoration */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute -top-[10%] -right-[10%] w-[50vw] h-[50vw] bg-linear-to-br from-blue-100/40 to-emerald-100/40 rounded-full blur-[120px]" />
@@ -31,7 +55,7 @@ const SupportPortal = () => {
       </div>
 
       <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 z-10 py-12">
-        
+
         {/* Hero Section */}
         <div className="text-center mb-16 space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-4 animate-fade-in-up">
@@ -41,11 +65,11 @@ const SupportPortal = () => {
             </span>
             <span className="text-sm font-medium text-slate-600">System Operational</span>
           </div>
-          
+
           <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
             How can we <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500">help you</span> today?
           </h1>
-          
+
           <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
             Welcome to the Service Best Support Portal. Browse our knowledge base, check ticket status, or connect with our expert team instantly.
           </p>
@@ -90,12 +114,23 @@ const SupportPortal = () => {
             <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Search your Ticket</h3>
             <p className="text-slate-500 mb-6">Check your tick Status.</p>
             <Link to="/checkticket"><div className="flex items-center text-emerald-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
-             Check ticket <ArrowRight className="h-4 w-4 ml-2" />
+              Check ticket <ArrowRight className="h-4 w-4 ml-2" />
             </div></Link>
           </div>
 
           {/* Card 3: Live Chat */}
-          
+          {Isvaliduser ?<div className="group relative bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 border border-slate-100 transition-all duration-300 cursor-pointer overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-linear-to-b from-emerald-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <FileText className="h-7 w-7 text-emerald-600" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Add Blog</h3>
+            <p className="text-slate-500 mb-6">Add a new blog</p>
+            <Link to="/addblog"><div className="flex items-center text-emerald-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
+              Add <ArrowRight className="h-4 w-4 ml-2" />
+            </div></Link>
+          </div>:""}
+
         </div>
 
         {/* Quick Links / Featured Sections */}
@@ -117,33 +152,33 @@ const SupportPortal = () => {
           </div>
 
           <div className="bg-white border border-slate-200 rounded-3xl p-8 relative overflow-hidden group">
-             <div className="flex flex-col h-full justify-between">
-                <div>
-                   <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                     <Zap className="text-amber-500 fill-current" /> Recent Updates
-                   </h3>
-                   <div className="space-y-4">
-                     <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
-                        <div className="mt-1 h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                        <div>
-                          <p className="text-slate-800 font-medium text-sm">New Dashboard Features Released</p>
-                          <p className="text-slate-400 text-xs mt-1">Today, 9:00 AM</p>
-                        </div>
-                     </div>
-                     <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
-                        <div className="mt-1 h-2 w-2 rounded-full bg-blue-500 shrink-0" />
-                        <div>
-                          <p className="text-slate-800 font-medium text-sm">Scheduled Maintenance Notice</p>
-                          <p className="text-slate-400 text-xs mt-1">Yesterday, 4:30 PM</p>
-                        </div>
-                     </div>
-                   </div>
+            <div className="flex flex-col h-full justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <Zap className="text-amber-500 fill-current" /> Recent Updates
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                    <div>
+                      <p className="text-slate-800 font-medium text-sm">New Dashboard Features Released</p>
+                      <p className="text-slate-400 text-xs mt-1">Today, 9:00 AM</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+                    <div>
+                      <p className="text-slate-800 font-medium text-sm">Scheduled Maintenance Notice</p>
+                      <p className="text-slate-400 text-xs mt-1">Yesterday, 4:30 PM</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
-                   <span className="text-sm text-slate-500">System Version 2.4.0</span>
-                   <button className="text-blue-600 text-sm font-semibold hover:underline">View Changelog</button>
-                </div>
-             </div>
+              </div>
+              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-sm text-slate-500">System Version 2.4.0</span>
+                <button className="text-blue-600 text-sm font-semibold hover:underline">View Changelog</button>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -37,7 +37,7 @@ const RegisterPage = () => {
 
   const handlelogin = async () => {
     const data = await googleSignIn();
-    console.log(data.user)
+    // console.log(data.user)
     console.log(data.user.email)
     if (data.user.email === 'bitnextrosolutions@gmail.com') {
       handleSuccess("Welcome to admin portal.")
