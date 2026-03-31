@@ -99,11 +99,19 @@ export default function AddBlog() {
         },
       });
       // console.log(res)
+      if (res.status) {
+        setIsSubmitting(false);
+        handleSuccess('Your blog post has been successfully created.')
+        setTitle('');
+        setDescription('');
+        removeImage();
+        return;
+      }
+
       setIsSubmitting(false);
-      handleSuccess('Your blog post has been successfully created.')
-      setTitle('');
-      setDescription('');
-      removeImage();
+      handleError('Server error try again !')
+
+
 
     } catch (error) {
       console.log(error);
