@@ -52,7 +52,7 @@ export default function LoginComponent() {
             
         }
         const final=s_token.join("")
-        secureLocalStorage.setItem("auth-token",final)
+        secureLocalStorage.setItem("auth-token",resdata.hased_token)
         return naviget("/support");
     };
     const handleChange = (e) => {
