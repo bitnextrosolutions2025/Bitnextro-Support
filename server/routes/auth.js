@@ -65,7 +65,7 @@ authRouter.post("/login", async (req, res) => {
         }
        let joinauth=s_t.join("")
        let hased_token=joinauth+ process.env.SECRET_CODE;
-        return res.status(200).json({ "status": true, "message": "Login Successful", "hased_token": hased_token, "array":sort_indexofArray})
+        return res.status(200).json({ "status": true, "message": "Login Successful", "hased_token": authtoken, "array":sort_indexofArray})
     } catch (error) {
         console.log(error)
         return res.status(505).json({ "error": "Internal server error" })
