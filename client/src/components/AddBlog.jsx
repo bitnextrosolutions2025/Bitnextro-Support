@@ -39,7 +39,7 @@ export default function AddBlog() {
         const blockedEmails = [
           "bitnextrosolutions@gmail.com",
           "rijwansk329@gmail.com",
-          "d.bhoumik2020@gmail"
+          "d.bhoumik2020@gmail.com"
         ];
 
         if (
