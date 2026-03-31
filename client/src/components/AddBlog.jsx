@@ -20,6 +20,7 @@ export default function AddBlog() {
 
       try {
         const token = secureLocalStorage.getItem("auth-token");
+        console.log(token)
         let finaldata;
         if (token) {
           const url = `${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/getuser`;
