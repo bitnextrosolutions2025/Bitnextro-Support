@@ -1,16 +1,64 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, X, Image as ImageIcon, CheckCircle, FileText } from 'lucide-react';
 import axios from 'axios'
 import { handleError, handleSuccess } from './ErrorMessage';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router';
+import secureLocalStorage from 'react-secure-storage';
 export default function AddBlog() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [userdata, setuserdata] = useState({})
+  const { user } = useAuth();
   const fileInputRef = useRef(null);
+  const naviget = useNavigate();
+  useEffect(() => {
+    const getoken = async () => {
 
+      try {
+        const token = secureLocalStorage.getItem("auth-token");
+        let finaldata;
+        if (token) {
+          const url = `${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/getuser`;
+          const response = await fetch(url, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "auth-token": token
+            },
+          });
+          const data = await response.json();
+          finaldata = data.message;
+          console.log(data.message)
+          setuserdata(data.message);
+        }
+        console.log(finaldata.email);
+        const blockedEmails = [
+          "bitnextrosolutions@gmail.com",
+          "rijwansk329@gmail.com",
+          "d.bhoumik2020@gmail"
+        ];
+
+        if (
+          blockedEmails.includes(user?.email) ||
+          blockedEmails.includes(finaldata?.email)
+        ) {
+          return;
+        }
+        handleError("Invalid admin")
+        return naviget("/adminbitnextro")
+      } catch (error) {
+        handleError("Invalid admin")
+        console.log(error)
+        return naviget("/adminbitnextro")
+
+      }
+    }
+    getoken();
+  }, [user]);
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith('image/')) {
@@ -33,8 +81,6 @@ export default function AddBlog() {
 
   const handleSubmit = async (e) => {
     try {
-
-
       e.preventDefault();
       setIsSubmitting(true);
       console.log(imageFile, title, description)
@@ -58,12 +104,12 @@ export default function AddBlog() {
       setTitle('');
       setDescription('');
       removeImage();
-    
+
     } catch (error) {
       console.log(error);
       setIsSubmitting(false);
       return handleError("Server error or image is too big ! Try again !")
-      
+
     }
 
   };

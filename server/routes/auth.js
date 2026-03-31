@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import User from '../models/User.js';
 import sendemail from '../middleware/sendmail.js';
+import fetchuer from '../middleware/fetchuser.js';
 const authRouter = express.Router();
 
 authRouter.post("/register", async (req, res) => {
@@ -63,7 +64,7 @@ authRouter.post("/login", async (req, res) => {
             s_t.splice(indexofArray[i],0,wordarray[i])
         }
        let joinauth=s_t.join("")
-       let hased_token=joinauth+process.env.SECRET_CODE;
+       let hased_token=joinauth+ process.env.SECRET_CODE;
         return res.status(200).json({ "status": true, "message": "Login Successful", "hased_token": hased_token, "array":sort_indexofArray})
     } catch (error) {
         console.log(error)
@@ -82,5 +83,22 @@ authRouter.post("/sendemail", async (req, res) => {
         console.log(error)
         return res.status(505).json({ "error": "Internal server error","status": false })
     }
+})
+
+authRouter.get("/getuser",fetchuer,async(req,res)=>{
+    try {
+        const userid= req.user
+        console.log(userid)
+       const userdata = await User.findById(userid)
+  .select("-password")
+  .select("-username");
+        console.log(userdata)
+        return res.status(200).json({"message":userdata})
+        
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({"error":"Intarnal server error"})
+    }
+  
 })
 export default authRouter;

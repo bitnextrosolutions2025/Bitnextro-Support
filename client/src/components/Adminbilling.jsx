@@ -10,7 +10,6 @@ export default function Adminbilling() {
   const naviget = useNavigate();
   useEffect(() => {
     const getoken = async () => {
-      console.log("Helloo")
       try {
         if (user.email === "bitnextrosolutions@gmail.com") {
           return;
