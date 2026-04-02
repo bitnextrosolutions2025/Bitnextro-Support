@@ -239,7 +239,8 @@ export default function AddMsmBlog() {
             <div className="pt-4">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                // disabled={isSubmitting}
+                disabled={true}
                 className={`w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition-all ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
                 {isSubmitting ? (
