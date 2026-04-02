@@ -9,7 +9,8 @@ export default function Navbar() {
   "/adminbitnextro",
   "/adminticktcheck",
   "/billing",
-  "/addblog"
+  "/addblog",
+  "/addmsmblog"
 ];
 
 const isAdminRoute = adminRoutes.includes(location.pathname);
@@ -39,7 +40,10 @@ const isAdminRoute = adminRoutes.includes(location.pathname);
                             Generate Bill
                         </Link>
                         <Link to="/addblog" className="hover:text-emerald-700 transition-colors">
-                           Blog
+                           BNblog
+                        </Link>
+                        <Link to="/addmsmblog" className="hover:text-emerald-700 transition-colors">
+                           Msmblog
                         </Link>
                     </div>
                     :<div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">

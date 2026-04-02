@@ -19,6 +19,7 @@ import Navbar from './components/Navbar'
 import Adminticketcheck from './components/Adminticketcheck'
 import Adminbilling from './components/Adminbilling'
 import AddBlog from './components/AddBlog'
+import AddMsmBlog from './components/AddMsmBlog'
 function App() {
 // const location=useLocation()
   return (
@@ -35,6 +36,7 @@ function App() {
       <Route path='/adminticktcheck' element={<Adminticketcheck/>}/>
       <Route path='/billing' element={<Adminbilling/>}/>
       <Route path='/addblog' element={<AddBlog/>}/>
+      <Route path='/addmsmblog' element={<AddMsmBlog/>}/>
       
 
     </Routes>

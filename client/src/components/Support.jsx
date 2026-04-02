@@ -73,21 +73,6 @@ const SupportPortal = () => {
           <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
             Welcome to the Service Best Support Portal. Browse our knowledge base, check ticket status, or connect with our expert team instantly.
           </p>
-
-          {/* Search Bar */}
-          {/* <div className="max-w-2xl mx-auto relative group mt-8">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-xl shadow-slate-200/50 transition-all duration-300"
-              placeholder="Search for articles, error codes, or topics..."
-            />
-            <button className="absolute right-2 top-2 bottom-2 bg-linear-to-r from-blue-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 text-white px-6 rounded-xl font-medium transition-all duration-200 shadow-md hover:shadow-lg">
-              Search
-            </button>
-          </div> */}
         </div>
 
         {/* Main Action Cards */}
@@ -124,9 +109,21 @@ const SupportPortal = () => {
             <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
               <FileText className="h-7 w-7 text-emerald-600" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Add Blog</h3>
-            <p className="text-slate-500 mb-6">Add a new blog</p>
+            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Add Blog for Bitnextro</h3>
+            <p className="text-slate-500 mb-6">Add a new blog for BN</p>
             <Link to="/addblog"><div className="flex items-center text-emerald-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
+              Add <ArrowRight className="h-4 w-4 ml-2" />
+            </div></Link>
+          </div>:""}
+
+          {Isvaliduser ?<div className="group relative bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 border border-slate-100 transition-all duration-300 cursor-pointer overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-linear-to-b from-emerald-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <FileText className="h-7 w-7 text-emerald-600" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">Add Blog for Manmalka</h3>
+            <p className="text-slate-500 mb-6">Add a new blog for Manmalka</p>
+            <Link to="/addmsmblog"><div className="flex items-center text-emerald-600 font-semibold text-sm group-hover:translate-x-1 transition-transform">
               Add <ArrowRight className="h-4 w-4 ml-2" />
             </div></Link>
           </div>:""}

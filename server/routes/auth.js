@@ -53,19 +53,19 @@ authRouter.post("/login", async (req, res) => {
             const num = Math.floor(Math.random() * 100)
             indexofArray.push(num)
         };
-      const sort_indexofArray= indexofArray.sort();
+        const sort_indexofArray = indexofArray.sort();
         let wordarray = [];
         for (let index = 0; index < 10; index++) {
-            const word=generateRandomString(1);
+            const word = generateRandomString(1);
             wordarray.push(word);
- 
+
         }
-        for(let i=0;i<10;i++){
-            s_t.splice(indexofArray[i],0,wordarray[i])
+        for (let i = 0; i < 10; i++) {
+            s_t.splice(indexofArray[i], 0, wordarray[i])
         }
-       let joinauth=s_t.join("")
-       let hased_token=joinauth+ process.env.SECRET_CODE;
-        return res.status(200).json({ "status": true, "message": "Login Successful", "hased_token":authtoken , "array":sort_indexofArray})
+        let joinauth = s_t.join("")
+        let hased_token = joinauth + process.env.SECRET_CODE;
+        return res.status(200).json({ "status": true, "message": "Login Successful", "hased_token": authtoken, "array": sort_indexofArray })
     } catch (error) {
         console.log(error)
         return res.status(505).json({ "error": "Internal server error" })
@@ -74,31 +74,31 @@ authRouter.post("/login", async (req, res) => {
 authRouter.post("/sendemail", async (req, res) => {
     try {
         const { email, username, password } = req.body;
-        const send = await sendemail(email,username,password)
+        const send = await sendemail(email, username, password)
         console.log("✅ Email Response:", send);
 
         return res.status(200).json({ "message": "send was mail", "status": true })
 
     } catch (error) {
         console.log(error)
-        return res.status(505).json({ "error": "Internal server error","status": false })
+        return res.status(505).json({ "error": "Internal server error", "status": false })
     }
 })
 
-authRouter.get("/getuser",fetchuer,async(req,res)=>{
+authRouter.get("/getuser", fetchuer, async (req, res) => {
     try {
-        const userid= req.user
+        const userid = req.user
         console.log(userid)
-       const userdata = await User.findById(userid)
-  .select("-password")
-  .select("-username");
+        const userdata = await User.findById(userid)
+            .select("-password")
+            .select("-username");
         console.log(userdata)
-        return res.status(200).json({"message":userdata})
-        
+        return res.status(200).json({ "message": userdata })
+
     } catch (error) {
         console.log(error)
-        return res.status(500).json({"error":"Intarnal server error"})
+        return res.status(500).json({ "error": "Intarnal server error" })
     }
-  
+
 })
 export default authRouter;
