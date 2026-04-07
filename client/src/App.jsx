@@ -20,6 +20,8 @@ import Adminticketcheck from './components/Adminticketcheck'
 import Adminbilling from './components/Adminbilling'
 import AddBlog from './components/AddBlog'
 import AddMsmBlog from './components/AddMsmBlog'
+import AddNewLead from './components/AddNewLead'
+import AllLead from './components/AllLead'
 function App() {
 // const location=useLocation()
   return (
@@ -37,6 +39,8 @@ function App() {
       <Route path='/billing' element={<Adminbilling/>}/>
       <Route path='/addblog' element={<AddBlog/>}/>
       <Route path='/addmsmblog' element={<AddMsmBlog/>}/>
+      <Route path='/addlead' element={<AddNewLead/>}/>
+      <Route path='/alllead' element={<AllLead/>}/>
       
 
     </Routes>

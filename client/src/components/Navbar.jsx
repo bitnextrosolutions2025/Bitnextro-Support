@@ -10,7 +10,9 @@ export default function Navbar() {
   "/adminticktcheck",
   "/billing",
   "/addblog",
-  "/addmsmblog"
+  "/addmsmblog",
+  "/addlead",
+  "/alllead"
 ];
 
 const isAdminRoute = adminRoutes.includes(location.pathname);
@@ -44,6 +46,9 @@ const isAdminRoute = adminRoutes.includes(location.pathname);
                         </Link>
                         <Link to="/addmsmblog" className="hover:text-emerald-700 transition-colors">
                            Msmblog
+                        </Link>
+                        <Link to="/alllead" className="hover:text-emerald-700 transition-colors">
+                           Lead
                         </Link>
                     </div>
                     :<div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
