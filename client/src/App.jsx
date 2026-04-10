@@ -22,6 +22,7 @@ import AddBlog from './components/AddBlog'
 import AddMsmBlog from './components/AddMsmBlog'
 import AddNewLead from './components/AddNewLead'
 import AllLead from './components/AllLead'
+import AllClients from './components/AllClients'
 function App() {
 // const location=useLocation()
   return (
@@ -41,6 +42,7 @@ function App() {
       <Route path='/addmsmblog' element={<AddMsmBlog/>}/>
       <Route path='/addlead' element={<AddNewLead/>}/>
       <Route path='/alllead' element={<AllLead/>}/>
+      <Route path='/allclients' element={<AllClients/>}/>
       
 
     </Routes>

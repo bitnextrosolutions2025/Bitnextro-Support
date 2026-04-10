@@ -9,7 +9,8 @@ import {
     Edit,
     Trash2,
     ClipboardList,
-    Loader2 // Imported Loader2 for the spinning icon
+    Loader2,
+    CheckCircle2
 } from 'lucide-react';
 import secureLocalStorage from 'react-secure-storage';
 import { Link } from 'react-router';
@@ -18,9 +19,10 @@ import { useNavigate } from 'react-router';
 
 export default function AllLead() {
     const [leads, setLeads] = useState([]);
-    const [isLoading, setIsLoading] = useState(true); // Added loading state
+    const [isLoading, setIsLoading] = useState(true);
     const [deleteLoadingId, setDeleteLoadingId] = useState(null);
     const [editLoadingId, setEditLoadingId] = useState(null);
+    const [convertLoadingId, setConvertLoadingId] = useState(null);
     const [editingLead, setEditingLead] = useState(null);
     const [editForm, setEditForm] = useState({
         companyName: "",
@@ -91,11 +93,12 @@ export default function AllLead() {
                     },
                 });
                 const leaddata = await response.json();
-                setLeads(leaddata.data);
+                // Filter to only show leads (not clients)
+                const filteredLeads = leaddata.data.filter(lead => lead.IsclientOrLead !== "client");
+                setLeads(filteredLeads);
             } catch (error) {
                 console.error("Error fetching leads:", error);
             } finally {
-                // Always set loading to false when the fetch is done (success or fail)
                 setIsLoading(false);
             }
         };
@@ -132,6 +135,36 @@ export default function AllLead() {
             window.alert("Could not delete lead. Please try again.");
         } finally {
             setDeleteLoadingId(null);
+        }
+    };
+
+    const handleConvertToClient = async (id) => {
+        if (!id) return;
+
+        const confirmConvert = window.confirm("Are you sure you want to convert this lead to a client?");
+        if (!confirmConvert) return;
+
+        try {
+            setConvertLoadingId(id);
+            const url = `${import.meta.env.VITE_BACKEND_URL}/api/v7/lead/converttoclient/${id}`;
+            const response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to convert lead.");
+            }
+
+            setLeads((prevLeads) => prevLeads.filter((lead) => lead._id !== id));
+        } catch (error) {
+            console.error("Error converting lead:", error);
+            window.alert("Could not convert lead. Please try again.");
+        } finally {
+            setConvertLoadingId(null);
         }
     };
 
@@ -227,11 +260,18 @@ export default function AllLead() {
                         </h1>
                         <p className="text-green-700 mt-2">Manage and track your active leads.</p>
                     </div>
-                    <Link to='/addlead'>
-                        <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-semibold shadow-md transition-colors flex items-center gap-2">
-                            + Add New Lead
-                        </button>
-                    </Link>
+                    <div className="flex gap-3">
+                        <Link to='/addlead'>
+                            <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-semibold shadow-md transition-colors flex items-center gap-2">
+                                + Add New Lead
+                            </button>
+                        </Link>
+                        <Link to='/allclients'>
+                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold shadow-md transition-colors flex items-center gap-2">
+                                View Clients
+                            </button>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Table Container */}
@@ -446,6 +486,19 @@ export default function AllLead() {
                                                             <Loader2 className="w-5 h-5 animate-spin" />
                                                         ) : (
                                                             <Edit className="w-5 h-5" />
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleConvertToClient(lead._id)}
+                                                        disabled={convertLoadingId === lead._id}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        title="Convert to Client"
+                                                    >
+                                                        {convertLoadingId === lead._id ? (
+                                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                                        ) : (
+                                                            <CheckCircle2 className="w-5 h-5" />
                                                         )}
                                                     </button>
                                                     <button

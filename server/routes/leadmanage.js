@@ -98,4 +98,31 @@ LeadRoute.put("/editlead/:id", async (req, res) => {
     }
 });
 
+LeadRoute.put("/converttoclient/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedLead = await Lead.findByIdAndUpdate(id, { $set: { IsclientOrLead: "client" } }, { new: true });
+
+        if (!updatedLead) {
+            return res.status(404).json({ error: "Lead not found", status: false });
+        }
+
+        return res.status(200).json({ msg: "Lead converted to client successfully", status: true, data: updatedLead });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: "Server Error", status: false });
+    }
+});
+
+LeadRoute.get("/fetch-all-clients", async (req, res) => {
+    try {
+        const allClients = await Lead.find({ IsclientOrLead: "client" });
+        return res.status(200).json({ data: allClients, status: true });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: "Server Error", status: false });
+    }
+});
+
+
 export default LeadRoute;

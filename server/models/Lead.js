@@ -32,6 +32,7 @@ const leadSchema = new mongoose.Schema({
     },
     IsclientOrLead:{
         type:String,
+        default:"lead"
     }
 
 }, { timestamps: true })
