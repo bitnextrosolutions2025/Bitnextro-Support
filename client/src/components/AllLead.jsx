@@ -19,6 +19,19 @@ import { useNavigate } from 'react-router';
 export default function AllLead() {
     const [leads, setLeads] = useState([]);
     const [isLoading, setIsLoading] = useState(true); // Added loading state
+    const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+    const [editLoadingId, setEditLoadingId] = useState(null);
+    const [editingLead, setEditingLead] = useState(null);
+    const [editForm, setEditForm] = useState({
+        companyName: "",
+        contactPerson: "",
+        location: "",
+        phone: "",
+        email: "",
+        status: "",
+        followUpDate: "",
+        followUpTime: "",
+    });
     const { user } = useAuth();
     const naviget = useNavigate();
     const [IsAllowUser, setIsAllowUser] = useState(false);
@@ -92,12 +105,106 @@ export default function AllLead() {
         }
     }, [IsAllowUser]);
 
-    const handleDelete = (id) => {
-        setLeads(leads.filter(lead => lead.id !== id));
+    const handleDelete = async (id) => {
+        if (!id) return;
+
+        const confirmDelete = window.confirm("Are you sure you want to delete this lead?");
+        if (!confirmDelete) return;
+
+        try {
+            setDeleteLoadingId(id);
+            const url = `${import.meta.env.VITE_BACKEND_URL}/api/v7/lead/deletelead/${id}`;
+            const response = await fetch(url, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to delete lead.");
+            }
+
+            setLeads((prevLeads) => prevLeads.filter((lead) => lead._id !== id && lead.id !== id));
+        } catch (error) {
+            console.error("Error deleting lead:", error);
+            window.alert("Could not delete lead. Please try again.");
+        } finally {
+            setDeleteLoadingId(null);
+        }
     };
 
-    const handleEdit = (lead) => {
-        console.log("Editing lead:", lead);
+    const openEditModal = (lead) => {
+        if (!lead?._id) return;
+        setEditingLead(lead);
+        setEditForm({
+            companyName: lead.Company_Name || "",
+            contactPerson: lead.Contact_Person || "",
+            location: lead.Location || "",
+            phone: lead.Phone_Number || "",
+            email: lead.email || "",
+            status: lead.status || "",
+            followUpDate: lead.followUpDate || "",
+            followUpTime: lead.followUpTime || "",
+        });
+    };
+
+    const closeEditModal = () => {
+        setEditingLead(null);
+        setEditForm({
+            companyName: "",
+            contactPerson: "",
+            location: "",
+            phone: "",
+            email: "",
+            status: "",
+            followUpDate: "",
+            followUpTime: "",
+        });
+    };
+
+    const handleEditChange = (event) => {
+        const { name, value } = event.target;
+        setEditForm((prevForm) => ({ ...prevForm, [name]: value }));
+    };
+
+    const handleEditSubmit = async () => {
+        if (!editingLead?._id) return;
+
+        try {
+            setEditLoadingId(editingLead._id);
+            const url = `${import.meta.env.VITE_BACKEND_URL}/api/v7/lead/editlead/${editingLead._id}`;
+            const response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    companyName: editForm.companyName,
+                    contactPerson: editForm.contactPerson,
+                    location: editForm.location,
+                    phone: Number(editForm.phone),
+                    email: editForm.email,
+                    status: editForm.status,
+                    followUpDate: editForm.followUpDate,
+                    followUpTime: editForm.followUpTime,
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to update lead.");
+            }
+
+            setLeads((prevLeads) => prevLeads.map((item) => item._id === editingLead._id ? data.data : item));
+            closeEditModal();
+        } catch (error) {
+            console.error("Error editing lead:", error);
+            window.alert("Could not update lead. Please try again.");
+        } finally {
+            setEditLoadingId(null);
+        }
     };
 
     const formatStatus = (status) => {
@@ -128,6 +235,126 @@ export default function AllLead() {
                 </div>
 
                 {/* Table Container */}
+                {editingLead && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+                        <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-black/10">
+                            <div className="mb-5 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-green-900">Edit Lead</h2>
+                                    <p className="text-sm text-gray-500">Update the lead details and submit.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={closeEditModal}
+                                    className="rounded-full bg-green-50 p-2 text-green-700 hover:bg-green-100"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <label className="space-y-2 text-sm text-gray-700">
+                                    Company Name
+                                    <input
+                                        name="companyName"
+                                        value={editForm.companyName}
+                                        onChange={handleEditChange}
+                                        className="w-full rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500"
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-gray-700">
+                                    Contact Person
+                                    <input
+                                        name="contactPerson"
+                                        value={editForm.contactPerson}
+                                        onChange={handleEditChange}
+                                        className="w-full rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500"
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-gray-700">
+                                    Location
+                                    <input
+                                        name="location"
+                                        value={editForm.location}
+                                        onChange={handleEditChange}
+                                        className="w-full rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500"
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-gray-700">
+                                    Phone Number
+                                    <input
+                                        name="phone"
+                                        value={editForm.phone}
+                                        onChange={handleEditChange}
+                                        className="w-full rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500"
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-gray-700">
+                                    Email
+                                    <input
+                                        name="email"
+                                        value={editForm.email}
+                                        onChange={handleEditChange}
+                                        className="w-full rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500"
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-gray-700 sm:col-span-2">
+                                    Lead Status
+                                    <select
+                                        name="status"
+                                        value={editForm.status}
+                                        onChange={handleEditChange}
+                                        className="w-full rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500"
+                                    >
+                                        <option value="interested">Interested</option>
+                                        <option value="not-interested">Not Interested</option>
+                                        <option value="need-follow-up">Need Follow Up</option>
+                                    </select>
+                                </label>
+                                {editForm.status === "need-follow-up" && (
+                                    <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2 p-4 bg-green-50 rounded-xl border border-green-200">
+                                        <label className="space-y-2 text-sm text-gray-700">
+                                            Follow-up Date
+                                            <input
+                                                type="date"
+                                                name="followUpDate"
+                                                value={editForm.followUpDate}
+                                                onChange={handleEditChange}
+                                                className="w-full rounded-xl border border-green-200 bg-white px-4 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500"
+                                            />
+                                        </label>
+                                        <label className="space-y-2 text-sm text-gray-700">
+                                            Follow-up Time
+                                            <input
+                                                type="time"
+                                                name="followUpTime"
+                                                value={editForm.followUpTime}
+                                                onChange={handleEditChange}
+                                                className="w-full rounded-xl border border-green-200 bg-white px-4 py-2 text-sm text-gray-900 outline-none transition focus:border-green-500"
+                                            />
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="mt-6 flex flex-wrap items-center gap-3 justify-end">
+                                <button
+                                    type="button"
+                                    onClick={closeEditModal}
+                                    className="rounded-full border border-green-200 bg-white px-5 py-2 text-sm font-medium text-green-700 hover:bg-green-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleEditSubmit}
+                                    disabled={editLoadingId === editingLead._id}
+                                    className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {editLoadingId === editingLead._id ? "Saving..." : "Save Changes"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div className="bg-white rounded-2xl shadow-xl border border-green-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
@@ -209,18 +436,30 @@ export default function AllLead() {
                                             <td className="px-6 py-4 text-center">
                                                 <div className="flex items-center justify-center gap-3 ">
                                                     <button
-                                                        onClick={() => handleEdit(lead)}
-                                                        className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors border border-transparent hover:border-green-200"
+                                                        type="button"
+                                                        onClick={() => openEditModal(lead)}
+                                                        disabled={editLoadingId === lead._id}
+                                                        className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors border border-transparent hover:border-green-200 disabled:cursor-not-allowed disabled:opacity-50"
                                                         title="Edit"
                                                     >
-                                                        <Edit className="w-5 h-5" />
+                                                        {editLoadingId === lead._id ? (
+                                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                                        ) : (
+                                                            <Edit className="w-5 h-5" />
+                                                        )}
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(lead.id)}
-                                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                                                        type="button"
+                                                        onClick={() => handleDelete(lead._id)}
+                                                        disabled={deleteLoadingId === lead._id}
+                                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                                                         title="Delete"
                                                     >
-                                                        <Trash2 className="w-5 h-5" />
+                                                        {deleteLoadingId === lead._id ? (
+                                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                                        ) : (
+                                                            <Trash2 className="w-5 h-5" />
+                                                        )}
                                                     </button>
                                                 </div>
                                             </td>

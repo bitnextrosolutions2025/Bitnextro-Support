@@ -117,9 +117,8 @@ export default function AddNewLead() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4 sm:p-6 md:p-8 flex items-center justify-center font-sans">
+        <div className="min-h-screen bg-linear-to-br from-blue-50 to-green-50 p-4 sm:p-6 md:p-8 flex items-center justify-center font-sans">
             <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden border-t-4 border-blue-600">
-
                 {/* Header */}
                 <div className="bg-white px-6 py-8 border-b border-gray-100 sm:px-10">
                     <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-3">

@@ -29,6 +29,9 @@ const leadSchema = new mongoose.Schema({
     },
     followUpTime:{
         type:String,
+    },
+    IsclientOrLead:{
+        type:String,
     }
 
 }, { timestamps: true })
