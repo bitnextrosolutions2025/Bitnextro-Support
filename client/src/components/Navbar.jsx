@@ -12,7 +12,8 @@ export default function Navbar() {
   "/addblog",
   "/addmsmblog",
   "/addlead",
-  "/alllead"
+  "/alllead",
+  "/allclients"
 ];
 
 const isAdminRoute = adminRoutes.includes(location.pathname);
