@@ -259,7 +259,6 @@ export default function Adminbilling() {
                 <div className="mt-2">
                   <input
                     name="email"
-                    required
                     placeholder="Enter email"
                     value={details.email}
                     onChange={handleDetailChange}
