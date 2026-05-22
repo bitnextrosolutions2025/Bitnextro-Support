@@ -69,7 +69,7 @@ const generateHTML = (data) => {
                 <td class="border-r border-black p-1 text-right">${rate.toFixed(2)}</td>
                 <td class="border-r border-black p-1">${qty}</td>
                 <td class="border-r border-black p-1 text-right">${taxable.toFixed(2)}</td>
-                <td class="border-r border-black p-1 text-right">${data.isGstApplied ? taxVal.toFixed(2) + '<br><span class="text-[10px]">(18%)</span>' : data.isGstApplied?taxValIGST.toFixed(2) + '<br><span class="text-[10px]">(18%)</span>' : '0.00'}</td>
+                <td class="border-r border-black p-1 text-right">${data.isGstApplied ? taxVal.toFixed(2) + '<br><span class="text-[10px]">(18%)</span>' : data.isIGstApplied ? taxValIGST.toFixed(2) + '<br><span class="text-[10px]">(18%)</span>' : '0.00'}</td>
                 <td class="p-1 text-right">${finalAmount.toFixed(2)}</td>
             </tr>
         `;
