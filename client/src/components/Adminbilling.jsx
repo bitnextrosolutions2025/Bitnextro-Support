@@ -35,6 +35,7 @@ export default function Adminbilling() {
     billingAddress:"",
     shippingAddress: '',
     isGstApplied: true,
+    isIGstApplied:true,
     isStampApplied: true,
     isPaymentdone: true
   });
@@ -415,6 +416,22 @@ export default function Adminbilling() {
                     name="isGstApplied"
                     className="sr-only peer"
                     checked={details.isGstApplied}
+                    onChange={handleDetailChange}
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </div>
+              </label>
+              <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                <div>
+                  <p className="text-sm font-medium text-slate-900">Apply IGST</p>
+                  <p className="text-xs text-slate-500 mt-1">Calculate IGST (SGST+CGST) on PDF</p>
+                </div>
+                <div className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="isIGstApplied"
+                    className="sr-only peer"
+                    checked={details.isIGstApplied}
                     onChange={handleDetailChange}
                   />
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>

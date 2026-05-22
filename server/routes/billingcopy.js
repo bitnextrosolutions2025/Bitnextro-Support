@@ -51,11 +51,15 @@ const generateHTML = (data) => {
         const taxable = rate * qty;
         
         let taxPercent = data.isGstApplied ? 18 : 0;
+        let taxPercentIGST = data.isIGstApplied ? 18 : 0;
         let taxVal = data.isGstApplied ? (taxable * 0.18) : 0;
-        let finalAmount = taxable + taxVal;
+        let taxValIGST = data.isIGstApplied ? (taxable * 0.18) : 0;
+
+        let finalAmount = taxable + taxVal + taxValIGST;
 
         totalTaxable += taxable;
-        totalTaxAmount += taxVal;
+        totalTaxAmount =totalTaxAmount+ taxVal + taxValIGST;
+
 
         return `
             <tr class="border-b border-black text-xs text-center h-8">
@@ -201,6 +205,12 @@ const generateHTML = (data) => {
                     <tr class="border-t border-black text-xs">
                         <td colspan="7" class="border-r border-black p-1 text-right">CGST 9.0%</td>
                         <td class="p-1 text-right">₹${(totalTaxAmount/2).toFixed(2)}</td>
+                    </tr>
+                    ` : ''}
+                    ${data.isIGstApplied ? `
+                    <tr class="border-t border-black text-xs">
+                        <td colspan="7" class="border-r border-black p-1 text-right">IGST</td>
+                        <td class="p-1 text-right">₹${totalTaxAmount.toFixed(2)}</td>
                     </tr>
                     ` : ''}
                     <tr class="border-t border-black font-bold text-sm bg-gray-100">
