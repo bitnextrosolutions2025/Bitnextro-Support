@@ -209,7 +209,7 @@ const generateHTML = (data) => {
                     ` : ''}
                     ${data.isIGstApplied ? `
                     <tr class="border-t border-black text-xs">
-                        <td colspan="7" class="border-r border-black p-1 text-right">IGST</td>
+                        <td colspan="7" class="border-r border-black p-1 text-right">IGST 18%</td>
                         <td class="p-1 text-right">₹${totalTaxAmount.toFixed(2)}</td>
                     </tr>
                     ` : ''}

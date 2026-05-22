@@ -408,7 +408,7 @@ export default function Adminbilling() {
               <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
                 <div>
                   <p className="text-sm font-medium text-slate-900">Apply GST</p>
-                  <p className="text-xs text-slate-500 mt-1">Calculate IGST/CGST/SGST on PDF</p>
+                  <p className="text-xs text-slate-500 mt-1">Calculate CGST/SGST on PDF</p>
                 </div>
                 <div className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -424,7 +424,7 @@ export default function Adminbilling() {
               <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
                 <div>
                   <p className="text-sm font-medium text-slate-900">Apply IGST</p>
-                  <p className="text-xs text-slate-500 mt-1">Calculate IGST (SGST+CGST) on PDF</p>
+                  <p className="text-xs text-slate-500 mt-1">Calculate IGST (18%) on PDF</p>
                 </div>
                 <div className="relative inline-flex items-center cursor-pointer">
                   <input
