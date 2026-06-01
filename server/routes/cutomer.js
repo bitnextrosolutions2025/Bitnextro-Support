@@ -5,7 +5,7 @@ const custometRoute = express.Router();
 
 custometRoute.post('/save-customer-data', async (req, res) => {
     try {
-        const { customerName, customerEmail, customerGstNo, customerShpAddress } = req.body;
+        const { customerName, customerEmail, customerGstNo, customerShpAddress , customerPlaceofSupply} = req.body;
 
         if (!customerName || !customerName.trim()) {
             return res.status(400).json({
@@ -24,7 +24,8 @@ custometRoute.post('/save-customer-data', async (req, res) => {
             customerName,
             customerEmail,
             customerGstNo,
-            customerShpAddress
+            customerShpAddress,
+            customerPlaceofSupply
         });
         newCustomer.save();
         return res.status(200).json({ msg: 'Register done', status: true })

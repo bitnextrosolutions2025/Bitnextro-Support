@@ -101,7 +101,9 @@ export default function Adminbilling() {
           gstno: data.data.customerGstNo || prev.gstno,
           shippingAddress: data.data.customerShpAddress || prev.shippingAddress,
           // You can also populate billing address if they are usually the same
-          billingAddress: data.data.customerShpAddress || prev.billingAddress 
+          billingAddress: data.data.customerShpAddress || prev.billingAddress,
+          supplyPlace:data.data.customerPlaceofSupply || prev.customerPlaceofSupply,
+          
         }));
         handleSuccess("Customer data fetched successfully!");
       } else {
@@ -211,7 +213,8 @@ export default function Adminbilling() {
           customerName: details.user, 
           customerEmail: details.email, 
           customerGstNo: details.gstno, 
-          customerShpAddress: details.shippingAddress 
+          customerShpAddress: details.shippingAddress,
+          customerPlaceofSupply:details.supplyPlace
         })
       });
       const data = await responce.json();
