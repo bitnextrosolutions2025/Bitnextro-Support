@@ -10,14 +10,18 @@ import BlogRoute from "./routes/blog.js"
 import BlogMsmRoute from "./routes/blogMsm.js"
 import LeadRoute from "./routes/leadmanage.js"
 import custometRoute from "./routes/cutomer.js"
+import quotationRoute from "./routes/quotation.js"
+import billingCustomerRoute from "./routes/billingCustomer.js"
+import proformaInvoiceRoute from "./routes/proformaInvoice.js"
 const app = express();
 app.use(express.json());
 const coresoption = {
     origin: [
         process.env.FRONTEND_URL,
         process.env.FRONTEND_URL2,
-        process.env.FRONTEND_URL3
-    ],
+        process.env.FRONTEND_URL3,
+        "http://localhost:5173"
+    ].filter(Boolean),
     methods: ['GET', 'POST', 'DELETE', 'OPTIONS', 'PUT', 'PATCH'], // Ensure methods are in an array
     allowedHeaders: ['Content-Type', 'Authorization', 'auth-token'],
     credentials: true, // Allow cookies/auth headers
@@ -36,6 +40,9 @@ app.use("/api/v5/blog", BlogRoute)
 app.use("/api/v6/blogMsm", BlogMsmRoute);
 app.use("/api/v7/lead",LeadRoute);
 app.use("/api/v8/cutomer",custometRoute);
+app.use("/api/v9/quotation", quotationRoute);
+app.use("/api/v10/customer", billingCustomerRoute);
+app.use("/api/v11/proforma", proformaInvoiceRoute);
 app.listen(process.env.PORT, () => {
     console.log(`your app is run in port:${process.env.PORT}`)
 });

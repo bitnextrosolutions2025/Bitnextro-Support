@@ -1,6 +1,7 @@
 import express from "express";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
+import fs from "fs";
 
 const billingRoute = express.Router();
 
@@ -46,9 +47,12 @@ const generateHTML = (data) => {
     const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
     const productsHtml = data.products.map((p, index) => {
-        const rate = parseFloat(p.rate);
-        const qty = parseInt(p.quantity);
-        const taxable = rate * qty;
+        let rate = parseFloat(p.rate);
+        if (data.isRoundOff) {
+            rate = Math.floor(rate);
+        }
+        const qty = parseInt(p.quantity, 10);
+        const taxable = Math.round(rate * qty * 100) / 100;
         
         let taxPercent = data.isGstApplied ? 18 : 0;
         let taxPercentIGST = data.isIGstApplied ? 18 : 0;
@@ -294,11 +298,27 @@ billingRoute.post("/billing-work", async (req, res) => {
         // 1. Generate HTML string based on req.body
         const htmlContent = generateHTML(alldata);
 
-        // 2. Launch Puppeteer (Vercel Serverless Configuration)
+        const isWin = process.platform === "win32";
+        let executablePath;
+
+        if (isWin) {
+            executablePath = process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+            if (!fs.existsSync(executablePath)) {
+                return res.status(500).json({
+                    message: "Chrome executable not found at specified path. Please ensure Google Chrome is installed or set CHROME_PATH environment variable."
+                });
+            }
+        } else {
+            executablePath = await chromium.executablePath();
+        }
+
+        // 2. Launch Puppeteer (Local Windows Chrome / Vercel Serverless Chromium)
         const browser = await puppeteer.launch({
-            args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
+            args: isWin 
+                ? ['--no-sandbox', '--disable-setuid-sandbox', '--hide-scrollbars', '--disable-web-security']
+                : [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
             defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath(),
+            executablePath: executablePath,
             headless: chromium.headless,
             ignoreHTTPSErrors: true,
         });
