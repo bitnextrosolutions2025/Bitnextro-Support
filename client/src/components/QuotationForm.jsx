@@ -132,7 +132,7 @@ export default function QuotationForm({ onBack }) {
   // Validation
   const validateForm = () => {
     if (!quotationDetails.invoiceNumber.trim()) {
-      handleError("Please enter an Invoice Number.");
+      handleError("Please enter a Quotation Number.");
       return false;
     }
     if (!customer.name.trim()) {
@@ -466,7 +466,7 @@ export default function QuotationForm({ onBack }) {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium leading-6 text-slate-900">
-                    Invoice Number <span className="text-red-500">*</span>
+                    Quotation Number <span className="text-red-500">*</span>
                   </label>
                   <div className="mt-2">
                     <input
@@ -484,7 +484,7 @@ export default function QuotationForm({ onBack }) {
 
                 <div>
                   <label className="block text-sm font-medium leading-6 text-slate-900">
-                    Invoice Date <span className="text-red-500">*</span>
+                    Quotation Date <span className="text-red-500">*</span>
                   </label>
                   <div className="mt-2">
                     <input
@@ -904,11 +904,11 @@ export default function QuotationForm({ onBack }) {
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
                 <div>
-                  <span className="text-slate-400 font-medium">Invoice Number:</span>
+                  <span className="text-slate-400 font-medium">Quotation Number:</span>
                   <p className="font-bold text-slate-800">{quotationDetails.invoiceNumber || ''}</p>
                 </div>
                 <div>
-                  <span className="text-slate-400 font-medium">Invoice Date:</span>
+                  <span className="text-slate-400 font-medium">Quotation Date:</span>
                   <p className="font-bold text-slate-800">{quotationDetails.invoiceDate || ''}</p>
                 </div>
                 <div>
@@ -1122,8 +1122,8 @@ export default function QuotationForm({ onBack }) {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-                  <th className="py-3 px-3">Invoice Number</th>
-                  <th className="py-3 px-3">Invoice Date</th>
+                  <th className="py-3 px-3">Quotation Number</th>
+                  <th className="py-3 px-3">Quotation Date</th>
                   <th className="py-3 px-3">Customer Name</th>
                   <th className="py-3 px-3 text-right">Taxable Amount</th>
                   <th className="py-3 px-3 text-right">Total Amount</th>
