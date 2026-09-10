@@ -28,6 +28,7 @@ const generateHTML = (data) => {
     const companyName = "BITNEXTRO SOLUTIONS PVT. LTD.";
     const companyLogo = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772130931/user_profiles/iasw8ry0br2wgwprakxg.jpg";
     const authStamp = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png";
+    const authSignature = data.signature || ""; // Reserved space for official signature image (to be provided later)
     
     // Fallbacks from your image requirements
     const compAddress = "5, Park Lane, Parkstreet, Kolkata, West Bengal, 700016";
@@ -256,8 +257,13 @@ const generateHTML = (data) => {
                 </div>
                 <div class="w-1/3 p-2 flex flex-col items-end justify-between text-[11px]">
                     <p class="font-bold text-gray-600">For ${companyName.toUpperCase()}</p>
-                    ${data.isStampApplied !== false ? `<img src="${authStamp}" alt="Stamp" class="w-24 h-24 object-contain opacity-90 my-2">` : '<div class="h-24"></div>'}
-                    <p class="font-medium text-gray-500">Authorized Signatory</p>
+                    <div class="flex items-center justify-end gap-2 my-1">
+                        ${data.isStampApplied !== false ? `<img src="${authStamp}" alt="Stamp" class="w-16 h-16 object-contain opacity-90">` : ''}
+                        <div class="w-24 h-16 flex items-center justify-center">
+                            ${authSignature ? `<img src="${authSignature}" alt="Signature" class="max-h-14 max-w-full object-contain">` : '<div class="w-24 h-16"></div>'}
+                        </div>
+                    </div>
+                    <p class="font-medium text-gray-500 border-t border-gray-400 pt-1 w-24 text-center">Authorized Signatory</p>
                 </div>
             </div>
 

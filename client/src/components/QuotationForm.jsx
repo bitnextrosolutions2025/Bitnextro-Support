@@ -26,6 +26,10 @@ import logo from '../assets/logo.jpg';
 import { handleSuccess, handleError } from './ErrorMessage';
 import secureLocalStorage from 'react-secure-storage';
 
+// Official Bitnextro seal and signature assets
+const authStamp = 'https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png';
+const authSignature = ''; // Reserved space for signature image to be added later
+
 export default function QuotationForm({ onBack }) {
   // Mode toggle: 'edit' or 'preview'
   const [viewMode, setViewMode] = useState('edit');
@@ -1062,12 +1066,26 @@ export default function QuotationForm({ onBack }) {
                 <p className="text-xs font-bold text-slate-800">
                   For BITNEXTRO SOLUTIONS PVT. LTD.
                 </p>
-                <img
-                  src="https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png"
-                  alt="Bitnextro Authorized Stamp & Signature"
-                  className="w-24 h-24 object-contain my-1 opacity-90"
-                />
-                <p className="text-xs font-semibold text-slate-700 border-t border-slate-300 pt-1 w-36 text-center">
+                <div className="flex items-center justify-end gap-3 my-2">
+                  <img
+                    src={authStamp}
+                    alt="Bitnextro Official Stamp"
+                    className="w-20 h-20 object-contain opacity-90"
+                  />
+                  <div className="w-32 h-16 flex items-center justify-center">
+                    {/* Dedicated Signature Space - ready for signature image when provided */}
+                    {authSignature ? (
+                      <img
+                        src={authSignature}
+                        alt="Authorized Signature"
+                        className="max-h-16 max-w-full object-contain"
+                      />
+                    ) : (
+                      <div className="w-32 h-16" />
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs font-semibold text-slate-700 border-t border-slate-400 pt-1 w-32 text-center">
                   Authorized Signatory
                 </p>
               </div>
