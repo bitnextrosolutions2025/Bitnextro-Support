@@ -10,7 +10,7 @@ import ProformaWorkspace from './ProformaWorkspace';
 export default function Adminbilling() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('invoice');
-  const [Isload, setIsload] = useState(false);
+  const [invoiceType, setInvoiceType] = useState('tax'); // 'tax' | 'cash'
   const [Isload1, setIsload1] = useState(false);
   const [isloadOriginal, setIsloadOriginal] = useState(false);
   const [saveloder, setSaveloder] = useState(false);
@@ -107,7 +107,7 @@ export default function Adminbilling() {
       ...prev,
       user: cust.customerName || prev.user,
       email: cust.emailId || cust.customerEmail || prev.email,
-      gstno: cust.gstNumber || cust.customerGstNo || prev.gstno,
+      gstno: invoiceType === 'cash' ? '' : (cust.gstNumber || cust.customerGstNo || prev.gstno),
       billingAddress: cust.billingAddress || cust.location || prev.billingAddress,
       shippingAddress: cust.shippingAddress || cust.billingAddress || cust.location || prev.shippingAddress,
       supplyPlace: cust.placeOfSupply || cust.customerPlaceofSupply || prev.supplyPlace,
@@ -199,6 +199,10 @@ export default function Adminbilling() {
   const buildPayload = () => {
     return {
       ...details,
+      invoiceType,
+      isGstApplied: invoiceType === 'cash' ? false : details.isGstApplied,
+      isIGstApplied: invoiceType === 'cash' ? false : details.isIGstApplied,
+      gstno: invoiceType === 'cash' ? '' : details.gstno,
       isRoundOff: Boolean(details.isRoundOff),
       products: products.map(({ id, ...rest }) => ({
         ...rest,
@@ -208,44 +212,7 @@ export default function Adminbilling() {
     };
   };
 
-  // Submit Handler
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsload(true);
-    const payload = buildPayload();
 
-    const url = `${import.meta.env.VITE_BACKEND_URL}/api/v3/bill/billing-work`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const pdfUrl = window.URL.createObjectURL(blob);
-      window.open(pdfUrl, '_blank');
-
-      const link = document.createElement('a');
-      link.href = pdfUrl;
-      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(pdfUrl);
-      setIsload(false);
-    } catch (error) {
-      setIsload(false);
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate invoice. Please check the console.");
-    }
-  };
 
   const handleofficecopy = async (e) => {
     e.preventDefault();
@@ -386,23 +353,61 @@ export default function Adminbilling() {
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 overflow-y-auto">
         {activeTab === 'invoice' && (
           <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Header with Mode Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Receipt className="h-6 w-6 text-indigo-600" />
-              Create New Invoice
+              <Receipt className={`h-6 w-6 ${invoiceType === 'cash' ? 'text-emerald-600' : 'text-indigo-600'}`} />
+              {invoiceType === 'cash' ? 'Create New Cash Invoice' : 'Create New Invoice'}
             </h1>
-            <p className="text-sm text-slate-500 mt-1">Fill in the details below to generate a production-ready billing PDF.</p>
+            <p className="text-sm text-slate-500 mt-1">
+              {invoiceType === 'cash'
+                ? 'Generate a pure non-GST cash invoice (no GST applied, no GST numbers included).'
+                : 'Fill in the details below to generate a production-ready billing PDF.'}
+            </p>
+          </div>
+
+          {/* Mode Switcher */}
+          <div className="inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setInvoiceType('tax');
+                setDetails(prev => ({ ...prev, isGstApplied: true, isIGstApplied: false }));
+              }}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                invoiceType === 'tax'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Receipt className="w-3.5 h-3.5" />
+              Tax Invoice
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setInvoiceType('cash');
+                setDetails(prev => ({ ...prev, isGstApplied: false, isIGstApplied: false, gstno: '' }));
+              }}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                invoiceType === 'cash'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Cash Invoice
+            </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleoriginalcopy} className="space-y-6">
           {/* Section 1: General Details */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
             <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-6 border-b pb-4">
               <FileText className="h-5 w-5 text-slate-400" />
-              Invoice Details
+              {invoiceType === 'cash' ? 'Cash Invoice Details' : 'Invoice Details'}
             </h2>
 
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
@@ -413,7 +418,7 @@ export default function Adminbilling() {
                     type="text"
                     name="invoiceNumber"
                     required
-                    placeholder="e.g. INV-2026-001"
+                    placeholder={invoiceType === 'cash' ? "e.g. CASH-2026-001" : "e.g. INV-2026-001"}
                     value={details.invoiceNumber}
                     onChange={handleDetailChange}
                     className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
@@ -506,19 +511,23 @@ export default function Adminbilling() {
                   </div>
                 </div>
 
-                <div className="mt-6">
-                  <label className="block text-sm font-medium leading-6 text-slate-900">Customer GST NO</label>
-                  <div className="mt-2">
-                    <input
-                      name="gstno"
-                      required
-                      placeholder="Enter GST NO"
-                      value={details.gstno}
-                      onChange={handleDetailChange}
-                      className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    />
+                {invoiceType === 'tax' && (
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium leading-6 text-slate-900">
+                      Customer GST NO <span className="text-red-500">*</span>
+                    </label>
+                    <div className="mt-2">
+                      <input
+                        name="gstno"
+                        required
+                        placeholder="Enter GST NO"
+                        value={details.gstno}
+                        onChange={handleDetailChange}
+                        className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="mt-6">
                   <label className="block text-sm font-medium leading-6 text-slate-900">Billing Address</label>
@@ -687,39 +696,50 @@ export default function Adminbilling() {
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* GST Toggle */}
-              <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                <div>
-                  <p className="text-sm font-medium text-slate-900">Apply GST</p>
-                  <p className="text-xs text-slate-500 mt-1">Calculate CGST/SGST on PDF</p>
+              {invoiceType === 'tax' ? (
+                <>
+                  {/* GST Toggle */}
+                  <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Apply GST</p>
+                      <p className="text-xs text-slate-500 mt-1">Calculate CGST/SGST on PDF</p>
+                    </div>
+                    <div className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="isGstApplied"
+                        className="sr-only peer"
+                        checked={details.isGstApplied}
+                        onChange={handleDetailChange}
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </div>
+                  </label>
+                  <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">Apply IGST</p>
+                      <p className="text-xs text-slate-500 mt-1">Calculate IGST (18%) on PDF</p>
+                    </div>
+                    <div className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="isIGstApplied"
+                        className="sr-only peer"
+                        checked={details.isIGstApplied}
+                        onChange={handleDetailChange}
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </div>
+                  </label>
+                </>
+              ) : (
+                <div className="sm:col-span-2 p-4 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-800">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span><strong>Cash Invoice:</strong> Pure non-GST bill. GST and IGST are disabled, and no GST numbers will appear on the document.</span>
+                  </div>
                 </div>
-                <div className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="isGstApplied"
-                    className="sr-only peer"
-                    checked={details.isGstApplied}
-                    onChange={handleDetailChange}
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                </div>
-              </label>
-              <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                <div>
-                  <p className="text-sm font-medium text-slate-900">Apply IGST</p>
-                  <p className="text-xs text-slate-500 mt-1">Calculate IGST (18%) on PDF</p>
-                </div>
-                <div className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="isIGstApplied"
-                    className="sr-only peer"
-                    checked={details.isIGstApplied}
-                    onChange={handleDetailChange}
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                </div>
-              </label>
+              )}
 
               {/* Stamp Toggle */}
               <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
@@ -761,21 +781,19 @@ export default function Adminbilling() {
           <div className="flex flex-wrap items-center justify-end gap-4 pt-4">
             <button
               type="submit"
-              className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors cursor-pointer"
-            >
-              {Isload ? <div className='w-4 h-4 border-2 border-white rounded-sm animate-spin'></div> : "Generate Billing PDF"}
-            </button>
-            <button
-              type="button"
-              onClick={handleoriginalcopy}
-              className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors cursor-pointer"
+              disabled={isloadOriginal || Isload1}
+              className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
             >
               {isloadOriginal ? <div className='w-4 h-4 border-2 border-white rounded-sm animate-spin'></div> : "Original copy"}
             </button>
             <button
               type="button"
-              onClick={handleofficecopy}
-              className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors cursor-pointer"
+              disabled={isloadOriginal || Isload1}
+              onClick={(e) => {
+                if (e.currentTarget.form && !e.currentTarget.form.reportValidity()) return;
+                handleofficecopy(e);
+              }}
+              className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
             >
               {Isload1 ? <div className='w-4 h-4 border-2 border-white rounded-sm animate-spin'></div> : "Duplicate copy"}
             </button>

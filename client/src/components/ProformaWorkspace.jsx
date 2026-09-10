@@ -308,7 +308,23 @@ export default function ProformaWorkspace({ onBack }) {
   // Print Handler
   const handlePrint = () => {
     if (!validateForm()) return;
+    const originalTitle = document.title;
+    const pNum = (invoiceDetails.proformaNumber || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
+    const cName = (customer.customerName || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
+    const fileName = [pNum, cName].filter(Boolean).join(' - ') || 'Proforma_Invoice';
+
+    document.title = fileName;
+
+    const restoreTitle = () => {
+      document.title = originalTitle;
+      window.removeEventListener('afterprint', restoreTitle);
+    };
+    window.addEventListener('afterprint', restoreTitle);
+
     window.print();
+
+    // Fallback restore in case afterprint does not fire
+    setTimeout(restoreTitle, 1500);
   };
 
   return (
@@ -426,7 +442,8 @@ export default function ProformaWorkspace({ onBack }) {
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-slate-900">BITNEXTRO SOLUTIONS PVT. LTD.</h2>
-                  <p className="text-xs font-medium text-slate-500">GSTIN: 19AAOCB2081P1ZO</p>
+                  <p className="text-xs font-semibold text-slate-600">IT & Cybersecurity Company</p>
+                  <p className="text-xs text-slate-500">GSTIN: 19AAOCB2081P1ZO</p>
                 </div>
               </div>
 
@@ -904,6 +921,9 @@ export default function ProformaWorkspace({ onBack }) {
                   <h1 className="text-2xl font-black text-slate-900 tracking-tight">
                     BITNEXTRO SOLUTIONS PVT. LTD.
                   </h1>
+                  <p className="text-xs font-semibold text-slate-600">
+                    IT & Cybersecurity Company
+                  </p>
                   <p className="text-xs font-bold text-indigo-700 tracking-wide mt-0.5">
                     GSTIN: 19AAOCB2081P1ZO
                   </p>
@@ -1070,13 +1090,18 @@ export default function ProformaWorkspace({ onBack }) {
                 <p>Subject to Kolkata Jurisdiction.</p>
               </div>
 
-              <div className="text-right space-y-8">
+              <div className="text-right flex flex-col items-end">
                 <p className="text-xs font-bold text-slate-800">
                   For BITNEXTRO SOLUTIONS PVT. LTD.
                 </p>
-                <div className="pt-4 border-t border-dashed border-slate-300">
-                  <p className="text-xs font-semibold text-slate-700">Authorized Signatory</p>
-                </div>
+                <img
+                  src="https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png"
+                  alt="Bitnextro Authorized Stamp & Signature"
+                  className="w-24 h-24 object-contain my-1 opacity-90"
+                />
+                <p className="text-xs font-semibold text-slate-700 border-t border-slate-300 pt-1 w-36 text-center">
+                  Authorized Signatory
+                </p>
               </div>
             </div>
           </div>

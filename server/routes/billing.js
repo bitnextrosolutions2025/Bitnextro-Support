@@ -41,6 +41,10 @@ const generateHTML = (data) => {
         branch: "CANNING STREET - KOLKATA"
     };
 
+    const isCashInvoice = data.invoiceType === 'cash';
+    const isGstApplied = !isCashInvoice && Boolean(data.isGstApplied);
+    const isIGstApplied = !isCashInvoice && Boolean(data.isIGstApplied);
+
     // --- Calculations ---
     let totalTaxable = 0;
     let totalTaxAmount = 0;
@@ -54,15 +58,15 @@ const generateHTML = (data) => {
         const qty = parseInt(p.quantity, 10);
         const taxable = Math.round(rate * qty * 100) / 100;
         
-        let taxPercent = data.isGstApplied ? 18 : 0;
-        let taxPercentIGST = data.isIGstApplied ? 18 : 0;
-        let taxVal = data.isGstApplied ? (taxable * 0.18) : 0;
-        let taxValIGST = data.isIGstApplied ? (taxable * 0.18) : 0;
+        let taxPercent = isGstApplied ? 18 : 0;
+        let taxPercentIGST = isIGstApplied ? 18 : 0;
+        let taxVal = isGstApplied ? (taxable * 0.18) : 0;
+        let taxValIGST = isIGstApplied ? (taxable * 0.18) : 0;
 
         let finalAmount = taxable + taxVal + taxValIGST;
 
         totalTaxable += taxable;
-        totalTaxAmount =totalTaxAmount+ taxVal + taxValIGST;
+        totalTaxAmount = totalTaxAmount + taxVal + taxValIGST;
 
 
         return `
@@ -73,7 +77,7 @@ const generateHTML = (data) => {
                 <td class="border-r border-black p-1 text-right">${rate.toFixed(2)}</td>
                 <td class="border-r border-black p-1">${qty}</td>
                 <td class="border-r border-black p-1 text-right">${taxable.toFixed(2)}</td>
-                <td class="border-r border-black p-1 text-right">${data.isGstApplied ? taxVal.toFixed(2) + '<br><span class="text-[10px]">(18%)</span>' : data.isIGstApplied ? taxValIGST.toFixed(2) + '<br><span class="text-[10px]">(18%)</span>' : '0.00'}</td>
+                <td class="border-r border-black p-1 text-right">${isGstApplied ? taxVal.toFixed(2) + '<br><span class="text-[10px]">(18%)</span>' : isIGstApplied ? taxValIGST.toFixed(2) + '<br><span class="text-[10px]">(18%)</span>' : '0.00'}</td>
                 <td class="p-1 text-right">${finalAmount.toFixed(2)}</td>
             </tr>
         `;
@@ -111,7 +115,7 @@ const generateHTML = (data) => {
             <!-- Header Row -->
             <div class="flex justify-between items-center border-b border-black px-2 py-1 text-xs font-bold uppercase tracking-wider">
                 <div class="w-1/3"></div>
-                <div class="w-1/3 text-center text-blue-600 text-sm">TAX INVOICE</div>
+                <div class="w-1/3 text-center text-blue-600 text-sm">${isCashInvoice ? 'CASH INVOICE' : 'TAX INVOICE'}</div>
                 <div class="w-1/3 text-right">ORIGINAL FOR RECIPIENT</div>
             </div>
 
@@ -121,8 +125,9 @@ const generateHTML = (data) => {
                 <div class="w-1/2 border-r border-black p-3 flex items-start gap-3">
                     <img src="${companyLogo}" alt="Logo" class="w-16 h-16 object-contain">
                     <div class="text-[11px] leading-tight">
-                        <h2 class="font-bold text-sm mb-1">${companyName}</h2>
-                        <p><strong>GSTIN: ${compGST}</strong></p>
+                        <h2 class="font-bold text-sm mb-0.5">${companyName}</h2>
+                        <p class="text-[10px] text-gray-600 font-medium mb-1">IT & Cybersecurity Company</p>
+                        ${isCashInvoice ? '' : `<p><strong>GSTIN: ${compGST}</strong></p>`}
                         <p>${compAddress}</p>
                         <p>Mobile: ${compPhone}</p>
                         <p>Email: info@bitnextro.com</p>
@@ -161,7 +166,7 @@ const generateHTML = (data) => {
                     <p class="font-bold mb-1">CUSTOMER DETAILS:</p>
                     <p>Name: ${data.user}</p> 
                     <p>Email: ${data.email}</p> 
-                    <p>GSTIN: ${data.gstno}</p> 
+                    ${isCashInvoice ? '' : (data.gstno ? `<p>GSTIN: ${data.gstno}</p>` : '')} 
                     <p class="font-bold mt-1">BILLING ADDRESS:</p>
                     <p>${data.billingAddress || 'N/A'}</p>
                 </div>
@@ -198,10 +203,10 @@ const generateHTML = (data) => {
                     <!-- Totals Section integrated directly into table for perfect column alignment -->
                     <tr class="border-t border-black text-xs">
                         <td colspan="5" class="border-r border-black p-1 px-2 font-medium text-left">Total Items / Qty : ${data.products.length} / ${data.products.reduce((acc, p) => acc + parseFloat(p.quantity || 0), 0)}</td>
-                        <td colspan="2" class="border-r border-black p-1 font-bold text-right">Taxable Amount</td>
+                        <td colspan="2" class="border-r border-black p-1 font-bold text-right">${isCashInvoice ? 'Sub Total' : 'Taxable Amount'}</td>
                         <td class="p-1 font-bold text-right">₹${totalTaxable.toFixed(2)}</td>
                     </tr>
-                    ${data.isGstApplied ? `
+                    ${isGstApplied ? `
                     <tr class="border-t border-black text-xs">
                         <td colspan="7" class="border-r border-black p-1 text-right">SGST 9.0%</td>
                         <td class="p-1 text-right">₹${(totalTaxAmount/2).toFixed(2)}</td>
@@ -211,7 +216,7 @@ const generateHTML = (data) => {
                         <td class="p-1 text-right">₹${(totalTaxAmount/2).toFixed(2)}</td>
                     </tr>
                     ` : ''}
-                    ${data.isIGstApplied ? `
+                    ${isIGstApplied ? `
                     <tr class="border-t border-black text-xs">
                         <td colspan="7" class="border-r border-black p-1 text-right">IGST 18%</td>
                         <td class="p-1 text-right">₹${totalTaxAmount.toFixed(2)}</td>
@@ -251,7 +256,7 @@ const generateHTML = (data) => {
                 </div>
                 <div class="w-1/3 p-2 flex flex-col items-end justify-between text-[11px]">
                     <p class="font-bold text-gray-600">For ${companyName.toUpperCase()}</p>
-                    ${data.isStampApplied ? `<img src="${authStamp}" alt="Stamp" class="w-24 h-24 object-contain opacity-90 my-2">` : '<div class="h-24"></div>'}
+                    ${data.isStampApplied !== false ? `<img src="${authStamp}" alt="Stamp" class="w-24 h-24 object-contain opacity-90 my-2">` : '<div class="h-24"></div>'}
                     <p class="font-medium text-gray-500">Authorized Signatory</p>
                 </div>
             </div>
