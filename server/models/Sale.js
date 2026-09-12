@@ -20,7 +20,7 @@ const SaleSchema = new mongoose.Schema({
   profit: { type: Number, default: 0 },
   amountReceived: { type: Number, default: 0, min: 0 },
   balanceDue: { type: Number, default: 0 },
-  paymentStatus: { type: String, enum: ["Unpaid", "Partially Paid", "Paid"], default: "Unpaid" },
+  paymentStatus: { type: String, enum: ["Unpaid", "Partially Paid", "Paid", "N/A"], default: "Unpaid" },
   entryType: { type: String, enum: ["sale", "purchase"], default: "sale" },
   source: { type: String, enum: ["billing_auto", "manual"], default: "billing_auto" },
   notes: { type: String, default: "" }
