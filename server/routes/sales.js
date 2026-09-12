@@ -113,6 +113,7 @@ router.get('/all', async (req, res) => {
     
     if (status && status !== 'All') {
       query.paymentStatus = status;
+      query.entryType = { $ne: 'purchase' }; // Purchases do not have an invoice payment status
     }
     
     if (search) {
@@ -228,7 +229,7 @@ router.patch('/update-payment/:id', async (req, res) => {
     if (amountReceived === 0) {
       sale.paymentStatus = "Unpaid";
     } else if (amountReceived >= sale.salesAmount) {
-      sale.paymentStatus = "Paid";
+      sale.paymentStatus = "N/A";
     } else {
       sale.paymentStatus = "Partially Paid";
     }
@@ -353,7 +354,7 @@ router.post('/manual-entry', async (req, res) => {
       saleData.profit = -pAmount;
       saleData.amountReceived = 0;
       saleData.balanceDue = 0;
-      saleData.paymentStatus = "Paid"; // Doesn't matter, but kept clean for DB
+      saleData.paymentStatus = "N/A";
     } else {
       const sAmount = parseFloat(salesAmount) || 0;
       const rAmount = parseFloat(amountReceived) || 0;
@@ -416,7 +417,7 @@ router.put('/manual-entry/:id', async (req, res) => {
       sale.profit = -pAmount;
       sale.amountReceived = 0;
       sale.balanceDue = 0;
-      sale.paymentStatus = "Paid";
+      sale.paymentStatus = "N/A";
     } else {
       const sAmount = parseFloat(salesAmount) || 0;
       const rAmount = parseFloat(amountReceived) || 0;
@@ -426,7 +427,7 @@ router.put('/manual-entry/:id', async (req, res) => {
       sale.amountReceived = rAmount;
       sale.balanceDue = Math.max(0, sAmount - rAmount);
       if (rAmount === 0) sale.paymentStatus = "Unpaid";
-      else if (rAmount >= sAmount) sale.paymentStatus = "Paid";
+      else if (rAmount >= sAmount) sale.paymentStatus = "N/A";
       else sale.paymentStatus = "Partially Paid";
     }
 
