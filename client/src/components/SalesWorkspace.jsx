@@ -97,15 +97,15 @@ const SalesWorkspace = () => {
     }
   };
 
-  const handleDeleteManualEntry = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this manual entry?")) return;
+  const handleDeleteEntry = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this entry? This action cannot be undone.")) return;
     try {
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/manual-entry/${id}`);
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/delete/${id}`);
       fetchSummary();
       fetchSales();
     } catch (error) {
-      console.error('Error deleting manual entry:', error);
-      alert('Failed to delete manual entry.');
+      console.error('Error deleting entry:', error);
+      alert('Failed to delete entry.');
     }
   };
 
@@ -396,8 +396,13 @@ const SalesWorkspace = () => {
                       >{sale.paymentStatus}</span>}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      {/* Placeholder for future actions like delete or view */}
-                      <span className="text-slate-300 text-xs">-</span>
+                      <button
+                        onClick={() => handleDeleteEntry(sale._id)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Entry"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 ))
