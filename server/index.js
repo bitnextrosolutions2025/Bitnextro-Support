@@ -13,6 +13,8 @@ import custometRoute from "./routes/cutomer.js"
 import quotationRoute from "./routes/quotation.js"
 import billingCustomerRoute from "./routes/billingCustomer.js"
 import proformaInvoiceRoute from "./routes/proformaInvoice.js"
+import salesRoute from "./routes/sales.js"
+
 const app = express();
 app.use(express.json());
 const coresoption = {
@@ -43,6 +45,8 @@ app.use("/api/v8/cutomer",custometRoute);
 app.use("/api/v9/quotation", quotationRoute);
 app.use("/api/v10/customer", billingCustomerRoute);
 app.use("/api/v11/proforma", proformaInvoiceRoute);
+app.use("/api/v12/sales", salesRoute);
+
 app.listen(process.env.PORT, () => {
     console.log(`your app is run in port:${process.env.PORT}`)
 });

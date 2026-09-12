@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User } from 'lucide-react';
+import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp } from 'lucide-react';
 import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
+import SalesWorkspace from './SalesWorkspace';
 
 export default function Adminbilling() {
   const { user } = useAuth();
@@ -214,10 +215,41 @@ export default function Adminbilling() {
 
 
 
+  const recordSale = async (payload) => {
+    try {
+      const salesPayload = {
+        invoiceNumber: payload.invoiceNumber,
+        invoiceType: payload.invoiceType,
+        invoiceDate: payload.date,
+        customerName: payload.user,
+        customerEmail: payload.email,
+        customerGstNumber: payload.gstno,
+        items: payload.products.map(p => ({
+          productName: p.name,
+          hsnNumber: p.hsn,
+          qty: Number(p.quantity) || 0,
+          rate: Number(p.rate) || 0,
+          taxableAmount: (Number(p.quantity) || 0) * (Number(p.rate) || 0)
+        })),
+        salesAmount: payload.totalAmount
+      };
+      
+      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/record-sale`, {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(salesPayload)
+      });
+    } catch (error) {
+      console.error("Error recording sale:", error);
+    }
+  };
+
   const handleofficecopy = async (e) => {
     e.preventDefault();
     setIsload1(true);
     const payload = buildPayload();
+
+    recordSale(payload);
 
     const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/copybill/billing-work`;
 
@@ -256,6 +288,8 @@ export default function Adminbilling() {
     e.preventDefault();
     setIsloadOriginal(true);
     const payload = buildPayload();
+
+    recordSale(payload);
 
     const url = `${import.meta.env.VITE_BACKEND_URL}/api/v3/bill/billing-work`;
 
@@ -345,6 +379,20 @@ export default function Adminbilling() {
           >
             <Receipt className={`h-4 w-4 shrink-0 ${activeTab === 'proforma' ? 'text-indigo-600' : 'text-slate-400'}`} />
             <span>Pro Forma Invoice</span>
+          </button>
+
+          <button
+            type="button"
+            id="sidebar-sales"
+            onClick={() => setActiveTab(activeTab === 'sales' ? 'invoice' : 'sales')}
+            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
+              activeTab === 'sales'
+                ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
+          >
+            <TrendingUp className={`h-4 w-4 shrink-0 ${activeTab === 'sales' ? 'text-indigo-600' : 'text-slate-400'}`} />
+            <span>Sales</span>
           </button>
         </nav>
       </aside>
@@ -815,6 +863,11 @@ export default function Adminbilling() {
     {/* Pro Forma Invoice Workspace */}
     {activeTab === 'proforma' && (
       <ProformaWorkspace onBack={() => setActiveTab('invoice')} />
+    )}
+
+    {/* Sales Workspace */}
+    {activeTab === 'sales' && (
+      <SalesWorkspace />
     )}
   </main>
 </div>
