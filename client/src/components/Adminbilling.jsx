@@ -270,7 +270,8 @@ export default function Adminbilling() {
 
       const link = document.createElement('a');
       link.href = pdfUrl;
-      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}.pdf`);
+      const safeCustomerName = (payload.customerName || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
+      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}_${safeCustomerName}.pdf`);
       document.body.appendChild(link);
       link.click();
 
@@ -310,7 +311,8 @@ export default function Adminbilling() {
 
       const link = document.createElement('a');
       link.href = pdfUrl;
-      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}_Original.pdf`);
+      const safeCustomerNameOrig = (payload.customerName || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
+      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}_${safeCustomerNameOrig}_Original.pdf`);
       document.body.appendChild(link);
       link.click();
 
