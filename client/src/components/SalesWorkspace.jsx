@@ -26,7 +26,7 @@ const SalesWorkspace = () => {
 
   const fetchSummary = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/v12/sales/monthly-summary?month=${currentMonth}`);
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/monthly-summary?month=${currentMonth}`);
       setSummary(res.data);
     } catch (error) {
       console.error('Error fetching summary:', error);
@@ -36,7 +36,7 @@ const SalesWorkspace = () => {
   const fetchSales = async () => {
     setLoading(true);
     try {
-      let url = `http://localhost:5000/api/v12/sales/all?month=${currentMonth}&status=${statusFilter}`;
+      let url = `${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/all?month=${currentMonth}&status=${statusFilter}`;
       if (searchTerm) {
         url += `&search=${encodeURIComponent(searchTerm)}`;
       }
@@ -56,7 +56,7 @@ const SalesWorkspace = () => {
 
   const handleUpdatePurchase = async (id) => {
     try {
-      await axios.patch(`http://localhost:5000/api/v12/sales/update-purchase/${id}`, {
+      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/update-purchase/${id}`, {
         purchaseAmount: Number(editPurchaseAmount)
       });
       setEditingId(null);
@@ -69,7 +69,7 @@ const SalesWorkspace = () => {
 
   const handleToggleStatus = async (id) => {
     try {
-      await axios.patch(`http://localhost:5000/api/v12/sales/toggle-status/${id}`);
+      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/toggle-status/${id}`);
       fetchSummary();
       fetchSales();
     } catch (error) {
@@ -245,3 +245,4 @@ const SalesWorkspace = () => {
 };
 
 export default SalesWorkspace;
+
