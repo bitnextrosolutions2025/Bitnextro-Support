@@ -384,6 +384,148 @@ const SalesWorkspace = () => {
           </table>
         </div>
       </div>
+
+      {/* Manual Entry Modal */}
+      {isManualModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h3 className="text-lg font-bold text-slate-900">
+                {manualForm.id ? 'Edit Manual Entry' : 'Add Manual Entry'}
+              </h3>
+              <button onClick={() => setIsManualModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <XCircle className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveManualEntry} className="p-6 space-y-4">
+              <div className="flex gap-4 p-1 bg-slate-100 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setManualForm({ ...manualForm, entryType: 'sale' })}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${manualForm.entryType === 'sale' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600'}`}
+                >
+                  Sale
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManualForm({ ...manualForm, entryType: 'purchase' })}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${manualForm.entryType === 'purchase' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600'}`}
+                >
+                  Purchase
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={manualForm.invoiceDate}
+                    onChange={(e) => setManualForm({ ...manualForm, invoiceDate: e.target.value })}
+                    className="w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Invoice Number</label>
+                  <input
+                    type="text"
+                    placeholder="Optional (e.g. INV-100)"
+                    value={manualForm.invoiceNumber}
+                    onChange={(e) => setManualForm({ ...manualForm, invoiceNumber: e.target.value })}
+                    className="w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {manualForm.entryType === 'purchase' ? 'Supplier Name' : 'Customer Name'}
+                </label>
+                <input
+                  type="text"
+                  placeholder="Optional"
+                  value={manualForm.customerName}
+                  onChange={(e) => setManualForm({ ...manualForm, customerName: e.target.value })}
+                  className="w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {manualForm.entryType === 'sale' ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Sales Amount (₹) *</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        required
+                        value={manualForm.salesAmount}
+                        onChange={(e) => setManualForm({ ...manualForm, salesAmount: e.target.value })}
+                        className="w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Amount Received (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        max={manualForm.salesAmount || ""}
+                        value={manualForm.amountReceived}
+                        onChange={(e) => setManualForm({ ...manualForm, amountReceived: e.target.value })}
+                        className="w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Purchase Amount (₹) *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      required
+                      value={manualForm.purchaseAmount}
+                      onChange={(e) => setManualForm({ ...manualForm, purchaseAmount: e.target.value })}
+                      className="w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                <textarea
+                  rows="2"
+                  value={manualForm.notes}
+                  onChange={(e) => setManualForm({ ...manualForm, notes: e.target.value })}
+                  className="w-full rounded-md border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                ></textarea>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsManualModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+                >
+                  Save Entry
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
