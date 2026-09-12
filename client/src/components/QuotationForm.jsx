@@ -745,7 +745,26 @@ export default function QuotationForm({ onBack }) {
                 <Plus className="h-4 w-4" /> Add Another Item
               </button>
             </div>
-          </div>
+          
+            {/* Round Off Toggle */}
+            <div className="mt-4 flex justify-end">
+              <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors">
+                <span className="text-xs font-semibold text-slate-700">Round Off Rate:</span>
+                <span className={`text-xs font-bold ${isRoundOff ? 'text-indigo-600' : 'text-slate-400'}`}>
+                  {isRoundOff ? 'ON' : 'OFF'}
+                </span>
+                <div className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={isRoundOff}
+                    onChange={(e) => setIsRoundOff(e.target.checked)}
+                  />
+                  <div className="w-8 h-4.5 bg-slate-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </div>
+              </label>
+            </div>
+</div>
 
           {/* SECTION 5: Amount Summary & Tax */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
