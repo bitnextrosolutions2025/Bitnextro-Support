@@ -111,9 +111,21 @@ router.get('/all', async (req, res) => {
       query.yearMonth = month;
     }
     
+    
+    const type = req.query.type || 'All';
+    
+    if (type === 'Sales') {
+      query.entryType = { $ne: 'purchase' };
+    } else if (type === 'Purchases') {
+      query.entryType = 'purchase';
+    } else {
+      if (status && status !== 'All') {
+        query.entryType = { $ne: 'purchase' };
+      }
+    }
+
     if (status && status !== 'All') {
       query.paymentStatus = status;
-      query.entryType = { $ne: 'purchase' }; // Purchases do not have an invoice payment status
     }
     
     if (search) {

@@ -21,6 +21,7 @@ const SalesWorkspace = () => {
   });
   
   const [statusFilter, setStatusFilter] = useState('All');
+  const [typeFilter, setTypeFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   
   const [loading, setLoading] = useState(false);
@@ -123,7 +124,7 @@ const SalesWorkspace = () => {
   const fetchSales = async () => {
     setLoading(true);
     try {
-      let url = `${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/all?month=${currentMonth}&status=${statusFilter}`;
+      let url = `${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/all?month=${currentMonth}&status=${statusFilter}&type=${typeFilter}`;
       if (searchTerm) {
         url += `&search=${encodeURIComponent(searchTerm)}`;
       }
@@ -139,7 +140,7 @@ const SalesWorkspace = () => {
   useEffect(() => {
     fetchSummary();
     fetchSales();
-  }, [currentMonth, statusFilter, searchTerm]);
+  }, [currentMonth, statusFilter, searchTerm, typeFilter]);
 
   const handleUpdatePurchase = async (id) => {
     try {
@@ -229,6 +230,20 @@ const SalesWorkspace = () => {
 
       {/* Filters and Search */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
+        
+        {/* Entry Type Toggle */}
+        <div className="flex bg-slate-100/80 p-1 rounded-lg">
+          {['All', 'Sales', 'Purchases'].map((t) => (
+            <button
+              key={t}
+              onClick={() => { setTypeFilter(t); if(t === 'Purchases') setStatusFilter('All'); }}
+              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${typeFilter === t ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
@@ -239,7 +254,7 @@ const SalesWorkspace = () => {
             className="pl-9 w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
           />
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className={`flex gap-2 w-full sm:w-auto ${typeFilter === 'Purchases' ? 'opacity-50 pointer-events-none' : ''}`}>
           {['All', 'Unpaid', 'Partially Paid', 'Paid'].map((status) => (
             <button
               key={status}
