@@ -27,11 +27,11 @@ const SaleSchema = new mongoose.Schema({
 });
 
 // Pre-save middleware to calculate profit
-SaleSchema.pre('save', function(next) {
+SaleSchema.pre('save', function() {
   if (this.isModified('salesAmount') || this.isModified('purchaseAmount')) {
     this.profit = parseFloat((this.salesAmount - this.purchaseAmount).toFixed(2));
   }
-  next();
 });
 
 export default mongoose.model('Sale', SaleSchema);
+
