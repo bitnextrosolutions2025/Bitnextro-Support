@@ -18,7 +18,9 @@ const SaleSchema = new mongoose.Schema({
   salesAmount: { type: Number, required: true, default: 0 },
   purchaseAmount: { type: Number, required: true, default: 0 },
   profit: { type: Number, default: 0 },
-  paymentStatus: { type: String, enum: ["Paid", "Unpaid"], default: "Unpaid" },
+  amountReceived: { type: Number, default: 0, min: 0 },
+  balanceDue: { type: Number, default: 0 },
+  paymentStatus: { type: String, enum: ["Unpaid", "Partially Paid", "Paid"], default: "Unpaid" },
   source: { type: String, enum: ["billing_auto", "manual"], default: "billing_auto" },
   notes: { type: String, default: "" }
 }, {
@@ -34,4 +36,5 @@ SaleSchema.pre('save', function() {
 });
 
 export default mongoose.model('Sale', SaleSchema);
+
 

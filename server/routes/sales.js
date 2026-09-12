@@ -59,7 +59,10 @@ router.post('/record-sale', async (req, res) => {
             customerGstNumber: customerGstNumber || "",
             items: items || [],
             salesAmount: salesAmount || 0,
-            profit
+            profit,
+            // Payment tracking logic
+            balanceDue: Math.max(0, (salesAmount || 0) - (existingSale.amountReceived || 0)),
+            paymentStatus: (existingSale.amountReceived || 0) === 0 ? "Unpaid" : (existingSale.amountReceived || 0) >= (salesAmount || 0) ? "Paid" : "Partially Paid"
           }
         },
         { new: true }
@@ -81,6 +84,8 @@ router.post('/record-sale', async (req, res) => {
         salesAmount: salesAmount || 0,
         purchaseAmount,
         profit,
+        amountReceived: 0,
+        balanceDue: salesAmount || 0,
         paymentStatus: "Unpaid",
         source: "billing_auto",
         notes: ""
@@ -153,8 +158,11 @@ router.get('/monthly-summary', async (req, res) => {
     let totalSales = 0;
     let totalPurchases = 0;
     let totalProfit = 0;
-    let totalPaidAmount = 0;
-    let totalUnpaidAmount = 0;
+    let totalReceived = 0;
+    let totalOutstanding = 0;
+    let unpaidInvoiceCount = 0;
+    let partiallyPaidInvoiceCount = 0;
+    let paidInvoiceCount = 0;
     
     sales.forEach(sale => {
       totalSales += sale.salesAmount;
@@ -162,10 +170,15 @@ router.get('/monthly-summary', async (req, res) => {
       const profit = sale.salesAmount - sale.purchaseAmount;
       totalProfit += profit;
       
+      totalReceived += (sale.amountReceived || 0);
+      totalOutstanding += (sale.balanceDue || 0);
+      
       if (sale.paymentStatus === 'Paid') {
-        totalPaidAmount += sale.salesAmount;
+        paidInvoiceCount++;
+      } else if (sale.paymentStatus === 'Partially Paid') {
+        partiallyPaidInvoiceCount++;
       } else {
-        totalUnpaidAmount += sale.salesAmount;
+        unpaidInvoiceCount++;
       }
     });
     
@@ -173,12 +186,56 @@ router.get('/monthly-summary', async (req, res) => {
       totalSales: parseFloat(totalSales.toFixed(2)),
       totalPurchases: parseFloat(totalPurchases.toFixed(2)),
       totalProfit: parseFloat(totalProfit.toFixed(2)),
-      totalPaidAmount: parseFloat(totalPaidAmount.toFixed(2)),
-      totalUnpaidAmount: parseFloat(totalUnpaidAmount.toFixed(2)),
+      totalReceived: parseFloat(totalReceived.toFixed(2)),
+      totalOutstanding: parseFloat(totalOutstanding.toFixed(2)),
+      unpaidInvoiceCount,
+      partiallyPaidInvoiceCount,
+      paidInvoiceCount,
       invoiceCount: sales.length
     });
   } catch (error) {
     console.error("Error fetching monthly summary:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// PATCH /update-payment/:id
+router.patch('/update-payment/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    let { amountReceived } = req.body;
+    
+    const sale = await Sale.findById(id);
+    if (!sale) {
+      return res.status(404).json({ error: "Sale not found" });
+    }
+    
+    if (amountReceived === undefined || amountReceived === null || isNaN(amountReceived) || amountReceived < 0) {
+       return res.status(400).json({ error: "Invalid amountReceived" });
+    }
+    
+    amountReceived = parseFloat(parseFloat(amountReceived).toFixed(2));
+    if (amountReceived > sale.salesAmount) {
+      amountReceived = sale.salesAmount;
+    }
+    
+    sale.amountReceived = amountReceived;
+    sale.balanceDue = parseFloat(Math.max(0, sale.salesAmount - amountReceived).toFixed(2));
+    
+    if (amountReceived === 0) {
+      sale.paymentStatus = "Unpaid";
+    } else if (amountReceived >= sale.salesAmount) {
+      sale.paymentStatus = "Paid";
+    } else {
+      sale.paymentStatus = "Partially Paid";
+    }
+    
+    await sale.save();
+    
+    res.status(200).json({ message: "Payment updated successfully", sale });
+  } catch (error) {
+    console.error("Error updating payment:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

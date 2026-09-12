@@ -8,8 +8,11 @@ const SalesWorkspace = () => {
     totalSales: 0,
     totalPurchases: 0,
     totalProfit: 0,
-    totalPaidAmount: 0,
-    totalUnpaidAmount: 0,
+    totalReceived: 0,
+      totalOutstanding: 0,
+      unpaidInvoiceCount: 0,
+      partiallyPaidInvoiceCount: 0,
+      paidInvoiceCount: 0,
     invoiceCount: 0
   });
   
@@ -23,6 +26,8 @@ const SalesWorkspace = () => {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editPurchaseAmount, setEditPurchaseAmount] = useState('');
+  const [editingPaymentId, setEditingPaymentId] = useState(null);
+  const [editAmountReceived, setEditAmountReceived] = useState('');
 
   const fetchSummary = async () => {
     try {
@@ -67,15 +72,20 @@ const SalesWorkspace = () => {
     }
   };
 
-  const handleToggleStatus = async (id) => {
+  
+  const handleUpdatePayment = async (id) => {
     try {
-      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/toggle-status/${id}`);
+      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/update-payment/${id}`, {
+        amountReceived: Number(editAmountReceived)
+      });
+      setEditingPaymentId(null);
       fetchSummary();
       fetchSales();
     } catch (error) {
-      console.error('Error toggling status:', error);
+      console.error('Error updating payment:', error);
     }
   };
+
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -114,13 +124,18 @@ const SalesWorkspace = () => {
           <p className="text-2xl font-bold text-green-600">₹{summary.totalProfit.toLocaleString('en-IN')}</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500 mb-1">Paid Amount</p>
-          <p className="text-2xl font-bold text-emerald-600">₹{summary.totalPaidAmount.toLocaleString('en-IN')}</p>
+          <p className="text-sm font-medium text-slate-500 mb-1">Total Received</p>
+          <p className="text-2xl font-bold text-emerald-600">₹{(summary.totalReceived || 0).toLocaleString('en-IN')}</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <p className="text-sm font-medium text-slate-500 mb-1">Unpaid Amount</p>
-          <p className="text-2xl font-bold text-orange-600">₹{summary.totalUnpaidAmount.toLocaleString('en-IN')}</p>
+          <p className="text-sm font-medium text-slate-500 mb-1">Outstanding</p>
+          <p className="text-2xl font-bold text-orange-600">₹{(summary.totalOutstanding || 0).toLocaleString('en-IN')}</p>
         </div>
+      </div>
+      <div className="flex gap-4 text-sm font-medium text-slate-600 mb-4 px-1 mt-2">
+        <span>Paid Invoices: <span className="text-emerald-600">{summary.paidInvoiceCount || 0}</span></span>
+        <span>Partially Paid: <span className="text-indigo-600">{summary.partiallyPaidInvoiceCount || 0}</span></span>
+        <span>Unpaid: <span className="text-orange-600">{summary.unpaidInvoiceCount || 0}</span></span>
       </div>
 
       {/* Filters and Search */}
@@ -136,7 +151,7 @@ const SalesWorkspace = () => {
           />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          {['All', 'Paid', 'Unpaid'].map((status) => (
+          {['All', 'Unpaid', 'Partially Paid', 'Paid'].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -164,6 +179,8 @@ const SalesWorkspace = () => {
                 <th className="px-6 py-4 font-semibold text-right">Sales Amount</th>
                 <th className="px-6 py-4 font-semibold text-right">Purchase Amount</th>
                 <th className="px-6 py-4 font-semibold text-right">Profit</th>
+                <th className="px-6 py-4 font-semibold text-right">Amount Received</th>
+                <th className="px-6 py-4 font-semibold text-right">Balance Due</th>
                 <th className="px-6 py-4 font-semibold text-center">Status</th>
                 <th className="px-6 py-4 font-semibold text-center">Actions</th>
               </tr>
@@ -171,11 +188,11 @@ const SalesWorkspace = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-slate-500">Loading sales records...</td>
+                  <td colSpan="10" className="px-6 py-8 text-center text-slate-500">Loading sales records...</td>
                 </tr>
               ) : sales.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-8 text-center text-slate-500">No records found for this period.</td>
+                  <td colSpan="10" className="px-6 py-8 text-center text-slate-500">No records found for this period.</td>
                 </tr>
               ) : (
                 sales.map((sale) => (
@@ -216,19 +233,55 @@ const SalesWorkspace = () => {
                         </div>
                       )}
                     </td>
+                    
                     <td className="px-6 py-4 text-right font-medium text-green-600">₹{sale.profit.toLocaleString('en-IN')}</td>
+                    <td className="px-6 py-4 text-right">
+                      {editingPaymentId === sale._id ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <input
+                            type="number"
+                            value={editAmountReceived}
+                            onChange={(e) => setEditAmountReceived(e.target.value)}
+                            className="w-24 text-right p-1 text-sm border rounded"
+                            autoFocus
+                          />
+                          <button onClick={() => handleUpdatePayment(sale._id)} className="text-green-600 hover:text-green-700">
+                            <CheckCircle className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => setEditingPaymentId(null)} className="text-red-500 hover:text-red-600">
+                            <XCircle className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-2 text-slate-600">
+                          ₹{(sale.amountReceived || 0).toLocaleString('en-IN')}
+                          <button
+                            onClick={() => {
+                              setEditingPaymentId(sale._id);
+                              setEditAmountReceived(sale.amountReceived || 0);
+                            }}
+                            className="text-slate-400 hover:text-indigo-600 transition-colors"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right text-slate-600 font-medium">₹{(sale.balanceDue || 0).toLocaleString('en-IN')}</td>
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => handleToggleStatus(sale._id)}
+                      <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                           sale.paymentStatus === 'Paid'
-                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                            : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : sale.paymentStatus === 'Partially Paid'
+                            ? 'bg-indigo-100 text-indigo-800'
+                            : 'bg-orange-100 text-orange-800'
                         }`}
                       >
                         {sale.paymentStatus}
-                      </button>
+                      </span>
                     </td>
+
                     <td className="px-6 py-4 text-center">
                       {/* Placeholder for future actions like delete or view */}
                       <span className="text-slate-300 text-xs">-</span>
