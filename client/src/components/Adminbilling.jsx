@@ -220,7 +220,7 @@ export default function Adminbilling() {
       const salesPayload = {
         invoiceNumber: payload.invoiceNumber,
         invoiceType: payload.invoiceType,
-        invoiceDate: payload.date,
+        invoiceDate: payload.date || new Date().toLocaleDateString("en-GB"),
         customerName: payload.user,
         customerEmail: payload.email,
         customerGstNumber: payload.gstno,
