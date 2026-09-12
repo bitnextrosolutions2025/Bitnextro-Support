@@ -1066,13 +1066,13 @@ export default function QuotationForm({ onBack }) {
                 <p className="text-xs font-bold text-slate-800">
                   For BITNEXTRO SOLUTIONS PVT. LTD.
                 </p>
-                <div className="flex items-center justify-end gap-3 my-2">
+                <div className="flex items-center justify-end gap-3 mt-2 mb-0">
                   <img
                     src={authStamp}
                     alt="Bitnextro Official Stamp"
                     className="w-20 h-20 object-contain opacity-90"
                   />
-                  <div className="w-32 h-16 flex items-center justify-center">
+                  <div className="w-32 h-16 flex items-end justify-center pb-1">
                     {/* Dedicated Signature Space - ready for signature image when provided */}
                     {authSignature ? (
                       <img
@@ -1254,4 +1254,6 @@ export default function QuotationForm({ onBack }) {
     </div>
   );
 }
+
+
 

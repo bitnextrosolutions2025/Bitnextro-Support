@@ -257,9 +257,9 @@ const generateHTML = (data) => {
                 </div>
                 <div class="w-1/3 p-2 flex flex-col items-end justify-between text-[11px]">
                     <p class="font-bold text-gray-600">For ${companyName.toUpperCase()}</p>
-                    <div class="flex items-center justify-end gap-2 my-1">
+                    <div class="flex items-center justify-end gap-2 mt-1 mb-0">
                         ${data.isStampApplied !== false ? `<img src="${authStamp}" alt="Stamp" class="w-16 h-16 object-contain opacity-90">` : ''}
-                        <div class="w-24 h-16 flex items-center justify-center">
+                        <div class="w-24 h-16 flex items-end justify-center pb-1">
                             ${authSignature ? `<img src="${authSignature}" alt="Signature" class="max-h-14 max-w-full object-contain">` : '<div class="w-24 h-16"></div>'}
                         </div>
                     </div>
@@ -365,3 +365,5 @@ billingRoute.post("/billing-work", async (req, res) => {
 });
 
 export default billingRoute;
+
+
