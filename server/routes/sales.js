@@ -173,12 +173,14 @@ router.get('/monthly-summary', async (req, res) => {
       totalReceived += (sale.amountReceived || 0);
       totalOutstanding += (sale.balanceDue || 0);
       
-      if (sale.paymentStatus === 'Paid') {
-        paidInvoiceCount++;
-      } else if (sale.paymentStatus === 'Partially Paid') {
-        partiallyPaidInvoiceCount++;
-      } else {
-        unpaidInvoiceCount++;
+      if (sale.entryType !== 'purchase') {
+        if (sale.paymentStatus === 'Paid') {
+          paidInvoiceCount++;
+        } else if (sale.paymentStatus === 'Partially Paid') {
+          partiallyPaidInvoiceCount++;
+        } else {
+          unpaidInvoiceCount++;
+        }
       }
     });
     
@@ -302,6 +304,152 @@ router.delete('/delete/:id', async (req, res) => {
     res.status(200).json({ message: "Sale deleted successfully" });
   } catch (error) {
     console.error("Error deleting sale:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+// POST /manual-entry
+router.post('/manual-entry', async (req, res) => {
+  try {
+    const { entryType, invoiceDate, customerName, salesAmount, amountReceived, purchaseAmount, notes } = req.body;
+    let { invoiceNumber } = req.body;
+
+    if (!invoiceDate) {
+      return res.status(400).json({ error: "Date is required" });
+    }
+
+    if (!invoiceNumber || !invoiceNumber.trim()) {
+      invoiceNumber = `MANUAL-${Date.now()}`;
+    }
+
+    if (entryType === 'purchase' && (purchaseAmount === undefined || purchaseAmount === null || purchaseAmount === '')) {
+      return res.status(400).json({ error: "Purchase Amount is required" });
+    }
+    if (entryType === 'sale' && (salesAmount === undefined || salesAmount === null || salesAmount === '')) {
+      return res.status(400).json({ error: "Sales Amount is required" });
+    }
+    let yearMonth = invoiceDate.substring(0, 7);
+    
+    let saleData = {
+      invoiceNumber,
+      invoiceType: "tax",
+      invoiceDate,
+      yearMonth,
+      customerName,
+      customerEmail: "",
+      customerGstNumber: "",
+      items: [],
+      source: "manual",
+      notes: notes || "",
+      entryType
+    };
+
+    if (entryType === "purchase") {
+      const pAmount = parseFloat(purchaseAmount) || 0;
+      saleData.salesAmount = 0;
+      saleData.purchaseAmount = pAmount;
+      saleData.profit = -pAmount;
+      saleData.amountReceived = 0;
+      saleData.balanceDue = 0;
+      saleData.paymentStatus = "Paid"; // Doesn't matter, but kept clean for DB
+    } else {
+      const sAmount = parseFloat(salesAmount) || 0;
+      const rAmount = parseFloat(amountReceived) || 0;
+      
+      saleData.salesAmount = sAmount;
+      saleData.purchaseAmount = 0;
+      saleData.profit = sAmount;
+      saleData.amountReceived = rAmount;
+      saleData.balanceDue = Math.max(0, sAmount - rAmount);
+      
+      if (rAmount === 0) saleData.paymentStatus = "Unpaid";
+      else if (rAmount >= sAmount) saleData.paymentStatus = "Paid";
+      else saleData.paymentStatus = "Partially Paid";
+    }
+
+    const newSale = new Sale(saleData);
+    await newSale.save();
+    
+    res.status(201).json({ message: "Manual entry created successfully", sale: newSale });
+  } catch (error) {
+    console.error("Error creating manual entry:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PUT /manual-entry/:id
+router.put('/manual-entry/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { entryType, invoiceDate, customerName, salesAmount, amountReceived, purchaseAmount, notes } = req.body;
+    let { invoiceNumber } = req.body;
+
+    const sale = await Sale.findById(id);
+    if (!sale || sale.source !== "manual") {
+      return res.status(404).json({ error: "Manual entry not found or restricted" });
+    }
+
+    if (!invoiceDate) {
+      return res.status(400).json({ error: "Date is required" });
+    }
+
+    if (!invoiceNumber || !invoiceNumber.trim()) {
+      invoiceNumber = sale.invoiceNumber.startsWith('MANUAL-') ? sale.invoiceNumber : `MANUAL-${Date.now()}`;
+    }
+
+    sale.invoiceNumber = invoiceNumber;
+    sale.invoiceDate = invoiceDate;
+    sale.yearMonth = invoiceDate.substring(0, 7);
+    sale.customerName = customerName;
+    sale.notes = notes || "";
+
+    // We do not allow changing entryType of an existing record for safety, but if requested we can.
+    // Assuming entryType is fixed or we can change it:
+    sale.entryType = entryType;
+
+    if (entryType === "purchase") {
+      const pAmount = parseFloat(purchaseAmount) || 0;
+      sale.salesAmount = 0;
+      sale.purchaseAmount = pAmount;
+      sale.profit = -pAmount;
+      sale.amountReceived = 0;
+      sale.balanceDue = 0;
+      sale.paymentStatus = "Paid";
+    } else {
+      const sAmount = parseFloat(salesAmount) || 0;
+      const rAmount = parseFloat(amountReceived) || 0;
+      sale.salesAmount = sAmount;
+      sale.purchaseAmount = 0;
+      sale.profit = sAmount;
+      sale.amountReceived = rAmount;
+      sale.balanceDue = Math.max(0, sAmount - rAmount);
+      if (rAmount === 0) sale.paymentStatus = "Unpaid";
+      else if (rAmount >= sAmount) sale.paymentStatus = "Paid";
+      else sale.paymentStatus = "Partially Paid";
+    }
+
+    await sale.save();
+    res.status(200).json({ message: "Manual entry updated successfully", sale });
+  } catch (error) {
+    console.error("Error updating manual entry:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// DELETE /manual-entry/:id
+router.delete('/manual-entry/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sale = await Sale.findById(id);
+    if (!sale || sale.source !== "manual") {
+      return res.status(403).json({ error: "Only manual records can be deleted via this endpoint" });
+    }
+    await Sale.findByIdAndDelete(id);
+    res.status(200).json({ message: "Manual entry deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting manual entry:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

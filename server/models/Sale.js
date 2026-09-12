@@ -5,7 +5,7 @@ const SaleSchema = new mongoose.Schema({
   invoiceType: { type: String, enum: ["tax", "cash"], default: "tax" },
   invoiceDate: { type: String, required: true, index: true },
   yearMonth: { type: String, required: true, index: true },
-  customerName: { type: String, required: true, index: true },
+  customerName: { type: String, default: "", index: true },
   customerEmail: { type: String, default: "" },
   customerGstNumber: { type: String, default: "" },
   items: [{
@@ -21,6 +21,7 @@ const SaleSchema = new mongoose.Schema({
   amountReceived: { type: Number, default: 0, min: 0 },
   balanceDue: { type: Number, default: 0 },
   paymentStatus: { type: String, enum: ["Unpaid", "Partially Paid", "Paid"], default: "Unpaid" },
+  entryType: { type: String, enum: ["sale", "purchase"], default: "sale" },
   source: { type: String, enum: ["billing_auto", "manual"], default: "billing_auto" },
   notes: { type: String, default: "" }
 }, {

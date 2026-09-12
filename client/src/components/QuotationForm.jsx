@@ -55,7 +55,8 @@ export default function QuotationForm({ onBack }) {
   ]);
 
   // Tax Option (matches 18% standard GST convention in Bitnextro)
-  const [taxType, setTaxType] = useState('cgst_sgst'); // 'cgst_sgst' (9%+9%) or 'igst' (18%)
+  const [taxType, setTaxType] = useState('cgst_sgst');
+  const [isRoundOff, setIsRoundOff] = useState(false); // 'cgst_sgst' (9%+9%) or 'igst' (18%)
 
   // Database / State Management
   const [quotationsList, setQuotationsList] = useState([]);
@@ -120,9 +121,15 @@ export default function QuotationForm({ onBack }) {
   };
 
   // Calculations
+  const getEffectiveRate = (rawRate) => {
+    const num = parseFloat(rawRate);
+    if (isNaN(num)) return 0;
+    return isRoundOff ? Math.floor(num) : num;
+  };
+
   const totalTaxable = items.reduce((sum, item) => {
     const qty = parseFloat(item.quantity) || 0;
-    const rate = parseFloat(item.rate) || 0;
+    const rate = getEffectiveRate(item.rate);
     return sum + qty * rate;
   }, 0);
 
@@ -183,7 +190,8 @@ export default function QuotationForm({ onBack }) {
           qty: Math.max(1, parseFloat(item.quantity) || 1),
           rate: Math.max(0, parseFloat(item.rate) || 0)
         })),
-        taxType
+        taxType,
+        isRoundOff
       };
 
       const res = await fetch(endpoint, {
@@ -205,6 +213,7 @@ export default function QuotationForm({ onBack }) {
           setQuotationDetails({ invoiceNumber: '', invoiceDate: '', validUntil: '' });
           setCustomer({ name: '', address: '', email: '', gstNo: '' });
           setItems([{ id: Date.now(), name: '', hsn: '', quantity: '', rate: '' }]);
+          setIsRoundOff(false);
         }
         // Refresh saved quotations list from MongoDB
         fetchQuotations();
@@ -245,6 +254,7 @@ export default function QuotationForm({ onBack }) {
       );
     }
     setTaxType(quote.taxType || 'cgst_sgst');
+    setIsRoundOff(Boolean(quote.isRoundOff));
     setViewMode('edit');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     handleSuccess(`Loaded quotation ${quote.invoiceNumber} into form.`);
@@ -275,6 +285,7 @@ export default function QuotationForm({ onBack }) {
       );
     }
     setTaxType(quote.taxType || 'cgst_sgst');
+    setIsRoundOff(Boolean(quote.isRoundOff));
     setViewMode('preview');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -285,6 +296,7 @@ export default function QuotationForm({ onBack }) {
     setQuotationDetails({ invoiceNumber: '', invoiceDate: '', validUntil: '' });
     setCustomer({ name: '', address: '', email: '', gstNo: '' });
     setItems([{ id: Date.now(), name: '', hsn: '', quantity: '', rate: '' }]);
+          setIsRoundOff(false);
   };
 
   // Delete quotation from MongoDB
@@ -694,8 +706,13 @@ export default function QuotationForm({ onBack }) {
                         placeholder="0.00"
                         value={item.rate}
                         onChange={(e) => handleItemChange(item.id, 'rate', e.target.value)}
-                        className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                      />
+                          className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        />
+                        {isRoundOff && item.rate !== '' && (
+                          <p className="text-[11px] text-indigo-600 font-semibold mt-1">
+                            Effective: ₹{getEffectiveRate(item.rate)}
+                          </p>
+                        )}
                     </div>
 
                     <div className="col-span-1 w-full text-left sm:text-right font-semibold text-slate-800 text-sm">
@@ -995,7 +1012,7 @@ export default function QuotationForm({ onBack }) {
                         <td className="py-3 px-3 font-medium text-slate-900">{item.name || ''}</td>
                         <td className="py-3 px-3 text-center text-slate-500">{item.hsn || ''}</td>
                         <td className="py-3 px-3 text-center text-slate-800">{item.quantity || ''}</td>
-                        <td className="py-3 px-3 text-right text-slate-800">{item.rate ? `₹${rate.toFixed(2)}` : ''}</td>
+                        <td className="py-3 px-3 text-right text-slate-800">{item.rate ? `₹${(getEffectiveRate(item.rate)).toFixed(2)}` : ''}</td>
                         <td className="py-3 px-3 text-right font-semibold text-slate-900">
                           {itemTaxable > 0 ? `₹${itemTaxable.toFixed(2)}` : ''}
                         </td>

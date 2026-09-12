@@ -96,8 +96,9 @@ quotationRoute.post('/create-quotation', async (req, res) => {
       customerGstNumber,
       customerGstNo,
       items,
-      taxType
-    } = req.body;
+      taxType,
+        isRoundOff
+      } = req.body;
 
     if (!invoiceNumber || !invoiceNumber.trim()) {
       return res.status(400).json({
@@ -216,8 +217,9 @@ quotationRoute.put('/update-quotation/:id', async (req, res) => {
       customerGstNumber,
       customerGstNo,
       items,
-      taxType
-    } = req.body;
+      taxType,
+        isRoundOff
+      } = req.body;
 
     if (!invoiceNumber || !invoiceNumber.trim()) {
       return res.status(400).json({

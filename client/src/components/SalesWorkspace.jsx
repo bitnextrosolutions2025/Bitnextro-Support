@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, DollarSign, Search, Edit2, CheckCircle, XCircle } from 'lucide-react';
+import {  TrendingUp, DollarSign, Search, Edit2, CheckCircle, XCircle , Plus, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 const SalesWorkspace = () => {
@@ -28,6 +28,88 @@ const SalesWorkspace = () => {
   const [editPurchaseAmount, setEditPurchaseAmount] = useState('');
   const [editingPaymentId, setEditingPaymentId] = useState(null);
   const [editAmountReceived, setEditAmountReceived] = useState('');
+
+  
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [manualForm, setManualForm] = useState({
+    id: null,
+    entryType: 'sale',
+    invoiceDate: new Date().toISOString().substring(0, 10),
+    customerName: '',
+    invoiceNumber: '',
+    salesAmount: '',
+    amountReceived: '',
+    purchaseAmount: '',
+    notes: ''
+  });
+
+  const handleOpenManualModal = (sale = null) => {
+    if (sale) {
+      setManualForm({
+        id: sale._id,
+        entryType: sale.entryType || 'sale',
+        invoiceDate: sale.invoiceDate || new Date().toISOString().substring(0, 10),
+        customerName: sale.customerName || '',
+        invoiceNumber: sale.invoiceNumber.startsWith('MANUAL-') ? '' : sale.invoiceNumber,
+        salesAmount: sale.salesAmount || '',
+        amountReceived: sale.amountReceived || '',
+        purchaseAmount: sale.purchaseAmount || '',
+        notes: sale.notes || ''
+      });
+    } else {
+      setManualForm({
+        id: null,
+        entryType: 'sale',
+        invoiceDate: new Date().toISOString().substring(0, 10),
+        customerName: '',
+        invoiceNumber: '',
+        salesAmount: '',
+        amountReceived: '',
+        purchaseAmount: '',
+        notes: ''
+      });
+    }
+    setIsManualModalOpen(true);
+  };
+
+  const handleSaveManualEntry = async (e) => {
+    e.preventDefault();
+    try {
+      if (manualForm.id) {
+        await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/manual-entry/${manualForm.id}`, manualForm);
+      } else {
+        await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/manual-entry`, manualForm);
+      }
+      setIsManualModalOpen(false);
+      fetchSummary();
+      fetchSales();
+    } catch (error) {
+      console.error('Error saving manual entry:', error);
+      alert('Failed to save manual entry.');
+    }
+  };
+
+  const handleDeleteManualEntry = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this manual entry?")) return;
+    try {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/manual-entry/${id}`);
+      fetchSummary();
+      fetchSales();
+    } catch (error) {
+      console.error('Error deleting manual entry:', error);
+      alert('Failed to delete manual entry.');
+    }
+  };
+
+  const renderBadge = (sale) => {
+    if (sale.entryType === 'purchase') {
+      return <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap">Manual Purchase</span>;
+    }
+    if (sale.source === 'manual') {
+      return <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap">Manual Sale</span>;
+    }
+    return <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap">Billing</span>;
+  };
 
   const fetchSummary = async () => {
     try {
@@ -99,6 +181,13 @@ const SalesWorkspace = () => {
         </div>
         
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => handleOpenManualModal()}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Manual Entry
+          </button>
           <label className="text-sm font-medium text-slate-700">Month:</label>
           <input
             type="month"
@@ -175,7 +264,7 @@ const SalesWorkspace = () => {
               <tr>
                 <th className="px-6 py-4 font-semibold">Invoice Number</th>
                 <th className="px-6 py-4 font-semibold">Date</th>
-                <th className="px-6 py-4 font-semibold">Customer</th>
+                <th className="px-6 py-4 font-semibold">Customer / Supplier</th>
                 <th className="px-6 py-4 font-semibold text-right">Sales Amount</th>
                 <th className="px-6 py-4 font-semibold text-right">Purchase Amount</th>
                 <th className="px-6 py-4 font-semibold text-right">Profit</th>
@@ -197,7 +286,12 @@ const SalesWorkspace = () => {
               ) : (
                 sales.map((sale) => (
                   <tr key={sale._id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-900">{sale.invoiceNumber}</td>
+                    <td className="px-6 py-4 font-medium text-slate-900">
+                      <div className="flex flex-col gap-1">
+                        <span>{sale.invoiceNumber.startsWith('MANUAL-') ? 'N/A' : sale.invoiceNumber}</span>
+                        {renderBadge(sale)}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-slate-600">{sale.invoiceDate}</td>
                     <td className="px-6 py-4 text-slate-600 truncate max-w-[150px]">{sale.customerName}</td>
                     <td className="px-6 py-4 text-right font-medium text-slate-900">₹{sale.salesAmount.toLocaleString('en-IN')}</td>
@@ -236,7 +330,7 @@ const SalesWorkspace = () => {
                     
                     <td className="px-6 py-4 text-right font-medium text-green-600">₹{sale.profit.toLocaleString('en-IN')}</td>
                     <td className="px-6 py-4 text-right">
-                      {editingPaymentId === sale._id ? (
+                      {sale.entryType === 'purchase' ? '-' : editingPaymentId === sale._id ? (
                         <div className="flex items-center justify-end gap-2">
                           <input
                             type="number"
@@ -269,7 +363,7 @@ const SalesWorkspace = () => {
                     </td>
                     <td className="px-6 py-4 text-right text-slate-600 font-medium">₹{(sale.balanceDue || 0).toLocaleString('en-IN')}</td>
                     <td className="px-6 py-4 text-center">
-                      <span
+                      {sale.entryType === 'purchase' ? '-' : <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                           sale.paymentStatus === 'Paid'
                             ? 'bg-emerald-100 text-emerald-800'
@@ -277,11 +371,8 @@ const SalesWorkspace = () => {
                             ? 'bg-indigo-100 text-indigo-800'
                             : 'bg-orange-100 text-orange-800'
                         }`}
-                      >
-                        {sale.paymentStatus}
-                      </span>
+                      >{sale.paymentStatus}</span>}
                     </td>
-
                     <td className="px-6 py-4 text-center">
                       {/* Placeholder for future actions like delete or view */}
                       <span className="text-slate-300 text-xs">-</span>

@@ -75,6 +75,10 @@ const quotationSchema = new mongoose.Schema({
       message: "Quotation must contain at least one item",
     },
   },
+  isRoundOff: {
+    type: Boolean,
+    default: false,
+  },
   taxType: {
     type: String,
     enum: ["cgst_sgst", "igst"],
