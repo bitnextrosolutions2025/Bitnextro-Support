@@ -82,8 +82,15 @@ const SalesWorkspace = () => {
         await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/manual-entry`, manualForm);
       }
       setIsManualModalOpen(false);
-      fetchSummary();
-      fetchSales();
+      
+      // Auto-navigate to the month of the newly added entry
+      const entryMonth = manualForm.invoiceDate.substring(0, 7);
+      if (entryMonth !== currentMonth) {
+        setCurrentMonth(entryMonth);
+      } else {
+        fetchSummary();
+        fetchSales();
+      }
     } catch (error) {
       console.error('Error saving manual entry:', error);
       alert('Failed to save manual entry.');
