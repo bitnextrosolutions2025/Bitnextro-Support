@@ -233,13 +233,13 @@ const SalesWorkspace = () => {
         
         {/* Entry Type Toggle */}
         <div className="flex bg-slate-100/80 p-1 rounded-lg">
-          {['All', 'Sales', 'Purchases'].map((t) => (
+          {[{label: 'Both', value: 'All'}, {label: 'Sales', value: 'Sales'}, {label: 'Purchases', value: 'Purchases'}].map((t) => (
             <button
-              key={t}
-              onClick={() => { setTypeFilter(t); if(t === 'Purchases') setStatusFilter('All'); }}
-              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${typeFilter === t ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+              key={t.value}
+              onClick={() => { setTypeFilter(t.value); if(t.value === 'Purchases') setStatusFilter('All'); }}
+              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${typeFilter === t.value ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
             >
-              {t}
+              {t.label}
             </button>
           ))}
         </div>
