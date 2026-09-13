@@ -446,8 +446,11 @@ router.put('/manual-entry/:id', async (req, res) => {
     await sale.save();
     res.status(200).json({ message: "Manual entry updated successfully", sale });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ error: "An entry with this Invoice Number already exists." });
+    }
     console.error("Error updating manual entry:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 });
 

@@ -93,7 +93,7 @@ const SalesWorkspace = () => {
       }
     } catch (error) {
       console.error('Error saving manual entry:', error);
-      alert('Failed to save manual entry.');
+      alert(error.response?.data?.error || 'Failed to save manual entry.');
     }
   };
 
