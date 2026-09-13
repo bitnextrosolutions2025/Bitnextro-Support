@@ -107,7 +107,7 @@ router.get('/all', async (req, res) => {
     
     let query = {};
     
-    if (month) {
+    if (month && !search) {
       query.yearMonth = month;
     }
     
