@@ -598,8 +598,8 @@ export default function QuotationForm({ onBack }) {
                 </label>
                 <div className="mt-2">
                   <input
-                    type="email"
-                    placeholder="client@example.com"
+                    type="text"
+                    placeholder="Optional (e.g. client@example.com)"
                     value={customer.email}
                     onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
                     className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
