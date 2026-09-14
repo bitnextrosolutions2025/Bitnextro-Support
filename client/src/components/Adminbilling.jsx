@@ -7,6 +7,7 @@ import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
 import SalesWorkspace from './SalesWorkspace';
+import DailyExpensesWorkspace from './DailyExpensesWorkspace';
 
 export default function Adminbilling() {
   const { user } = useAuth();
