@@ -61,8 +61,12 @@ const calculateQuotationAmounts = (rawItems, taxType = 'cgst_sgst') => {
   let sgst = 0;
   let igst = 0;
 
-  if (isIgst) {
+  if (taxType === 'igst') {
     igst = Math.round(roundedTaxable * 0.18 * 100) / 100;
+  } else if (taxType === 'none') {
+    cgst = 0;
+    sgst = 0;
+    igst = 0;
   } else {
     cgst = Math.round(roundedTaxable * 0.09 * 100) / 100;
     sgst = Math.round(roundedTaxable * 0.09 * 100) / 100;
