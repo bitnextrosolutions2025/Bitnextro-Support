@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2 } from 'lucide-react';
+import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X } from 'lucide-react';
 import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
@@ -68,6 +68,29 @@ export default function Adminbilling() {
     } catch (err) {
       console.error(err);
       alert("Error deleting invoice");
+    }
+  };
+
+  
+  const handleClearForm = () => {
+    if (window.confirm("Are you sure you want to clear the form?")) {
+      setDetails({
+        invoiceNumber: '',
+        supplyPlace: '',
+        email: "",
+        user: "",
+        gstno: "",
+        billingAddress: "",
+        shippingAddress: '',
+        isGstApplied: true,
+        isIGstApplied: false,
+        isStampApplied: true,
+        isPaymentdone: true,
+        isRoundOff: false
+      });
+      setProducts([{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
+      setInvoiceType('tax');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -924,6 +947,14 @@ export default function Adminbilling() {
 
           {/* Submit Actions */}
           <div className="flex flex-wrap items-center justify-end gap-2 pt-4">
+            <button
+              type="button"
+              onClick={handleClearForm}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-slate-100 px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600 transition-colors cursor-pointer mr-auto"
+            >
+              <X className="w-4 h-4" />
+              Clear Form
+            </button>
             <button
               type="submit"
               disabled={isloadOriginal || Isload1}
