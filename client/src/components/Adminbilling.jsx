@@ -439,7 +439,7 @@ export default function Adminbilling() {
           <button
             type="button"
             id="sidebar-customer"
-            onClick={() => setActiveTab(activeTab === 'customer' ? 'invoice' : 'customer')}
+            onClick={() => setActiveTab('customer')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
               activeTab === 'customer'
                 ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
@@ -453,7 +453,7 @@ export default function Adminbilling() {
           <button
             type="button"
             id="sidebar-quotation"
-            onClick={() => setActiveTab(activeTab === 'quotation' ? 'invoice' : 'quotation')}
+            onClick={() => setActiveTab('quotation')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
               activeTab === 'quotation'
                 ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
@@ -467,7 +467,7 @@ export default function Adminbilling() {
           <button
             type="button"
             id="sidebar-proforma"
-            onClick={() => setActiveTab(activeTab === 'proforma' ? 'invoice' : 'proforma')}
+            onClick={() => setActiveTab('proforma')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
               activeTab === 'proforma'
                 ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
@@ -481,7 +481,7 @@ export default function Adminbilling() {
           <button
             type="button"
             id="sidebar-sales"
-            onClick={() => setActiveTab(activeTab === 'sales' ? 'invoice' : 'sales')}
+            onClick={() => setActiveTab('sales')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
               activeTab === 'sales'
                 ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
