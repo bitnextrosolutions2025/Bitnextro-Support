@@ -981,7 +981,7 @@ export default function Adminbilling() {
 
       {/* Saved Invoices Section */}
       {activeTab === 'invoice' && (
-      <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8 space-y-4 mb-10">
+      <div className="max-w-4xl mx-auto bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8 space-y-4 mb-10 mt-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
