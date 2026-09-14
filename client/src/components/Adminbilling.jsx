@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye } from 'lucide-react';
+import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2 } from 'lucide-react';
 import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
@@ -31,7 +31,8 @@ export default function Adminbilling() {
       const data = await res.json();
       if (data && Array.isArray(data.sales)) {
         // Sort by newest first
-        setSavedInvoices(data.sales.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+        const autoInvoices = data.sales.filter(inv => !inv.source || inv.source === 'billing_auto');
+        setSavedInvoices(autoInvoices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
       } else {
         setInvoiceListError(data.msg || "Could not retrieve saved invoices.");
       }
@@ -48,6 +49,27 @@ export default function Adminbilling() {
       fetchInvoices();
     }
   }, [activeTab]);
+
+  
+  const handleDeleteInvoice = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this invoice? This will also remove it from your Sales ledger.")) return;
+    try {
+      const token = secureLocalStorage.getItem("auth-token") || "";
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/delete/${id}`, {
+        method: "DELETE",
+        headers: { "auth-token": token }
+      });
+      const data = await res.json();
+      if (data.status) {
+        setSavedInvoices(prev => prev.filter(inv => inv._id !== id));
+      } else {
+        alert(data.msg || "Failed to delete invoice");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting invoice");
+    }
+  };
 
   const handleViewInvoice = (inv) => {
     const totalTaxable = (inv.items || []).reduce((acc, curr) => acc + (curr.qty * curr.rate), 0);
@@ -886,7 +908,7 @@ export default function Adminbilling() {
           </div>
 
           {/* Submit Actions */}
-          <div className="flex flex-wrap items-center justify-end gap-4 pt-4">
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-4">
             <button
               type="submit"
               disabled={isloadOriginal || Isload1}
@@ -977,13 +999,24 @@ export default function Adminbilling() {
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap max-w-[150px] truncate">{inv.customerName}</td>
                     <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">₹{inv.salesAmount?.toFixed(2)}</td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <button
-                        onClick={() => handleViewInvoice(inv)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        Load
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleViewInvoice(inv)}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                          title="Edit / Load Invoice"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteInvoice(inv._id)}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                          title="Delete Invoice"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
