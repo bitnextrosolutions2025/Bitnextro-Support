@@ -475,7 +475,7 @@ export default function Adminbilling() {
             }`}
           >
             <Receipt className={`h-4 w-4 shrink-0 ${activeTab === 'proforma' ? 'text-indigo-600' : 'text-slate-400'}`} />
-            <span>Pro Forma Invoice</span>
+            <span>Proforma Invoice</span>
           </button>
 
           <button
@@ -1057,7 +1057,7 @@ export default function Adminbilling() {
       <QuotationForm onBack={() => setActiveTab('invoice')} />
     )}
 
-    {/* Pro Forma Invoice Workspace */}
+    {/* Proforma Invoice Workspace */}
     {activeTab === 'proforma' && (
       <ProformaWorkspace onBack={() => setActiveTab('invoice')} />
     )}

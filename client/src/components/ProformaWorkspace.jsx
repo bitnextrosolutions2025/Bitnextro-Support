@@ -36,7 +36,7 @@ export default function ProformaWorkspace({ onBack }) {
   // Mode toggle: 'edit' or 'preview'
   const [viewMode, setViewMode] = useState('edit');
 
-  // 1. Pro Forma Invoice Details
+  // 1. Proforma Invoice Details
   const [invoiceDetails, setInvoiceDetails] = useState({
     proformaNumber: '',
     invoiceDate: '',
@@ -70,7 +70,7 @@ export default function ProformaWorkspace({ onBack }) {
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-  // Fetch saved Pro Forma Invoices from backend MongoDB
+  // Fetch saved Proforma Invoices from backend MongoDB
   const fetchProformas = async () => {
     setIsLoadingList(true);
     setListError(null);
@@ -86,10 +86,10 @@ export default function ProformaWorkspace({ onBack }) {
       if (data.status && Array.isArray(data.data)) {
         setProformaList(data.data);
       } else {
-        setListError(data.msg || "Could not retrieve saved Pro Forma Invoices.");
+        setListError(data.msg || "Could not retrieve saved Proforma Invoices.");
       }
     } catch (err) {
-      console.error("Error fetching saved Pro Forma Invoices:", err);
+      console.error("Error fetching saved Proforma Invoices:", err);
       setListError("Unable to reach backend server. Please verify backend is running on " + backendUrl);
     } finally {
       setIsLoadingList(false);
@@ -139,7 +139,7 @@ export default function ProformaWorkspace({ onBack }) {
   // Validation
   const validateForm = () => {
     if (!invoiceDetails.proformaNumber.trim()) {
-      handleError("Please enter a Pro Forma Invoice Number.");
+      handleError("Please enter a Proforma Invoice Number.");
       return false;
     }
     if (!customer.customerName.trim()) {
@@ -217,7 +217,7 @@ export default function ProformaWorkspace({ onBack }) {
 
       const result = await res.json();
       if (result.status) {
-        handleSuccess(result.msg || `Pro Forma Invoice ${invoiceDetails.proformaNumber} saved successfully!`);
+        handleSuccess(result.msg || `Proforma Invoice ${invoiceDetails.proformaNumber} saved successfully!`);
         if (isEditing) {
           setEditingId(null);
         } else {
@@ -226,17 +226,17 @@ export default function ProformaWorkspace({ onBack }) {
         // Refresh saved list immediately
         fetchProformas();
       } else {
-        handleError(result.msg || "Failed to save Pro Forma Invoice to database.");
+        handleError(result.msg || "Failed to save Proforma Invoice to database.");
       }
     } catch (err) {
-      console.error("Save Pro Forma error:", err);
+      console.error("Save Proforma error:", err);
       handleError("Network error while communicating with backend API.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Load Pro Forma into form for editing
+  // Load Proforma into form for editing
   const handleEdit = (proforma) => {
     setEditingId(proforma._id);
     setInvoiceDetails({
@@ -265,19 +265,19 @@ export default function ProformaWorkspace({ onBack }) {
     setTaxType(proforma.taxType || 'cgst_sgst');
     setViewMode('edit');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    handleSuccess(`Loaded Pro Forma ${proforma.proformaNumber} into form.`);
+    handleSuccess(`Loaded Proforma ${proforma.proformaNumber} into form.`);
   };
 
-  // Load Pro Forma directly into preview mode
+  // Load Proforma directly into preview mode
   const handlePreviewProforma = (proforma) => {
     handleEdit(proforma);
     setViewMode('preview');
   };
 
-  // Delete Pro Forma from MongoDB
+  // Delete Proforma from MongoDB
   const handleDelete = async (id, pNum) => {
     const confirmDelete = window.confirm(
-      `Are you sure you want to permanently delete Pro Forma Invoice "${pNum || id}"?`
+      `Are you sure you want to permanently delete Proforma Invoice "${pNum || id}"?`
     );
     if (!confirmDelete) return;
 
@@ -293,17 +293,17 @@ export default function ProformaWorkspace({ onBack }) {
       });
       const result = await res.json();
       if (result.status) {
-        handleSuccess(result.msg || "Pro Forma Invoice deleted successfully.");
+        handleSuccess(result.msg || "Proforma Invoice deleted successfully.");
         if (editingId === id) {
           resetForm();
         }
         fetchProformas();
       } else {
-        handleError(result.msg || "Failed to delete Pro Forma Invoice.");
+        handleError(result.msg || "Failed to delete Proforma Invoice.");
       }
     } catch (err) {
       console.error("Delete error:", err);
-      handleError("Network error while deleting Pro Forma Invoice.");
+      handleError("Network error while deleting Proforma Invoice.");
     } finally {
       setDeletingId(null);
     }
@@ -363,7 +363,7 @@ export default function ProformaWorkspace({ onBack }) {
         <div className="no-print bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-amber-800 text-sm font-medium">
             <Edit3 className="w-4 h-4 text-amber-600" />
-            <span>Editing Saved Pro Forma Invoice: <strong>{invoiceDetails.proformaNumber || editingId}</strong></span>
+            <span>Editing Saved Proforma Invoice: <strong>{invoiceDetails.proformaNumber || editingId}</strong></span>
           </div>
           <button
             type="button"
@@ -381,10 +381,10 @@ export default function ProformaWorkspace({ onBack }) {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <FileText className="h-6 w-6 text-indigo-600" />
-            Pro Forma Invoice
+            Proforma Invoice
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Create, manage, and print official Pro Forma Invoices with database storage.
+            Create, manage, and print official Proforma Invoices with database storage.
           </p>
         </div>
 
@@ -433,11 +433,11 @@ export default function ProformaWorkspace({ onBack }) {
       </div>
 
       {/* ========================================================================= */}
-      {/* MODE 1: PRO FORMA INVOICE EDIT FORM */}
+      {/* MODE 1: PROFORMA INVOICE EDIT FORM */}
       {/* ========================================================================= */}
       {viewMode === 'edit' && (
         <form onSubmit={handleSave} className="space-y-6">
-          {/* SECTION 1: Company Header & Pro Forma Invoice Details */}
+          {/* SECTION 1: Company Header & Proforma Invoice Details */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-200">
               <div className="flex items-center gap-3">
@@ -460,17 +460,17 @@ export default function ProformaWorkspace({ onBack }) {
               </div>
             </div>
 
-            {/* Pro Forma Invoice Details */}
+            {/* Proforma Invoice Details */}
             <div className="pt-6">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
                 <Hash className="w-4 h-4 text-indigo-600" />
-                Pro Forma Invoice Details
+                Proforma Invoice Details
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium leading-6 text-slate-900">
-                    Pro Forma Invoice Number <span className="text-red-500">*</span>
+                    Proforma Invoice Number <span className="text-red-500">*</span>
                   </label>
                   <div className="mt-2">
                     <input
@@ -849,7 +849,7 @@ export default function ProformaWorkspace({ onBack }) {
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  {editingId ? "Update Pro Forma Invoice" : "Save Pro Forma Invoice"}
+                  {editingId ? "Update Proforma Invoice" : "Save Proforma Invoice"}
                 </>
               )}
             </button>
@@ -858,7 +858,7 @@ export default function ProformaWorkspace({ onBack }) {
       )}
 
       {/* ========================================================================= */}
-      {/* MODE 2: OFFICIAL PRO FORMA INVOICE DOCUMENT VIEW & PRINT */}
+      {/* MODE 2: OFFICIAL PROFORMA INVOICE DOCUMENT VIEW & PRINT */}
       {/* ========================================================================= */}
       {viewMode === 'preview' && (
         <div className="space-y-6">
@@ -903,7 +903,7 @@ export default function ProformaWorkspace({ onBack }) {
                 ) : (
                   <>
                     <Save className="w-3.5 h-3.5" />
-                    {editingId ? "Update Pro Forma" : "Save Pro Forma"}
+                    {editingId ? "Update Proforma" : "Save Proforma"}
                   </>
                 )}
               </button>
@@ -947,12 +947,12 @@ export default function ProformaWorkspace({ onBack }) {
             <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50 border border-slate-200 rounded-lg p-4 gap-4">
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
-                  PRO FORMA INVOICE
+                  PROFORMA INVOICE
                 </h2>
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
                 <div>
-                  <span className="text-slate-400 font-medium">Pro Forma No:</span>
+                  <span className="text-slate-400 font-medium">Proforma No:</span>
                   <p className="font-bold text-slate-800">{invoiceDetails.proformaNumber || '-'}</p>
                 </div>
                 <div>
@@ -1090,7 +1090,7 @@ export default function ProformaWorkspace({ onBack }) {
             {/* Signature Block */}
             <div className="mt-10 pt-8 flex justify-between items-end border-t border-slate-100">
               <div className="text-xs text-slate-400">
-                <p>This is a computer-generated Pro Forma Invoice.</p>
+                <p>This is a computer-generated Proforma Invoice.</p>
                 <p>Subject to Kolkata Jurisdiction.</p>
               </div>
 
@@ -1127,14 +1127,14 @@ export default function ProformaWorkspace({ onBack }) {
       )}
 
       {/* ========================================================================= */}
-      {/* SECTION: SAVED PRO FORMA INVOICES LIST (MongoDB Retrievable) */}
+      {/* SECTION: SAVED PROFORMA INVOICES LIST (MongoDB Retrievable) */}
       {/* ========================================================================= */}
       <div className="no-print bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
-              Saved Pro Forma Invoices
+              Saved Proforma Invoices
               <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
                 {proformaList.length}
               </span>
@@ -1159,7 +1159,7 @@ export default function ProformaWorkspace({ onBack }) {
         {isLoadingList && (
           <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
             <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            <p className="text-xs">Loading saved Pro Forma Invoices from database...</p>
+            <p className="text-xs">Loading saved Proforma Invoices from database...</p>
           </div>
         )}
 
@@ -1186,20 +1186,20 @@ export default function ProformaWorkspace({ onBack }) {
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
               <FileText className="w-6 h-6" />
             </div>
-            <p className="text-sm font-semibold text-slate-700">No saved Pro Forma Invoices yet</p>
+            <p className="text-sm font-semibold text-slate-700">No saved Proforma Invoices yet</p>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Fill in the form above and click "Save Pro Forma Invoice" to store your first record permanently.
+              Fill in the form above and click "Save Proforma Invoice" to store your first record permanently.
             </p>
           </div>
         )}
 
-        {/* Table of Saved Pro Forma Invoices */}
+        {/* Table of Saved Proforma Invoices */}
         {!isLoadingList && !listError && proformaList.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-                  <th className="py-3 px-3">Pro Forma Number</th>
+                  <th className="py-3 px-3">Proforma Number</th>
                   <th className="py-3 px-3">Customer Name</th>
                   <th className="py-3 px-3">Invoice Date</th>
                   <th className="py-3 px-3 text-right">Taxable Amount</th>
@@ -1245,7 +1245,7 @@ export default function ProformaWorkspace({ onBack }) {
                             type="button"
                             onClick={() => handlePreviewProforma(pi)}
                             className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-indigo-600 px-2 py-1 rounded hover:bg-slate-100 transition-colors cursor-pointer"
-                            title="View / Print Pro Forma"
+                            title="View / Print Proforma"
                           >
                             <Eye className="w-3 h-3" />
                             View
@@ -1254,7 +1254,7 @@ export default function ProformaWorkspace({ onBack }) {
                             type="button"
                             onClick={() => handleEdit(pi)}
                             className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 px-2 py-1 rounded hover:bg-indigo-50 transition-colors cursor-pointer"
-                            title="Edit Pro Forma"
+                            title="Edit Proforma"
                           >
                             <Edit3 className="w-3 h-3" />
                             Edit
@@ -1264,7 +1264,7 @@ export default function ProformaWorkspace({ onBack }) {
                             onClick={() => handleDelete(pi._id, pi.proformaNumber)}
                             disabled={isDeleting}
                             className="inline-flex items-center gap-1 text-[11px] font-medium text-red-600 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
-                            title="Delete Pro Forma"
+                            title="Delete Proforma"
                           >
                             {isDeleting ? (
                               <Loader2 className="w-3 h-3 animate-spin" />
