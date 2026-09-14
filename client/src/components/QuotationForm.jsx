@@ -134,8 +134,9 @@ export default function QuotationForm({ onBack }) {
   }, 0);
 
   const isIgst = taxType === 'igst';
-  const cgst = !isIgst ? totalTaxable * 0.09 : 0;
-  const sgst = !isIgst ? totalTaxable * 0.09 : 0;
+  const isNoGst = taxType === 'none';
+  const cgst = (!isIgst && !isNoGst) ? totalTaxable * 0.09 : 0;
+  const sgst = (!isIgst && !isNoGst) ? totalTaxable * 0.09 : 0;
   const igst = isIgst ? totalTaxable * 0.18 : 0;
   const totalGst = cgst + sgst + igst;
   const grandTotal = totalTaxable + totalGst;
@@ -798,6 +799,17 @@ export default function QuotationForm({ onBack }) {
                 >
                   IGST (18%)
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setTaxType('none')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    taxType === 'none'
+                      ? 'bg-white text-indigo-700 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Without GST
+                </button>
               </div>
             </div>
 
@@ -808,7 +820,8 @@ export default function QuotationForm({ onBack }) {
                 <span className="font-semibold text-slate-900">₹{totalTaxable.toFixed(2)}</span>
               </div>
 
-              {!isIgst ? (
+              {taxType !== 'none' && (
+                !isIgst ? (
                 <>
                   <div className="flex justify-between text-xs text-slate-500">
                     <span>CGST (9%)</span>
@@ -824,12 +837,15 @@ export default function QuotationForm({ onBack }) {
                   <span>IGST (18%)</span>
                   <span>₹{igst.toFixed(2)}</span>
                 </div>
+              )
               )}
 
-              <div className="flex justify-between text-sm text-slate-600 pt-1 border-t border-slate-100">
-                <span>GST Total (18%)</span>
-                <span className="font-semibold text-slate-900">₹{totalGst.toFixed(2)}</span>
-              </div>
+              {taxType !== 'none' && (
+                <div className="flex justify-between text-sm text-slate-600 pt-1 border-t border-slate-100">
+                  <span>GST Total (18%)</span>
+                  <span className="font-semibold text-slate-900">₹{totalGst.toFixed(2)}</span>
+                </div>
+              )}
 
               <div className="flex justify-between text-base font-bold text-slate-900 pt-3 border-t-2 border-slate-900">
                 <span>Total Amount</span>
@@ -1061,7 +1077,8 @@ export default function QuotationForm({ onBack }) {
                   <span className="font-semibold text-slate-900">₹{totalTaxable.toFixed(2)}</span>
                 </div>
 
-                {!isIgst ? (
+                {taxType !== 'none' && (
+                !isIgst ? (
                   <>
                     <div className="flex justify-between text-slate-500">
                       <span>CGST (9%)</span>
@@ -1077,12 +1094,15 @@ export default function QuotationForm({ onBack }) {
                     <span>IGST (18%)</span>
                     <span>₹{igst.toFixed(2)}</span>
                   </div>
-                )}
+                )
+              )}
 
+              {taxType !== 'none' && (
                 <div className="flex justify-between text-slate-600 pt-1 border-t border-slate-100">
                   <span>GST Total (18%)</span>
                   <span className="font-semibold text-slate-900">₹{totalGst.toFixed(2)}</span>
                 </div>
+              )}
 
                 <div className="flex justify-between text-sm font-bold text-slate-900 pt-2 border-t-2 border-slate-900">
                   <span>Total Amount</span>
