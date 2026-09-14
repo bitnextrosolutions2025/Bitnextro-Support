@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye } from 'lucide-react';
 import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
@@ -19,7 +19,65 @@ export default function Adminbilling() {
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const naviget = useNavigate();
+  const [savedInvoices, setSavedInvoices] = useState([]);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
+  const [invoiceListError, setInvoiceListError] = useState(null);
 
+    const fetchInvoices = async () => {
+    setIsLoadingInvoices(true);
+    setInvoiceListError(null);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/all?type=Sales`);
+      const data = await res.json();
+      if (data && Array.isArray(data.sales)) {
+        // Sort by newest first
+        setSavedInvoices(data.sales.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      } else {
+        setInvoiceListError(data.msg || "Could not retrieve saved invoices.");
+      }
+    } catch (err) {
+      console.error(err);
+      setInvoiceListError("Unable to reach backend server.");
+    } finally {
+      setIsLoadingInvoices(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'invoice') {
+      fetchInvoices();
+    }
+  }, [activeTab]);
+
+  const handleViewInvoice = (inv) => {
+    const totalTaxable = (inv.items || []).reduce((acc, curr) => acc + (curr.qty * curr.rate), 0);
+    const hasTax = (inv.salesAmount - totalTaxable) > 1;
+
+    setInvoiceType(inv.invoiceType || (hasTax ? 'tax' : 'cash'));
+    
+    setDetails(prev => ({
+      ...prev,
+      invoiceNumber: inv.invoiceNumber || '',
+      email: inv.customerEmail || '',
+      user: inv.customerName || '',
+      gstno: inv.customerGstNumber || '',
+      isGstApplied: hasTax,
+      isIGstApplied: false,
+      isStampApplied: true,
+      isPaymentdone: inv.paymentStatus === 'Paid',
+    }));
+
+    const mappedProducts = (inv.items || []).map((item, idx) => ({
+      id: Date.now() + idx,
+      name: item.productName || '',
+      hsn: item.hsnNumber || '',
+      rate: item.rate || '',
+      quantity: item.qty || 1
+    }));
+    
+    setProducts(mappedProducts.length > 0 ? mappedProducts : [{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   useEffect(() => {
     const getoken = async () => {
       try {
@@ -852,6 +910,95 @@ export default function Adminbilling() {
       </div>
     )}
 
+
+      {/* Saved Invoices Section */}
+      {activeTab === 'invoice' && (
+      <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8 space-y-4 mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
+              Saved Invoices
+              <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
+                {savedInvoices.length}
+              </span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Click View to load the invoice data back into the form. (Note: Addresses are not saved in ledger).
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={fetchInvoices}
+            disabled={isLoadingInvoices}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingInvoices ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+
+        {isLoadingInvoices && (
+          <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
+            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+            <p className="text-xs">Loading saved invoices...</p>
+          </div>
+        )}
+
+        {invoiceListError && !isLoadingInvoices && (
+          <div className="p-4 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100">
+            {invoiceListError}
+          </div>
+        )}
+
+        {!isLoadingInvoices && !invoiceListError && savedInvoices.length === 0 && (
+          <div className="py-12 text-center text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+            <p className="text-sm">No saved invoices found in the database.</p>
+          </div>
+        )}
+
+        {!isLoadingInvoices && !invoiceListError && savedInvoices.length > 0 && (
+          <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
+            <table className="min-w-full divide-y divide-slate-200 text-sm text-left">
+              <thead className="bg-slate-50 text-slate-600 font-semibold">
+                <tr>
+                  <th className="px-4 py-3 whitespace-nowrap">Invoice #</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Date</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Customer</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Amount</th>
+                  <th className="px-4 py-3 whitespace-nowrap text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 bg-white">
+                {savedInvoices.slice(0, 15).map(inv => (
+                  <tr key={inv._id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">{inv.invoiceNumber}</td>
+                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{inv.invoiceDate || new Date(inv.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-slate-700 whitespace-nowrap max-w-[150px] truncate">{inv.customerName}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">₹{inv.salesAmount?.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => handleViewInvoice(inv)}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        Load
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {savedInvoices.length > 15 && (
+              <div className="p-3 bg-slate-50 text-center text-xs text-slate-500 border-t border-slate-200">
+                Showing most recent 15 invoices. View all in the Sales tab.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      )}
+      
     {/* Customer Workspace */}
     {activeTab === 'customer' && (
       <CustomerWorkspace onBack={() => setActiveTab('invoice')} />
