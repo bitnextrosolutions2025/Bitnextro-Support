@@ -503,6 +503,20 @@ export default function Adminbilling() {
 
           <button
             type="button"
+            id="sidebar-expenses"
+            onClick={() => setActiveTab('expenses')}
+            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
+              activeTab === 'expenses'
+                ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            }`}
+          >
+            <Wallet className={`h-4 w-4 shrink-0 ${activeTab === 'expenses' ? 'text-indigo-600' : 'text-slate-400'}`} />
+            <span>Daily Expenses</span>
+          </button>
+
+          <button
+            type="button"
             id="sidebar-sales"
             onClick={() => setActiveTab('sales')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
@@ -1078,7 +1092,11 @@ export default function Adminbilling() {
       </div>
       )}
       
-    {/* Customer Workspace */}
+    
+        {/* Daily Expenses Workspace */}
+        {activeTab === 'expenses' && <DailyExpensesWorkspace />}
+
+        {/* Customer Workspace */}
     {activeTab === 'customer' && (
       <CustomerWorkspace onBack={() => setActiveTab('invoice')} />
     )}
