@@ -950,7 +950,7 @@ export default function Adminbilling() {
             <button
               type="button"
               onClick={handleClearForm}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-slate-100 px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600 transition-colors cursor-pointer mr-auto"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-slate-100 px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
               Clear Form
