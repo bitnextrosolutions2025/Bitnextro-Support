@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X } from 'lucide-react';
+import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X, Wallet } from 'lucide-react';
 import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
