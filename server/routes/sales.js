@@ -241,7 +241,7 @@ router.patch('/update-payment/:id', async (req, res) => {
     if (amountReceived === 0) {
       sale.paymentStatus = "Unpaid";
     } else if (amountReceived >= sale.salesAmount) {
-      sale.paymentStatus = "N/A";
+      sale.paymentStatus = "Paid";
     } else {
       sale.paymentStatus = "Partially Paid";
     }
