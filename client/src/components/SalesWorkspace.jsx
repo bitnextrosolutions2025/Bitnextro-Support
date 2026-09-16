@@ -208,7 +208,7 @@ const [currentMonth, setCurrentMonth] = useState(() => {
             <TrendingUp className="h-6 w-6 text-indigo-600" />
             Sales & Profit
           </h1>
-          <p className="text-slate-500 mt-1">Track monthly sales, purchase costs, and calculated profits.</p>
+          <p className="text-slate-500 mt-1">{viewMode === 'month' ? 'Track monthly sales, purchase costs, and calculated profits.' : 'Track yearly sales, purchase costs, and calculated profits.'}</p>
         </div>
         
         <div className="flex items-center gap-3">
