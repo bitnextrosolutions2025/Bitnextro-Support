@@ -1,4 +1,5 @@
 import express from "express"
+import compression from "compression"
 import cors from "cors"
 import { connectDB } from "./db.js"
 import 'dotenv/config'
@@ -17,6 +18,7 @@ import salesRoute from "./routes/sales.js"
 import expensesRoute from "./routes/expenses.js"
 
 const app = express();
+app.use(compression());
 app.use(express.json());
 const coresoption = {
     origin: [
