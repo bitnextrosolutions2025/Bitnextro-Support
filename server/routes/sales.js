@@ -110,7 +110,7 @@ router.get('/all', async (req, res) => {
     if (month && !search) {
       query.yearMonth = month;
     } else if (year && !search) {
-      query.yearMonth = new RegExp('^' + year);
+      query.$or = [ { yearMonth: { $regex: '^' + year } }, { invoiceDate: { $regex: year } } ];
     }
     
     
@@ -166,7 +166,7 @@ router.get('/yearly-summary', async (req, res) => {
     
     let query = {};
     if (year) {
-      query.yearMonth = new RegExp('^' + year);
+      query.$or = [ { yearMonth: { $regex: '^' + year } }, { invoiceDate: { $regex: year } } ];
     }
     
     const sales = await Sale.find(query);
