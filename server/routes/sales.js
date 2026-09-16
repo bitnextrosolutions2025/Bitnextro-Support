@@ -103,12 +103,14 @@ router.post('/record-sale', async (req, res) => {
 // GET /all
 router.get('/all', async (req, res) => {
   try {
-    const { month, status, search, page = 1, limit = 50 } = req.query;
+    const { month, year, status, search, page = 1, limit = 50 } = req.query;
     
     let query = {};
     
     if (month && !search) {
       query.yearMonth = month;
+    } else if (year && !search) {
+      query.yearMonth = new RegExp('^' + year);
     }
     
     
@@ -152,6 +154,58 @@ router.get('/all', async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching sales:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// GET /yearly-summary
+router.get('/yearly-summary', async (req, res) => {
+  try {
+    const { year } = req.query;
+    
+    let query = {};
+    if (year) {
+      query.yearMonth = new RegExp('^' + year);
+    }
+    
+    const sales = await Sale.find(query);
+    
+    let totalSales = 0;
+    let totalPurchases = 0;
+    let totalProfit = 0;
+    let totalReceived = 0;
+    let totalOutstanding = 0;
+    let unpaidInvoiceCount = 0;
+    let partiallyPaidInvoiceCount = 0;
+    let paidInvoiceCount = 0;
+    
+    sales.forEach(sale => {
+      totalSales += sale.salesAmount;
+      totalPurchases += sale.purchaseAmount;
+      const profit = sale.salesAmount - sale.purchaseAmount;
+      totalProfit += profit;
+      
+      totalReceived += (sale.amountReceived || 0);
+      totalOutstanding += (sale.balanceDue || 0);
+      
+      if (sale.paymentStatus === 'Unpaid') unpaidInvoiceCount++;
+      else if (sale.paymentStatus === 'Partially Paid') partiallyPaidInvoiceCount++;
+      else if (sale.paymentStatus === 'Paid' || sale.paymentStatus === 'N/A') paidInvoiceCount++;
+    });
+
+    res.json({
+      totalSales,
+      totalPurchases,
+      totalProfit,
+      totalReceived,
+      totalOutstanding,
+      unpaidInvoiceCount,
+      partiallyPaidInvoiceCount,
+      paidInvoiceCount
+    });
+  } catch (error) {
+    console.error("Error fetching yearly summary:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

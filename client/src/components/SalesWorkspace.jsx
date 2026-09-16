@@ -16,8 +16,13 @@ const SalesWorkspace = () => {
     invoiceCount: 0
   });
   
-  const [currentMonth, setCurrentMonth] = useState(() => {
+const [currentMonth, setCurrentMonth] = useState(() => {
     return new Date().toISOString().substring(0, 7); // YYYY-MM
+  });
+  
+  const [viewMode, setViewMode] = useState('month'); // 'month' | 'year'
+  const [currentYear, setCurrentYear] = useState(() => {
+    return new Date().getFullYear().toString(); // YYYY
   });
   
   const [statusFilter, setStatusFilter] = useState('All');
@@ -121,7 +126,11 @@ const SalesWorkspace = () => {
 
   const fetchSummary = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/monthly-summary?month=${currentMonth}`);
+      let url = `${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/monthly-summary?month=${currentMonth}`;
+      if (viewMode === 'year') {
+        url = `${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/yearly-summary?year=${currentYear}`;
+      }
+      const res = await axios.get(url);
       setSummary(res.data);
     } catch (error) {
       console.error('Error fetching summary:', error);
@@ -131,7 +140,7 @@ const SalesWorkspace = () => {
   const fetchSales = async () => {
     setLoading(true);
     try {
-      let url = `${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/all?month=${currentMonth}&status=${statusFilter}&type=${typeFilter}`;
+      let url = `${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/all?${viewMode === 'year' ? 'year=' + currentYear : 'month=' + currentMonth}&status=${statusFilter}&type=${typeFilter}`;
       if (searchTerm) {
         url += `&search=${encodeURIComponent(searchTerm)}`;
       }
