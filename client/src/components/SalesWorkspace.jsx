@@ -205,13 +205,40 @@ const [currentMonth, setCurrentMonth] = useState(() => {
             <Plus className="h-4 w-4" />
             Add Manual Entry
           </button>
-          <label className="text-sm font-medium text-slate-700">Month:</label>
-          <input
-            type="month"
-            value={currentMonth}
-            onChange={(e) => setCurrentMonth(e.target.value)}
-            className="rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
+
+          <div className="flex items-center bg-white rounded-lg border border-slate-200 p-1 shadow-sm ml-2">
+            <button
+              onClick={() => setViewMode('month')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${viewMode === 'month' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setViewMode('year')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${viewMode === 'year' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Yearly
+            </button>
+          </div>
+
+          <label className="text-sm font-medium text-slate-700 ml-2">{viewMode === 'month' ? 'Month:' : 'Year:'}</label>
+          {viewMode === 'month' ? (
+              <input 
+                type="month"
+                value={currentMonth}
+                onChange={(e) => setCurrentMonth(e.target.value)}
+                className="rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
+            ) : (
+              <input 
+                type="number"
+                min="2000"
+                max="2100"
+                value={currentYear}
+                onChange={(e) => setCurrentYear(e.target.value)}
+                className="rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 w-24"
+              />
+          )}
         </div>
       </div>
 
