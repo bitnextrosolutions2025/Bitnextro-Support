@@ -156,7 +156,7 @@ const [currentMonth, setCurrentMonth] = useState(() => {
   useEffect(() => {
     fetchSummary();
     fetchSales();
-  }, [currentMonth, statusFilter, searchTerm, typeFilter]);
+  }, [currentMonth, currentYear, viewMode, statusFilter, searchTerm, typeFilter]);
 
   const handleUpdatePurchase = async (id) => {
     try {
