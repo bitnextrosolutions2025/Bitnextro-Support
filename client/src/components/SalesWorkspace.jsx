@@ -186,6 +186,20 @@ const [currentMonth, setCurrentMonth] = useState(() => {
   };
 
 
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    // If it's already DD/MM/YYYY, return as is
+    if (dateString.includes('/')) return dateString;
+    // If it's YYYY-MM-DD, convert to DD/MM/YYYY
+    if (dateString.includes('-')) {
+      const parts = dateString.split('-');
+      if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+    }
+    return dateString;
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -350,7 +364,7 @@ const [currentMonth, setCurrentMonth] = useState(() => {
                         {renderBadge(sale)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600">{sale.invoiceDate}</td>
+                    <td className="px-6 py-4 text-slate-600">{formatDateForDisplay(sale.invoiceDate)}</td>
                     <td className="px-6 py-4 text-slate-600 truncate max-w-[150px]">{sale.customerName}</td>
                     <td className="px-6 py-4 text-right font-medium text-slate-900">₹{sale.salesAmount.toLocaleString('en-IN')}</td>
                     <td className="px-6 py-4 text-right">
