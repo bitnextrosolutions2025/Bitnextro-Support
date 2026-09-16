@@ -110,7 +110,8 @@ router.get('/all', async (req, res) => {
     if (month && !search) {
       query.yearMonth = month;
     } else if (year && !search) {
-      query.$or = [ { yearMonth: { $regex: '^' + year } }, { invoiceDate: { $regex: year } } ];
+      const yr = year.trim();
+      query.$or = [ { yearMonth: { $gte: `${yr}-01`, $lte: `${yr}-12` } }, { invoiceDate: { $regex: yr, $options: 'i' } } ];
     }
     
     
@@ -166,7 +167,8 @@ router.get('/yearly-summary', async (req, res) => {
     
     let query = {};
     if (year) {
-      query.$or = [ { yearMonth: { $regex: '^' + year } }, { invoiceDate: { $regex: year } } ];
+      const yr = year.trim();
+      query.$or = [ { yearMonth: { $gte: `${yr}-01`, $lte: `${yr}-12` } }, { invoiceDate: { $regex: yr, $options: 'i' } } ];
     }
     
     const sales = await Sale.find(query);
