@@ -214,7 +214,7 @@ const [currentMonth, setCurrentMonth] = useState(() => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => handleOpenManualModal()}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
           >
             <Plus className="h-4 w-4" />
             Add Manual Entry
