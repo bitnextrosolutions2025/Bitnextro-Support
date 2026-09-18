@@ -753,9 +753,9 @@ export default function Adminbilling() {
                 Line Items
               </h2>
 
-              {/* Round Off Control for Rate */}
+              {/* Round Off Control for Bill */}
               <label className="inline-flex items-center gap-2.5 cursor-pointer select-none bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors">
-                <span className="text-xs font-semibold text-slate-700">Round Off Rate:</span>
+                <span className="text-xs font-semibold text-slate-700">Round Off Total Bill:</span>
                 <span className={`text-xs font-bold ${details.isRoundOff ? 'text-indigo-600' : 'text-slate-400'}`}>
                   {details.isRoundOff ? 'ON' : 'OFF'}
                 </span>
@@ -818,11 +818,6 @@ export default function Adminbilling() {
                       onChange={(e) => handleProductChange(product.id, 'rate', e.target.value)}
                       className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
-                    {details.isRoundOff && product.rate !== '' && (
-                      <p className="text-[11px] text-indigo-600 font-semibold mt-1">
-                        Effective: ₹{getEffectiveRate(product.rate)}
-                      </p>
-                    )}
                   </div>
                   <div className="col-span-2 w-full">
                     <label className="block sm:hidden text-xs font-medium text-slate-500 mb-1">Qty</label>
