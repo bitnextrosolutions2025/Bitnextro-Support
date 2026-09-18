@@ -951,7 +951,6 @@ export default function Adminbilling() {
               </div>
             </div>
           )}
-          </div>
 
           {/* Section 3: Configuration & Settings */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
