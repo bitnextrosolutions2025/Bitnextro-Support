@@ -848,8 +848,15 @@ export default function QuotationForm({ onBack }) {
                 </div>
               )}
 
-              <div className="flex justify-between text-base font-bold text-slate-900 pt-3 border-t-2 border-slate-900">
-                <span>Total Amount</span>
+              <div className="flex justify-between items-center text-base font-bold text-slate-900 pt-3 border-t-2 border-slate-900">
+                <div className="flex items-center gap-2">
+                  <span>Total Amount</span>
+                  {isRoundOff && (
+                    <span className="text-[10px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 uppercase tracking-wider">
+                      Round Off
+                    </span>
+                  )}
+                </div>
                 <span className="text-indigo-600 text-lg">₹{grandTotal.toFixed(2)}</span>
               </div>
             </div>
