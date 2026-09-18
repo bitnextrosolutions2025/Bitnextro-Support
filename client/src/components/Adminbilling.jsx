@@ -880,90 +880,102 @@ export default function Adminbilling() {
 
           {/* Section 2.5: GST Calculation UI */}
           {invoiceType === 'tax' && (
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-              <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50">
+            <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-200">
                 <div>
                   <h3 className="text-base font-semibold text-slate-900">GST Calculation Convention</h3>
-                  <p className="text-sm text-slate-500 mt-1">Standard 18% GST calculation as configured in Bitnextro billing.</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Standard 18% GST calculation as configured in Bitnextro billing.</p>
                 </div>
                 
-                <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0 overflow-x-auto w-full sm:w-auto">
+                {/* GST Type Selector */}
+                <div className="inline-flex rounded-lg bg-slate-100 p-1">
                   <button
                     type="button"
                     onClick={() => setDetails(prev => ({...prev, isGstApplied: true, isIGstApplied: false}))}
-                    className={`px-4 py-2 text-xs font-medium rounded-md transition-all whitespace-nowrap ${details.isGstApplied && !details.isIGstApplied ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                      details.isGstApplied && !details.isIGstApplied
+                        ? 'bg-white text-indigo-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
                   >
                     CGST (9%) + SGST (9%)
                   </button>
                   <button
                     type="button"
                     onClick={() => setDetails(prev => ({...prev, isGstApplied: false, isIGstApplied: true}))}
-                    className={`px-4 py-2 text-xs font-medium rounded-md transition-all whitespace-nowrap ${!details.isGstApplied && details.isIGstApplied ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                      !details.isGstApplied && details.isIGstApplied
+                        ? 'bg-white text-indigo-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
                   >
                     IGST (18%)
                   </button>
                   <button
                     type="button"
                     onClick={() => setDetails(prev => ({...prev, isGstApplied: false, isIGstApplied: false}))}
-                    className={`px-4 py-2 text-xs font-medium rounded-md transition-all whitespace-nowrap ${!details.isGstApplied && !details.isIGstApplied ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                      !details.isGstApplied && !details.isIGstApplied
+                        ? 'bg-white text-indigo-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
                   >
                     Without GST
                   </button>
                 </div>
               </div>
 
-              <div className="p-4 sm:p-6 bg-white">
-                <div className="flex flex-col ml-auto sm:w-1/2 w-full gap-3 text-sm">
-                  <div className="flex justify-between text-slate-600">
-                    <span>Total Taxable Amount</span>
-                    <span className="font-medium text-slate-900">₹{calculateTotalTaxable().toFixed(2)}</span>
-                  </div>
-                  
-                  {details.isGstApplied && !details.isIGstApplied && (
-                    <>
-                      <div className="flex justify-between text-slate-600">
-                        <span>CGST (9%)</span>
-                        <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-600">
-                        <span>SGST (9%)</span>
-                        <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
-                      </div>
-                    </>
-                  )}
+              {/* Detailed Summary Rows */}
+              <div className="pt-6 max-w-sm ml-auto space-y-3">
+                <div className="flex justify-between text-sm text-slate-600">
+                  <span>Total Taxable Amount</span>
+                  <span className="font-semibold text-slate-900">₹{calculateTotalTaxable().toFixed(2)}</span>
+                </div>
 
-                  {!details.isGstApplied && details.isIGstApplied && (
-                    <div className="flex justify-between text-slate-600">
-                      <span>IGST (18%)</span>
-                      <span>₹{(calculateTotalTaxable() * 0.18).toFixed(2)}</span>
+                {details.isGstApplied && !details.isIGstApplied && (
+                  <>
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>CGST (9%)</span>
+                      <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
                     </div>
-                  )}
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>SGST (9%)</span>
+                      <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
 
-                  <div className="flex justify-between text-slate-600 border-b border-slate-200 pb-3 mb-1">
+                {!details.isGstApplied && details.isIGstApplied && (
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>IGST (18%)</span>
+                    <span>₹{(calculateTotalTaxable() * 0.18).toFixed(2)}</span>
+                  </div>
+                )}
+
+                {(details.isGstApplied || details.isIGstApplied) && (
+                  <div className="flex justify-between text-sm text-slate-600 pt-1 border-t border-slate-100">
                     <span>GST Total (18%)</span>
-                    <span className="font-medium text-slate-900">
-                      ₹{((details.isGstApplied || details.isIGstApplied) ? (calculateTotalTaxable() * 0.18) : 0).toFixed(2)}
-                    </span>
+                    <span className="font-semibold text-slate-900">₹{(calculateTotalTaxable() * 0.18).toFixed(2)}</span>
                   </div>
+                )}
 
-                  <div className="flex justify-between text-slate-900 text-base font-bold items-center mt-1">
-                    <div className="flex items-center gap-2">
-                      Total Amount
-                      {details.isRoundOff && (
-                        <span className="text-[10px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 uppercase tracking-wider">
-                          Round Off
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-indigo-700 text-lg">
-                      ₹{
-                        (details.isRoundOff 
-                          ? Math.round(calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
-                          : (calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
-                        ).toFixed(2)
-                      }
-                    </span>
+                <div className="flex justify-between items-center text-base font-bold text-slate-900 pt-3 border-t-2 border-slate-900">
+                  <div className="flex items-center gap-2">
+                    <span>Total Amount</span>
+                    {details.isRoundOff && (
+                      <span className="text-[10px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 uppercase tracking-wider">
+                        Round Off
+                      </span>
+                    )}
                   </div>
+                  <span className="text-indigo-600 text-lg">
+                    ₹{
+                      (details.isRoundOff 
+                        ? Math.round(calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                        : (calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                      ).toFixed(2)
+                    }
+                  </span>
                 </div>
               </div>
             </div>
