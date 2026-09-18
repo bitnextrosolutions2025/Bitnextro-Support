@@ -229,12 +229,6 @@ const generateHTML = (data) => {
                         <td class="p-1 text-right">₹${totalTaxAmount.toFixed(2)}</td>
                     </tr>
                     ` : ''}
-                    ${data.isRoundOff && roundOffAmount !== 0 ? `
-                    <tr class="border-t border-black text-xs">
-                        <td colspan="7" class="border-r border-black p-1 text-right">Round Off</td>
-                        <td class="p-1 text-right">${roundOffAmount > 0 ? '+' : ''}${roundOffAmount.toFixed(2)}</td>
-                    </tr>
-                    ` : ''}
                     <tr class="border-t border-black font-bold text-sm bg-gray-100">
                         <td colspan="7" class="border-r border-black p-1 text-right uppercase">Total</td>
                         <td class="p-1 text-right text-base">₹${grandTotal.toFixed(2)}</td>
