@@ -91,10 +91,15 @@ const generateHTML = (data) => {
         grandTotal = roundedTotal;
     }
 
+    const advanceAmount = parseFloat(data.advanceAmount || data.amountReceived || 0);
+    const balanceDue = Math.max(0, parseFloat((grandTotal - advanceAmount).toFixed(2)));
+    const isPaymentDone = Boolean(data.isPaymentdone) || (advanceAmount >= grandTotal && grandTotal > 0);
+
     const amountInWords = numberToWords(grandTotal);
     
-    // Generate UPI QR dynamically based on amount
-    const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent(companyName)}&am=${grandTotal.toFixed(2)}&cu=INR`;
+    // Generate UPI QR dynamically based on balance due (or total if no advance)
+    const upiPayAmount = balanceDue > 0 ? balanceDue : grandTotal;
+    const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent(companyName)}&am=${upiPayAmount.toFixed(2)}&cu=INR`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(upiString)}`;
 
     return `
@@ -233,15 +238,28 @@ const generateHTML = (data) => {
                         <td colspan="7" class="border-r border-black p-1 text-right uppercase">Total</td>
                         <td class="p-1 text-right text-base">₹${grandTotal.toFixed(2)}</td>
                     </tr>
+                    ${advanceAmount > 0 ? `
+                    <tr class="border-t border-black text-xs font-semibold">
+                        <td colspan="7" class="border-r border-black p-1 text-right text-emerald-700">Advance Paid</td>
+                        <td class="p-1 text-right font-bold text-emerald-700">₹${advanceAmount.toFixed(2)}</td>
+                    </tr>
+                    <tr class="border-t border-black text-xs font-bold bg-amber-50">
+                        <td colspan="7" class="border-r border-black p-1 text-right uppercase text-rose-700">Balance Due Amount</td>
+                        <td class="p-1 text-right text-sm text-rose-700 font-extrabold">₹${balanceDue.toFixed(2)}</td>
+                    </tr>
+                    ` : ''}
                 </tbody>
             </table>
 
             <!-- Amount Due Status -->
-            ${data.isPaymentdone?`<div class="text-right text-[11px] font-bold text-green-600 p-1 border-b border-black">
-                
+            ${isPaymentDone ? `<div class="text-right text-[11px] font-bold text-green-600 p-1 border-b border-black">
                 <span class="inline-flex items-center gap-1"> <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> Amount Paid </span>
-                </div>`:`<div class="text-right text-[11px] font-bold text-red-600 p-1 border-b border-black">
-            
+                </div>` : advanceAmount > 0 ? `<div class="text-right text-[11px] font-bold text-amber-700 p-1 border-b border-black">
+                <span class="inline-flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg>
+                    Advance Paid: ₹${advanceAmount.toFixed(2)} | Balance Due: ₹${balanceDue.toFixed(2)}
+                </span>
+            </div>` : `<div class="text-right text-[11px] font-bold text-red-600 p-1 border-b border-black">
                 <span class="inline-flex items-center gap-1">
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg>
                     Amount Due
@@ -258,7 +276,7 @@ const generateHTML = (data) => {
                     <div class="flex"><span class="w-20">Branch:</span> <strong>${bankDetails.branch}</strong></div>
                 </div>
                    <div class="w-1/3 border-r border-black p-2 flex flex-col items-center justify-center">
-                    <p class="text-[11px] w-full text-left font-bold mb-1">Pay using UPI:</p>
+                    <p class="text-[11px] w-full text-left font-bold mb-1">${balanceDue > 0 ? 'Pay Due using UPI:' : 'Pay using UPI:'}</p>
                     <img src="${qrUrl}" alt="UPI QR" class="w-20 h-20 object-contain mix-blend-multiply">
                 </div>
                 <div class="w-1/3 p-2 flex flex-col items-end justify-between text-[11px]">

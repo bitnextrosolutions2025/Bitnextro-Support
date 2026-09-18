@@ -25,6 +25,7 @@ const SaleSchema = new mongoose.Schema({
   salesAmount: { type: Number, required: true, default: 0 },
   purchaseAmount: { type: Number, required: true, default: 0 },
   profit: { type: Number, default: 0 },
+  advanceAmount: { type: Number, default: 0 },
   amountReceived: { type: Number, default: 0, min: 0 },
   balanceDue: { type: Number, default: 0 },
   paymentStatus: { type: String, enum: ["Unpaid", "Partially Paid", "Paid", "N/A"], default: "Unpaid" },

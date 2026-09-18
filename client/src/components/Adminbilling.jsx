@@ -112,7 +112,8 @@ export default function Adminbilling() {
         isStampApplied: true,
         isPaymentdone: true,
         isRoundOff: false,
-        invoiceDate: ''
+        invoiceDate: '',
+        advanceAmount: ''
       });
       setProducts([{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
       setInvoiceType('tax');
@@ -159,7 +160,8 @@ export default function Adminbilling() {
       isStampApplied: inv.isStampApplied !== undefined ? inv.isStampApplied : true,
       isPaymentdone: inv.paymentStatus === 'Paid',
       isRoundOff: Boolean(inv.isRoundOff),
-      invoiceDate: inv.invoiceDate || (inv.createdAt ? new Date(inv.createdAt).toLocaleDateString("en-GB") : '')
+      invoiceDate: inv.invoiceDate || (inv.createdAt ? new Date(inv.createdAt).toLocaleDateString("en-GB") : ''),
+      advanceAmount: inv.advanceAmount !== undefined && inv.advanceAmount !== null ? inv.advanceAmount : (inv.amountReceived || '')
     });
 
     const mappedProducts = (inv.items || []).map((item, idx) => ({
@@ -212,7 +214,8 @@ export default function Adminbilling() {
     isStampApplied: true,
     isPaymentdone: true,
     isRoundOff: false,
-    invoiceDate: ''
+    invoiceDate: '',
+    advanceAmount: ''
   });
 
   // State for dynamic products list
@@ -360,6 +363,14 @@ export default function Adminbilling() {
 
   // Build consistent payload for PDF generation
   const buildPayload = () => {
+    const totalTaxable = calculateTotalTaxable();
+    const isTax = invoiceType === 'tax';
+    const gstRate = (isTax && (details.isGstApplied || details.isIGstApplied)) ? 0.18 : 0;
+    const rawTotal = totalTaxable + (totalTaxable * gstRate);
+    const grandTotalCalculated = details.isRoundOff ? Math.round(rawTotal) : rawTotal;
+    const advancePaid = parseFloat(details.advanceAmount || 0);
+    const calculatedDue = Math.max(0, parseFloat((grandTotalCalculated - advancePaid).toFixed(2)));
+
     return {
       ...details,
       invoiceType,
@@ -368,11 +379,14 @@ export default function Adminbilling() {
       isIGstApplied: invoiceType === 'cash' ? false : details.isIGstApplied,
       gstno: invoiceType === 'cash' ? '' : details.gstno,
       isRoundOff: Boolean(details.isRoundOff),
+      advanceAmount: advancePaid,
+      amountReceived: advancePaid,
+      balanceDue: calculatedDue,
       products: products.map(({ id, ...rest }) => ({
         ...rest,
         rate: getEffectiveRate(rest.rate)
       })),
-      totalAmount: calculateTotalTaxable()
+      totalAmount: grandTotalCalculated
     };
   };
 
@@ -395,6 +409,10 @@ export default function Adminbilling() {
         isIGstApplied: payload.isIGstApplied,
         isStampApplied: payload.isStampApplied,
         isRoundOff: payload.isRoundOff,
+        isPaymentdone: payload.isPaymentdone,
+        advanceAmount: parseFloat(payload.advanceAmount || 0),
+        amountReceived: parseFloat(payload.advanceAmount || 0),
+        balanceDue: parseFloat(payload.balanceDue || 0),
         items: payload.products.map(p => ({
           productName: p.name,
           hsnNumber: p.hsn,
@@ -1146,6 +1164,46 @@ export default function Adminbilling() {
                     }
                   </span>
                 </div>
+
+                {/* Advance Amount Paid */}
+                <div className="pt-3 mt-2 border-t border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                      <span>Advance Paid by Client</span>
+                      <span className="text-[10px] text-slate-400 font-normal">(Optional)</span>
+                    </label>
+                    <div className="relative w-44">
+                      <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-sm font-semibold pointer-events-none">₹</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        name="advanceAmount"
+                        value={details.advanceAmount || ''}
+                        onChange={handleDetailChange}
+                        placeholder="0.00"
+                        className="w-full pl-7 pr-3 py-1.5 text-right text-sm font-semibold text-emerald-700 bg-emerald-50/50 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {parseFloat(details.advanceAmount || 0) > 0 && (
+                    <div className="flex justify-between items-center text-sm font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                        <span>Rest Due Amount:</span>
+                      </div>
+                      <span className="text-base font-extrabold">
+                        ₹{Math.max(0, (
+                          (details.isRoundOff 
+                            ? Math.round(calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                            : (calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                          ) - parseFloat(details.advanceAmount || 0)
+                        )).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1301,7 +1359,12 @@ export default function Adminbilling() {
           previewGrandTotal = rounded;
         }
 
-        const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent("BITNEXTRO SOLUTIONS PVT. LTD.")}&am=${previewGrandTotal.toFixed(2)}&cu=INR`;
+        const previewAdvanceAmount = parseFloat(details.advanceAmount || 0);
+        const previewBalanceDue = Math.max(0, parseFloat((previewGrandTotal - previewAdvanceAmount).toFixed(2)));
+        const isPaymentDone = Boolean(details.isPaymentdone) || (previewAdvanceAmount >= previewGrandTotal && previewGrandTotal > 0);
+
+        const upiPayAmount = previewBalanceDue > 0 ? previewBalanceDue : previewGrandTotal;
+        const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent("BITNEXTRO SOLUTIONS PVT. LTD.")}&am=${upiPayAmount.toFixed(2)}&cu=INR`;
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(upiString)}`;
 
         return (
@@ -1528,17 +1591,39 @@ export default function Adminbilling() {
                     <td colSpan={7} className="border-r border-black p-1 text-right uppercase">Total</td>
                     <td className="p-1 text-right text-base">₹{previewGrandTotal.toFixed(2)}</td>
                   </tr>
+
+                  {previewAdvanceAmount > 0 && (
+                    <>
+                      <tr className="border-t border-black text-xs font-semibold">
+                        <td colSpan={7} className="border-r border-black p-1 text-right text-emerald-700">Advance Paid</td>
+                        <td className="p-1 text-right font-bold text-emerald-700">₹{previewAdvanceAmount.toFixed(2)}</td>
+                      </tr>
+                      <tr className="border-t border-black text-xs font-bold bg-amber-50">
+                        <td colSpan={7} className="border-r border-black p-1 text-right uppercase text-rose-700">Balance Due Amount</td>
+                        <td className="p-1 text-right text-sm text-rose-700 font-extrabold">₹{previewBalanceDue.toFixed(2)}</td>
+                      </tr>
+                    </>
+                  )}
                 </tbody>
               </table>
 
               {/* Amount Due Status */}
-              {details.isPaymentdone ? (
+              {isPaymentDone ? (
                 <div className="text-right text-[11px] font-bold text-green-600 p-1 border-b border-black">
                   <span className="inline-flex items-center gap-1">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     Amount Paid
+                  </span>
+                </div>
+              ) : previewAdvanceAmount > 0 ? (
+                <div className="text-right text-[11px] font-bold text-amber-700 p-1 border-b border-black">
+                  <span className="inline-flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    Advance Paid: ₹{previewAdvanceAmount.toFixed(2)} | Balance Due: ₹{previewBalanceDue.toFixed(2)}
                   </span>
                 </div>
               ) : (
@@ -1562,7 +1647,7 @@ export default function Adminbilling() {
                   <div className="flex"><span className="w-20">Branch:</span><strong>{bankDetails.branch}</strong></div>
                 </div>
                 <div className="w-1/3 border-r border-black p-2 flex flex-col items-center justify-center">
-                  <p className="text-[11px] w-full text-left font-bold mb-1">Pay using UPI:</p>
+                  <p className="text-[11px] w-full text-left font-bold mb-1">{previewBalanceDue > 0 ? 'Pay Due using UPI:' : 'Pay using UPI:'}</p>
                   <img src={qrUrl} alt="UPI QR" className="w-20 h-20 object-contain mix-blend-multiply" />
                 </div>
                 <div className="w-1/3 p-2 flex flex-col items-end justify-between text-[11px]">
@@ -1677,7 +1762,21 @@ export default function Adminbilling() {
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap max-w-[150px] truncate">{inv.customerName}</td>
                     <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={inv.billingAddress || '—'}>{inv.billingAddress || '—'}</td>
                     <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={inv.shippingAddress || '—'}>{inv.shippingAddress || '—'}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">₹{inv.salesAmount?.toFixed(2)}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
+                      <div>₹{inv.salesAmount?.toFixed(2)}</div>
+                      {inv.advanceAmount > 0 ? (
+                        <div className="text-[11px] font-normal text-slate-500">
+                          <span className="text-emerald-700 font-medium">Adv: ₹{inv.advanceAmount?.toFixed(2)}</span>
+                          {inv.balanceDue > 0 && (
+                            <span className="text-rose-600 font-semibold ml-1.5">• Due: ₹{inv.balanceDue?.toFixed(2)}</span>
+                          )}
+                        </div>
+                      ) : inv.paymentStatus ? (
+                        <div className={`text-[10px] font-medium ${inv.paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                          {inv.paymentStatus}
+                        </div>
+                      ) : null}
+                    </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
                         <button

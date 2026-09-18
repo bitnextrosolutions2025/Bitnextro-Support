@@ -22,6 +22,8 @@ router.post('/record-sale', async (req, res) => {
       isIGstApplied,
       isStampApplied,
       isRoundOff,
+      advanceAmount,
+      amountReceived,
       items,
       salesAmount
     } = req.body;
@@ -60,8 +62,23 @@ router.post('/record-sale', async (req, res) => {
       existingSale = await Sale.findOne({ invoiceNumber });
     }
 
+    const totalSalesNum = Number(salesAmount) || 0;
+    const isPaymentDoneBool = req.body.isPaymentdone !== undefined ? Boolean(req.body.isPaymentdone) : false;
+    let receivedNum = 0;
+    if (amountReceived !== undefined && Number(amountReceived) > 0) {
+      receivedNum = Number(amountReceived);
+    } else if (advanceAmount !== undefined && Number(advanceAmount) > 0) {
+      receivedNum = Number(advanceAmount);
+    } else if (isPaymentDoneBool) {
+      receivedNum = totalSalesNum;
+    } else if (existingSale && existingSale.amountReceived !== undefined) {
+      receivedNum = Number(existingSale.amountReceived);
+    }
+    const finalBalanceDue = Math.max(0, parseFloat((totalSalesNum - receivedNum).toFixed(2)));
+    const finalPaymentStatus = receivedNum <= 0 ? "Unpaid" : receivedNum >= totalSalesNum ? "Paid" : "Partially Paid";
+
     if (existingSale) {
-      const profit = parseFloat((salesAmount - (existingSale.purchaseAmount || 0)).toFixed(2));
+      const profit = parseFloat((totalSalesNum - (existingSale.purchaseAmount || 0)).toFixed(2));
       
       const updatedSale = await Sale.findByIdAndUpdate(
         existingSale._id,
@@ -82,11 +99,12 @@ router.post('/record-sale', async (req, res) => {
             isStampApplied: isStampApplied !== undefined ? Boolean(isStampApplied) : true,
             isRoundOff: Boolean(isRoundOff),
             items: items || [],
-            salesAmount: salesAmount || 0,
+            salesAmount: totalSalesNum,
             profit,
-            // Payment tracking logic
-            balanceDue: Math.max(0, (salesAmount || 0) - (existingSale.amountReceived || 0)),
-            paymentStatus: (existingSale.amountReceived || 0) === 0 ? "Unpaid" : (existingSale.amountReceived || 0) >= (salesAmount || 0) ? "Paid" : "Partially Paid"
+            advanceAmount: receivedNum,
+            amountReceived: receivedNum,
+            balanceDue: finalBalanceDue,
+            paymentStatus: finalPaymentStatus
           }
         },
         { new: true }
@@ -94,7 +112,7 @@ router.post('/record-sale', async (req, res) => {
       return res.status(200).json({ message: "Sale updated successfully", sale: updatedSale });
     } else {
       const purchaseAmount = 0;
-      const profit = parseFloat((salesAmount - purchaseAmount).toFixed(2));
+      const profit = parseFloat((totalSalesNum - purchaseAmount).toFixed(2));
       
       const newSale = new Sale({
         invoiceNumber,
@@ -112,12 +130,13 @@ router.post('/record-sale', async (req, res) => {
         isStampApplied: isStampApplied !== undefined ? Boolean(isStampApplied) : true,
         isRoundOff: Boolean(isRoundOff),
         items: items || [],
-        salesAmount: salesAmount || 0,
+        salesAmount: totalSalesNum,
         purchaseAmount,
         profit,
-        amountReceived: 0,
-        balanceDue: salesAmount || 0,
-        paymentStatus: "Unpaid",
+        advanceAmount: receivedNum,
+        amountReceived: receivedNum,
+        balanceDue: finalBalanceDue,
+        paymentStatus: finalPaymentStatus,
         source: "billing_auto",
         notes: ""
       });
