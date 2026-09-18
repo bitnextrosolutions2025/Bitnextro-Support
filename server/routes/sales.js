@@ -64,18 +64,31 @@ router.post('/record-sale', async (req, res) => {
 
     const totalSalesNum = Number(salesAmount) || 0;
     const isPaymentDoneBool = req.body.isPaymentdone !== undefined ? Boolean(req.body.isPaymentdone) : false;
-    let receivedNum = 0;
-    if (amountReceived !== undefined && Number(amountReceived) > 0) {
-      receivedNum = Number(amountReceived);
-    } else if (advanceAmount !== undefined && Number(advanceAmount) > 0) {
-      receivedNum = Number(advanceAmount);
-    } else if (isPaymentDoneBool) {
-      receivedNum = totalSalesNum;
-    } else if (existingSale && existingSale.amountReceived !== undefined) {
-      receivedNum = Number(existingSale.amountReceived);
+
+    // Check if advance was explicitly provided in the request body (including 0 when cleared)
+    let advanceNum = 0;
+    if (req.body.advanceAmount !== undefined && req.body.advanceAmount !== null && req.body.advanceAmount !== '') {
+      advanceNum = Math.max(0, Number(req.body.advanceAmount) || 0);
+    } else if (req.body.amountReceived !== undefined && req.body.amountReceived !== null && req.body.amountReceived !== '') {
+      advanceNum = Math.max(0, Number(req.body.amountReceived) || 0);
+    } else if (existingSale && !isPaymentDoneBool) {
+      advanceNum = existingSale.advanceAmount !== undefined ? Number(existingSale.advanceAmount) : (Number(existingSale.amountReceived) || 0);
     }
-    const finalBalanceDue = Math.max(0, parseFloat((totalSalesNum - receivedNum).toFixed(2)));
-    const finalPaymentStatus = receivedNum <= 0 ? "Unpaid" : receivedNum >= totalSalesNum ? "Paid" : "Partially Paid";
+
+    let receivedNum = advanceNum;
+    if (isPaymentDoneBool && advanceNum <= 0) {
+      receivedNum = totalSalesNum;
+    }
+
+    const finalBalanceDue = isPaymentDoneBool
+      ? 0
+      : (advanceNum > 0
+          ? Math.max(0, parseFloat((totalSalesNum - advanceNum).toFixed(2)))
+          : totalSalesNum);
+
+    const finalPaymentStatus = isPaymentDoneBool || (receivedNum >= totalSalesNum && totalSalesNum > 0)
+      ? "Paid"
+      : (advanceNum > 0 ? "Partially Paid" : "Unpaid");
 
     if (existingSale) {
       const profit = parseFloat((totalSalesNum - (existingSale.purchaseAmount || 0)).toFixed(2));
@@ -101,7 +114,7 @@ router.post('/record-sale', async (req, res) => {
             items: items || [],
             salesAmount: totalSalesNum,
             profit,
-            advanceAmount: receivedNum,
+            advanceAmount: advanceNum,
             amountReceived: receivedNum,
             balanceDue: finalBalanceDue,
             paymentStatus: finalPaymentStatus
@@ -133,7 +146,7 @@ router.post('/record-sale', async (req, res) => {
         salesAmount: totalSalesNum,
         purchaseAmount,
         profit,
-        advanceAmount: receivedNum,
+        advanceAmount: advanceNum,
         amountReceived: receivedNum,
         balanceDue: finalBalanceDue,
         paymentStatus: finalPaymentStatus,
