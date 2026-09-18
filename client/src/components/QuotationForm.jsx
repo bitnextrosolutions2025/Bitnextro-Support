@@ -848,13 +848,6 @@ export default function QuotationForm({ onBack }) {
                 </div>
               )}
 
-              {isRoundOff && roundOffAmount !== 0 && (
-                <div className="flex justify-between text-sm text-slate-600 pt-1 border-t border-slate-100">
-                  <span>Round Off</span>
-                  <span className="font-semibold text-slate-900">{roundOffAmount > 0 ? '+' : ''}{roundOffAmount.toFixed(2)}</span>
-                </div>
-              )}
-
               <div className="flex justify-between text-base font-bold text-slate-900 pt-3 border-t-2 border-slate-900">
                 <span>Total Amount</span>
                 <span className="text-indigo-600 text-lg">₹{grandTotal.toFixed(2)}</span>
@@ -1109,13 +1102,6 @@ export default function QuotationForm({ onBack }) {
                 <div className="flex justify-between text-slate-600 pt-1 border-t border-slate-100">
                   <span>GST Total (18%)</span>
                   <span className="font-semibold text-slate-900">₹{totalGst.toFixed(2)}</span>
-                </div>
-              )}
-
-              {isRoundOff && roundOffAmount !== 0 && (
-                <div className="flex justify-between text-sm text-slate-600 pt-1 border-t border-slate-100">
-                  <span>Round Off</span>
-                  <span className="font-semibold text-slate-900">{roundOffAmount > 0 ? '+' : ''}{roundOffAmount.toFixed(2)}</span>
                 </div>
               )}
 
