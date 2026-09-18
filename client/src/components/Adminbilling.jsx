@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X, Wallet, Save } from 'lucide-react';
+import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X, Wallet, Save, Printer, ArrowLeft, FileCheck, CheckCircle2, Download, Edit3 } from 'lucide-react';
 import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
@@ -10,9 +10,20 @@ import SalesWorkspace from './SalesWorkspace';
 import DailyExpensesWorkspace from './DailyExpensesWorkspace';
 import secureLocalStorage from 'react-secure-storage';
 
+// Official Bitnextro letterhead assets
+const companyLogo = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772130931/user_profiles/iasw8ry0br2wgwprakxg.jpg";
+const authStamp = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png";
+const bankDetails = {
+  bank: "HDFC Bank",
+  acc: "50200098939227",
+  ifsc: "HDFC0000014",
+  branch: "Kolkata, Central Plaza"
+};
+
 export default function Adminbilling() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('invoice');
+  const [viewMode, setViewMode] = useState('edit'); // 'edit' | 'preview'
   const [invoiceType, setInvoiceType] = useState('tax'); // 'tax' | 'cash'
   const [Isload1, setIsload1] = useState(false);
   const [isloadOriginal, setIsloadOriginal] = useState(false);
@@ -86,6 +97,7 @@ export default function Adminbilling() {
   const handleClearForm = () => {
     if (window.confirm("Are you sure you want to clear the form?")) {
       setEditingInvoiceId(null);
+      setViewMode('edit');
       setDetails({
         invoiceNumber: '',
         supplyPlace: '',
@@ -98,7 +110,8 @@ export default function Adminbilling() {
         isIGstApplied: false,
         isStampApplied: true,
         isPaymentdone: true,
-        isRoundOff: false
+        isRoundOff: false,
+        invoiceDate: ''
       });
       setProducts([{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
       setInvoiceType('tax');
@@ -106,7 +119,26 @@ export default function Adminbilling() {
     }
   };
 
-  const handleViewInvoice = (inv) => {
+  const handlePrint = () => {
+    const originalTitle = document.title;
+    const invNum = (details.invoiceNumber || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
+    const cName = (details.user || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
+    const fileName = [invNum, cName].filter(Boolean).join(' - ') || 'Invoice';
+
+    document.title = fileName;
+
+    const restoreTitle = () => {
+      document.title = originalTitle;
+      window.removeEventListener('afterprint', restoreTitle);
+    };
+    window.addEventListener('afterprint', restoreTitle);
+
+    window.print();
+
+    setTimeout(restoreTitle, 1500);
+  };
+
+  const handleViewInvoice = (inv, mode = 'edit') => {
     setEditingInvoiceId(inv._id);
     const totalTaxable = (inv.items || []).reduce((acc, curr) => acc + (curr.qty * curr.rate), 0);
     const hasTax = (inv.salesAmount - totalTaxable) > 1;
@@ -125,7 +157,8 @@ export default function Adminbilling() {
       isIGstApplied: Boolean(inv.isIGstApplied),
       isStampApplied: inv.isStampApplied !== undefined ? inv.isStampApplied : true,
       isPaymentdone: inv.paymentStatus === 'Paid',
-      isRoundOff: Boolean(inv.isRoundOff)
+      isRoundOff: Boolean(inv.isRoundOff),
+      invoiceDate: inv.invoiceDate || (inv.createdAt ? new Date(inv.createdAt).toLocaleDateString("en-GB") : '')
     });
 
     const mappedProducts = (inv.items || []).map((item, idx) => ({
@@ -137,7 +170,14 @@ export default function Adminbilling() {
     }));
     
     setProducts(mappedProducts.length > 0 ? mappedProducts : [{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
-    handleSuccess(`Invoice "${inv.invoiceNumber}" loaded into form.`);
+    
+    if (mode === 'preview') {
+      setViewMode('preview');
+      handleSuccess(`Previewing invoice "${inv.invoiceNumber}".`);
+    } else {
+      setViewMode('edit');
+      handleSuccess(`Invoice "${inv.invoiceNumber}" loaded into form for editing.`);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   useEffect(() => {
@@ -170,7 +210,8 @@ export default function Adminbilling() {
     isIGstApplied: false,
     isStampApplied: true,
     isPaymentdone: true,
-    isRoundOff: false
+    isRoundOff: false,
+    invoiceDate: ''
   });
 
   // State for dynamic products list
@@ -321,6 +362,7 @@ export default function Adminbilling() {
     return {
       ...details,
       invoiceType,
+      date: details.invoiceDate || new Date().toLocaleDateString("en-GB"),
       isGstApplied: invoiceType === 'cash' ? false : details.isGstApplied,
       isIGstApplied: invoiceType === 'cash' ? false : details.isIGstApplied,
       gstno: invoiceType === 'cash' ? '' : details.gstno,
@@ -500,7 +542,10 @@ export default function Adminbilling() {
           <button
             type="button"
             id="sidebar-invoice"
-            onClick={() => setActiveTab('invoice')}
+            onClick={() => {
+              setActiveTab('invoice');
+              setViewMode('edit');
+            }}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
               activeTab === 'invoice'
                 ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
@@ -587,56 +632,121 @@ export default function Adminbilling() {
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 overflow-y-auto">
         {activeTab === 'invoice' && (
           <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header with Mode Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Receipt className={`h-6 w-6 ${invoiceType === 'cash' ? 'text-emerald-600' : 'text-indigo-600'}`} />
-              {invoiceType === 'cash' ? 'Create New Cash Invoice' : 'Create New Invoice'}
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              {invoiceType === 'cash'
-                ? 'Generate a pure non-GST cash invoice (no GST applied, no GST numbers included).'
-                : 'Fill in the details below to generate a production-ready billing PDF.'}
-            </p>
-          </div>
+            {/* Print Stylesheet */}
+            <style>{`
+              @media print {
+                body * {
+                  visibility: hidden;
+                }
+                #billing-printable-document, #billing-printable-document * {
+                  visibility: visible;
+                }
+                #billing-printable-document {
+                  position: absolute;
+                  left: 0;
+                  top: 0;
+                  width: 100%;
+                  margin: 0;
+                  padding: 24px;
+                  box-shadow: none !important;
+                  border: none !important;
+                  background: white !important;
+                }
+                .no-print {
+                  display: none !important;
+                }
+              }
+            `}</style>
 
-          {/* Mode Switcher */}
-          <div className="inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200 shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                setInvoiceType('tax');
-                setDetails(prev => ({ ...prev, isGstApplied: true, isIGstApplied: false }));
-              }}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                invoiceType === 'tax'
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Receipt className="w-3.5 h-3.5" />
-              Tax Invoice
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setInvoiceType('cash');
-                setDetails(prev => ({ ...prev, isGstApplied: false, isIGstApplied: false, gstno: '' }));
-              }}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                invoiceType === 'cash'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              Cash Invoice
-            </button>
-          </div>
-        </div>
+            {/* Header with Mode Switcher (Hidden when printing) */}
+            <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                  <Receipt className={`h-6 w-6 ${invoiceType === 'cash' ? 'text-emerald-600' : 'text-indigo-600'}`} />
+                  {viewMode === 'preview'
+                    ? 'Invoice Document Preview'
+                    : (invoiceType === 'cash' ? 'Create New Cash Invoice' : (editingInvoiceId ? 'Edit Invoice' : 'Create New Invoice'))}
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
+                  {viewMode === 'preview'
+                    ? 'Preview the official letterhead document, ready for printing or PDF export.'
+                    : (invoiceType === 'cash'
+                        ? 'Generate a pure non-GST cash invoice (no GST applied, no GST numbers included).'
+                        : 'Fill in the details below to generate and save production-ready invoices.')}
+                </p>
+              </div>
 
-        <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown} className="space-y-6">
+              {/* Controls: Edit/Preview View Switcher + Tax/Cash Switcher */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('edit')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                      viewMode === 'edit'
+                        ? 'bg-white text-indigo-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    Edit Form
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewMode('preview');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                      viewMode === 'preview'
+                        ? 'bg-white text-indigo-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    Document Preview
+                  </button>
+                </div>
+
+                {viewMode === 'edit' && (
+                  <div className="inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInvoiceType('tax');
+                        setDetails(prev => ({ ...prev, isGstApplied: true, isIGstApplied: false }));
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                        invoiceType === 'tax'
+                          ? 'bg-white text-indigo-700 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Receipt className="w-3.5 h-3.5" />
+                      Tax Invoice
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInvoiceType('cash');
+                        setDetails(prev => ({ ...prev, isGstApplied: false, isIGstApplied: false, gstno: '' }));
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                        invoiceType === 'cash'
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      Cash Invoice
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {viewMode === 'edit' && (
+              <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown} className="space-y-6">
           {/* Editing Status Banner */}
           {editingInvoiceId && (
             <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-amber-800 shadow-xs">
@@ -1096,6 +1206,17 @@ export default function Adminbilling() {
             </button>
             <button
               type="button"
+              onClick={() => {
+                setViewMode('preview');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors cursor-pointer"
+            >
+              <Eye className="w-4 h-4 text-slate-500" />
+              Preview Document
+            </button>
+            <button
+              type="button"
               disabled={isSavingInvoice || isloadOriginal || Isload1}
               onClick={async (e) => {
                 if (e.currentTarget.form && !e.currentTarget.form.reportValidity()) return;
@@ -1136,13 +1257,317 @@ export default function Adminbilling() {
             </button>
           </div>
         </form>
-      </div>
-    )}
+      )}
 
+      {/* Mode 2: Official Document Preview */}
+      {viewMode === 'preview' && (() => {
+        const previewTaxable = calculateTotalTaxable();
+        const isCash = invoiceType === 'cash';
+        const isGst = !isCash && Boolean(details.isGstApplied);
+        const isIGst = !isCash && Boolean(details.isIGstApplied);
+
+        const cgst = isGst ? Math.round(previewTaxable * 0.09 * 100) / 100 : 0;
+        const sgst = isGst ? Math.round(previewTaxable * 0.09 * 100) / 100 : 0;
+        const igst = isIGst ? Math.round(previewTaxable * 0.18 * 100) / 100 : 0;
+        const totalTaxAmount = cgst + sgst + igst;
+        let previewGrandTotal = previewTaxable + totalTaxAmount;
+        let previewRoundOff = 0;
+        if (details.isRoundOff) {
+          const rounded = Math.round(previewGrandTotal);
+          previewRoundOff = rounded - previewGrandTotal;
+          previewGrandTotal = rounded;
+        }
+
+        return (
+          <div className="space-y-6">
+            {/* Document Actions Bar (Hidden when printing) */}
+            <div className="no-print flex flex-wrap items-center justify-between gap-3 bg-slate-900 text-white p-4 rounded-xl shadow-md">
+              <div className="flex items-center gap-3">
+                <FileCheck className="w-5 h-5 text-emerald-400" />
+                <div>
+                  <p className="text-sm font-semibold">
+                    Document Preview: {details.invoiceNumber || 'Draft Invoice'}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Official letterhead view • Ready to print or export PDF
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode('edit');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Edit Form
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-colors cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Print / Save as PDF
+                </button>
+                <button
+                  type="button"
+                  disabled={isloadOriginal || Isload1}
+                  onClick={(e) => handleoriginalcopy(e)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+                >
+                  {isloadOriginal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  Original Copy PDF
+                </button>
+                <button
+                  type="button"
+                  disabled={isloadOriginal || Isload1}
+                  onClick={(e) => handleofficecopy(e)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+                >
+                  {Isload1 ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                  Duplicate Copy PDF
+                </button>
+              </div>
+            </div>
+
+            {/* Authentic Letterhead Printable Document */}
+            <div
+              id="billing-printable-document"
+              className="bg-white rounded-xl shadow-lg ring-1 ring-slate-200 p-6 sm:p-10 text-slate-800 font-sans border border-slate-300"
+            >
+              {/* Header Row: Title & Recipient Copy */}
+              <div className="flex justify-between items-center border-b-2 border-black pb-2 mb-4 text-xs font-bold uppercase tracking-wider">
+                <div className="text-slate-500 font-medium">{details.isPaymentdone ? 'PAID INVOICE' : 'TAX INVOICE'}</div>
+                <div className={`text-base font-extrabold ${isCash ? 'text-emerald-600' : 'text-blue-600'}`}>
+                  {isCash ? 'CASH INVOICE' : 'TAX INVOICE'}
+                </div>
+                <div className="text-slate-600">ORIGINAL FOR RECIPIENT</div>
+              </div>
+
+              {/* Top Grid: Company Info & Invoice Info */}
+              <div className="flex flex-col sm:flex-row border border-black mb-4">
+                {/* Company Details */}
+                <div className="w-full sm:w-1/2 p-3 border-b sm:border-b-0 sm:border-r border-black flex items-start gap-3">
+                  <img src={companyLogo} alt="Bitnextro Logo" className="w-16 h-16 object-contain rounded-md shrink-0" />
+                  <div className="text-[11px] leading-tight space-y-0.5">
+                    <h2 className="font-bold text-sm text-slate-900">BITNEXTRO SOLUTIONS PVT. LTD.</h2>
+                    <p className="text-[10px] text-slate-600 font-medium">IT & Cybersecurity Company</p>
+                    {!isCash && (
+                      <p className="font-semibold text-slate-900">GSTIN: 19AAOCB2081P1ZO</p>
+                    )}
+                    <p className="text-slate-600">5, Park Lane, Parkstreet, Kolkata, West Bengal, 700016</p>
+                    <p className="text-slate-600">Mobile: +91 9330855877</p>
+                    <p className="text-slate-600">Email: info@bitnextro.com | Web: www.bitnextro.com</p>
+                  </div>
+                </div>
+
+                {/* Invoice Meta */}
+                <div className="w-full sm:w-1/2 grid grid-cols-2 divide-x divide-y divide-black text-[11px]">
+                  <div className="p-2.5">
+                    <p className="text-slate-500 font-medium text-[10px]">Invoice #:</p>
+                    <p className="font-bold text-slate-900 text-sm">{details.invoiceNumber || '—'}</p>
+                  </div>
+                  <div className="p-2.5">
+                    <p className="text-slate-500 font-medium text-[10px]">Invoice Date:</p>
+                    <p className="font-bold text-slate-900">{details.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
+                  </div>
+                  <div className="p-2.5">
+                    <p className="text-slate-500 font-medium text-[10px]">Place of Supply:</p>
+                    <p className="font-semibold text-slate-900 uppercase">{details.supplyPlace || 'West Bengal'}</p>
+                  </div>
+                  <div className="p-2.5">
+                    <p className="text-slate-500 font-medium text-[10px]">Payment Status:</p>
+                    <p className={`font-bold ${details.isPaymentdone ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {details.isPaymentdone ? 'Amount Paid' : 'Amount Due'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Details Row */}
+              <div className="flex flex-col sm:flex-row border border-black mb-4">
+                <div className="w-full sm:w-1/2 p-3 border-b sm:border-b-0 sm:border-r border-black text-[11px] leading-tight space-y-1">
+                  <p className="font-bold text-slate-900 uppercase text-[10px] tracking-wider text-slate-500">Billed To (Customer Details):</p>
+                  <p className="font-bold text-slate-900 text-xs">{details.user || '—'}</p>
+                  {details.email && <p className="text-slate-600">Email: {details.email}</p>}
+                  {!isCash && details.gstno && (
+                    <p className="font-semibold text-slate-900">GSTIN: {details.gstno}</p>
+                  )}
+                  <p className="font-semibold text-slate-700 mt-1">Billing Address:</p>
+                  <p className="text-slate-600 whitespace-pre-line">{details.billingAddress || '—'}</p>
+                </div>
+                <div className="w-full sm:w-1/2 p-3 text-[11px] leading-tight space-y-1">
+                  <p className="font-bold text-slate-900 uppercase text-[10px] tracking-wider text-slate-500">Shipped To:</p>
+                  <p className="font-semibold text-slate-700">Shipping Address:</p>
+                  <p className="text-slate-600 whitespace-pre-line">{details.shippingAddress || '—'}</p>
+                </div>
+              </div>
+
+              {/* Line Items Table */}
+              <div className="border border-black overflow-hidden mb-4">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-black bg-slate-50 text-[11px] font-bold text-slate-900 text-center">
+                      <th className="border-r border-black p-1.5 w-8">#</th>
+                      <th className="border-r border-black p-1.5 text-left">Item Description</th>
+                      <th className="border-r border-black p-1.5 w-24">HSN/SAC</th>
+                      <th className="border-r border-black p-1.5 text-right w-24">Rate/Item</th>
+                      <th className="border-r border-black p-1.5 w-14">Qty</th>
+                      <th className="border-r border-black p-1.5 text-right w-28">Taxable Value</th>
+                      <th className="border-r border-black p-1.5 text-right w-28">Tax Amount</th>
+                      <th className="p-1.5 text-right w-28">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black/20 text-xs">
+                    {products.map((p, idx) => {
+                      const effRate = getEffectiveRate(p.rate);
+                      const qty = parseInt(p.quantity, 10) || 0;
+                      const taxable = Math.round(effRate * qty * 100) / 100;
+                      const taxVal = (!isCash && details.isGstApplied) ? (taxable * 0.18) : (!isCash && details.isIGstApplied) ? (taxable * 0.18) : 0;
+                      const finalItemTotal = taxable + taxVal;
+                      return (
+                        <tr key={p.id || idx} className="text-center h-8">
+                          <td className="border-r border-black p-1.5 text-slate-500">{idx + 1}</td>
+                          <td className="border-r border-black p-1.5 text-left font-medium text-slate-900 whitespace-pre-line break-words">
+                            {p.name || '—'}
+                          </td>
+                          <td className="border-r border-black p-1.5 text-slate-600">{p.hsn || '-'}</td>
+                          <td className="border-r border-black p-1.5 text-right text-slate-800">₹{effRate.toFixed(2)}</td>
+                          <td className="border-r border-black p-1.5 text-slate-900 font-semibold">{qty}</td>
+                          <td className="border-r border-black p-1.5 text-right font-semibold text-slate-900">₹{taxable.toFixed(2)}</td>
+                          <td className="border-r border-black p-1.5 text-right text-slate-700">
+                            {taxVal > 0 ? (
+                              <>
+                                ₹{taxVal.toFixed(2)}
+                                <span className="text-[10px] text-slate-500 block">(18%)</span>
+                              </>
+                            ) : '₹0.00'}
+                          </td>
+                          <td className="p-1.5 text-right font-bold text-slate-900">₹{finalItemTotal.toFixed(2)}</td>
+                        </tr>
+                      );
+                    })}
+
+                    {/* Totals Breakdown Rows */}
+                    <tr className="border-t-2 border-black font-semibold text-xs bg-slate-50">
+                      <td colSpan="5" className="border-r border-black p-2 text-left font-medium">
+                        Total Items / Qty: {products.length} / {products.reduce((acc, p) => acc + (parseInt(p.quantity, 10) || 0), 0)}
+                      </td>
+                      <td colSpan="2" className="border-r border-black p-2 font-bold text-right">
+                        {isCash ? 'Sub Total' : 'Taxable Amount'}
+                      </td>
+                      <td className="p-2 font-bold text-right">₹{previewTaxable.toFixed(2)}</td>
+                    </tr>
+
+                    {isGst && (
+                      <>
+                        <tr className="border-t border-black text-xs">
+                          <td colSpan="7" className="border-r border-black p-1.5 text-right text-slate-600">CGST (9.0%)</td>
+                          <td className="p-1.5 text-right font-medium">₹{cgst.toFixed(2)}</td>
+                        </tr>
+                        <tr className="border-t border-black text-xs">
+                          <td colSpan="7" className="border-r border-black p-1.5 text-right text-slate-600">SGST (9.0%)</td>
+                          <td className="p-1.5 text-right font-medium">₹{sgst.toFixed(2)}</td>
+                        </tr>
+                      </>
+                    )}
+
+                    {isIGst && (
+                      <tr className="border-t border-black text-xs">
+                        <td colSpan="7" className="border-r border-black p-1.5 text-right text-slate-600">IGST (18.0%)</td>
+                        <td className="p-1.5 text-right font-medium">₹{igst.toFixed(2)}</td>
+                      </tr>
+                    )}
+
+                    {details.isRoundOff && (
+                      <tr className="border-t border-black text-xs">
+                        <td colSpan="7" className="border-r border-black p-1.5 text-right text-slate-600">Round Off</td>
+                        <td className="p-1.5 text-right font-medium">₹{previewRoundOff.toFixed(2)}</td>
+                      </tr>
+                    )}
+
+                    <tr className="border-t-2 border-black font-bold text-sm bg-slate-100">
+                      <td colSpan="7" className="border-r border-black p-2 text-right uppercase tracking-wider text-slate-900">
+                        Total Bill Amount
+                      </td>
+                      <td className="p-2 text-right text-base text-indigo-700">₹{previewGrandTotal.toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Payment Status Bar */}
+              <div className={`flex items-center justify-end gap-1.5 py-1.5 px-3 border border-black mb-4 text-xs font-bold ${
+                details.isPaymentdone ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+              }`}>
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{details.isPaymentdone ? 'AMOUNT PAID' : 'AMOUNT DUE'}</span>
+              </div>
+
+              {/* Bank Details, UPI QR, and Signature */}
+              <div className="flex flex-col sm:flex-row border border-black mb-4">
+                {/* Bank Details */}
+                <div className="w-full sm:w-1/3 p-3 border-b sm:border-b-0 sm:border-r border-black text-[11px] leading-relaxed">
+                  <p className="font-bold text-slate-900 mb-1.5 uppercase text-[10px] tracking-wider">Bank Details:</p>
+                  <div className="flex justify-between py-0.5"><span className="text-slate-500">Bank:</span><strong className="text-slate-800">{bankDetails.bank}</strong></div>
+                  <div className="flex justify-between py-0.5"><span className="text-slate-500">Account #:</span><strong className="text-slate-800">{bankDetails.acc}</strong></div>
+                  <div className="flex justify-between py-0.5"><span className="text-slate-500">IFSC:</span><strong className="text-slate-800">{bankDetails.ifsc}</strong></div>
+                  <div className="flex justify-between py-0.5"><span className="text-slate-500">Branch:</span><strong className="text-slate-800">{bankDetails.branch}</strong></div>
+                </div>
+
+                {/* UPI QR */}
+                <div className="w-full sm:w-1/3 p-3 border-b sm:border-b-0 sm:border-r border-black flex flex-col items-center justify-center text-center">
+                  <p className="text-[11px] font-bold text-slate-900 mb-1">Pay using UPI:</p>
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(`upi://pay?pa=81153201@ubin&pn=BITNEXTRO%20SOLUTIONS%20PVT.%20LTD.&am=${previewGrandTotal.toFixed(2)}&cu=INR`)}`}
+                    alt="UPI QR"
+                    className="w-20 h-20 object-contain mix-blend-multiply"
+                  />
+                  <p className="text-[10px] text-slate-500 font-mono mt-1">81153201@ubin</p>
+                </div>
+
+                {/* Stamp & Authorized Signatory */}
+                <div className="w-full sm:w-1/3 p-3 flex flex-col justify-between items-end text-right">
+                  <p className="text-[11px] font-bold text-slate-700">For BITNEXTRO SOLUTIONS PVT. LTD.</p>
+                  <div className="flex items-center justify-end gap-2 my-2">
+                    {details.isStampApplied && (
+                      <img src={authStamp} alt="Authorized Stamp" className="w-16 h-16 object-contain opacity-90" />
+                    )}
+                  </div>
+                  <p className="font-medium text-[11px] text-slate-500 border-t border-slate-400 pt-1 w-32 text-center">
+                    Authorized Signatory
+                  </p>
+                </div>
+              </div>
+
+              {/* Notes & Terms */}
+              <div className="flex flex-col sm:flex-row border border-black text-[10px] text-slate-600">
+                <div className="w-full sm:w-1/3 p-3 border-b sm:border-b-0 sm:border-r border-black">
+                  <p className="font-bold text-slate-800 mb-1">Notes:</p>
+                  <p>Thank you for your business!</p>
+                </div>
+                <div className="w-full sm:w-2/3 p-3">
+                  <p className="font-bold text-slate-800 mb-1">Terms and Conditions:</p>
+                  <ol className="list-decimal pl-4 space-y-0.5">
+                    <li>All services will be provided as per the scope mentioned in this invoice.</li>
+                    <li>Work delivery and credential handover will be completed after full payment.</li>
+                    <li>No refunds will be applicable once services are activated.</li>
+                    <li>Any additional requirements beyond the invoice scope will be charged separately.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Saved Invoices Section */}
-      {activeTab === 'invoice' && (
-      <div className="max-w-4xl mx-auto bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8 space-y-4 mb-10 mt-8">
+      <div className="no-print bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8 space-y-4 mb-10 mt-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -1153,7 +1578,7 @@ export default function Adminbilling() {
               </span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Click View to load the invoice data back into the form.
+              Click View to preview the official document, or Edit to load into the form for modification.
             </p>
           </div>
           <button
@@ -1212,22 +1637,25 @@ export default function Adminbilling() {
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => handleViewInvoice(inv)}
+                          type="button"
+                          onClick={() => handleViewInvoice(inv, 'preview')}
                           className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
-                          title="View / Load Invoice"
+                          title="Preview Document"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           View
                         </button>
                         <button
-                          onClick={() => handleViewInvoice(inv)}
+                          type="button"
+                          onClick={() => handleViewInvoice(inv, 'edit')}
                           className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
-                          title="Edit / Load Invoice"
+                          title="Edit Invoice"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                           Edit
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteInvoice(inv._id)}
                           className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
                           title="Delete Invoice"
@@ -1249,7 +1677,8 @@ export default function Adminbilling() {
           </div>
         )}
       </div>
-      )}
+    </div>
+    )}
       
     
         {/* Daily Expenses Workspace */}
