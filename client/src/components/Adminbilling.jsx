@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X, Wallet } from 'lucide-react';
+import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X, Wallet, Save } from 'lucide-react';
 import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
@@ -24,6 +24,8 @@ export default function Adminbilling() {
   const [savedInvoices, setSavedInvoices] = useState([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
   const [invoiceListError, setInvoiceListError] = useState(null);
+  const [editingInvoiceId, setEditingInvoiceId] = useState(null);
+  const [isSavingInvoice, setIsSavingInvoice] = useState(false);
 
     const fetchInvoices = async () => {
     setIsLoadingInvoices(true);
@@ -83,6 +85,7 @@ export default function Adminbilling() {
   
   const handleClearForm = () => {
     if (window.confirm("Are you sure you want to clear the form?")) {
+      setEditingInvoiceId(null);
       setDetails({
         invoiceNumber: '',
         supplyPlace: '',
@@ -104,34 +107,37 @@ export default function Adminbilling() {
   };
 
   const handleViewInvoice = (inv) => {
+    setEditingInvoiceId(inv._id);
     const totalTaxable = (inv.items || []).reduce((acc, curr) => acc + (curr.qty * curr.rate), 0);
     const hasTax = (inv.salesAmount - totalTaxable) > 1;
 
     setInvoiceType(inv.invoiceType || (hasTax ? 'tax' : 'cash'));
     
-    setDetails(prev => ({
-      ...prev,
+    setDetails({
       invoiceNumber: inv.invoiceNumber || '',
+      supplyPlace: inv.supplyPlace || '',
       email: inv.customerEmail || '',
       user: inv.customerName || '',
       gstno: inv.customerGstNumber || '',
       billingAddress: inv.billingAddress || '',
       shippingAddress: inv.shippingAddress || '',
-      isGstApplied: hasTax,
-      isIGstApplied: false,
-      isStampApplied: true,
+      isGstApplied: inv.isGstApplied !== undefined ? inv.isGstApplied : hasTax,
+      isIGstApplied: Boolean(inv.isIGstApplied),
+      isStampApplied: inv.isStampApplied !== undefined ? inv.isStampApplied : true,
       isPaymentdone: inv.paymentStatus === 'Paid',
-    }));
+      isRoundOff: Boolean(inv.isRoundOff)
+    });
 
     const mappedProducts = (inv.items || []).map((item, idx) => ({
       id: Date.now() + idx,
       name: item.productName || '',
       hsn: item.hsnNumber || '',
-      rate: item.rate || '',
+      rate: item.rate !== undefined && item.rate !== null ? item.rate : '',
       quantity: item.qty || 1
     }));
     
     setProducts(mappedProducts.length > 0 ? mappedProducts : [{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
+    handleSuccess(`Invoice "${inv.invoiceNumber}" loaded into form.`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   useEffect(() => {
@@ -332,6 +338,7 @@ export default function Adminbilling() {
   const recordSale = async (payload) => {
     try {
       const salesPayload = {
+        id: editingInvoiceId || undefined,
         invoiceNumber: payload.invoiceNumber,
         invoiceType: payload.invoiceType,
         invoiceDate: payload.date || new Date().toLocaleDateString("en-GB"),
@@ -340,6 +347,11 @@ export default function Adminbilling() {
         customerGstNumber: payload.gstno,
         billingAddress: payload.billingAddress || '',
         shippingAddress: payload.shippingAddress || '',
+        supplyPlace: payload.supplyPlace || '',
+        isGstApplied: payload.isGstApplied,
+        isIGstApplied: payload.isIGstApplied,
+        isStampApplied: payload.isStampApplied,
+        isRoundOff: payload.isRoundOff,
         items: payload.products.map(p => ({
           productName: p.name,
           hsnNumber: p.hsn,
@@ -350,13 +362,26 @@ export default function Adminbilling() {
         salesAmount: payload.totalAmount
       };
       
-      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/record-sale`, {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/record-sale`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(salesPayload)
       });
+      const data = await res.json();
+      if (res.ok) {
+        if (data.sale && data.sale._id) {
+          setEditingInvoiceId(data.sale._id);
+        }
+        await fetchInvoices();
+        return true;
+      } else {
+        handleError(data.error || "Failed to save invoice to database");
+        return false;
+      }
     } catch (error) {
       console.error("Error recording sale:", error);
+      handleError("Error connecting to server to save invoice");
+      return false;
     }
   };
 
@@ -365,7 +390,7 @@ export default function Adminbilling() {
     setIsload1(true);
     const payload = buildPayload();
 
-    recordSale(payload);
+    await recordSale(payload);
 
     const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/copybill/billing-work`;
 
@@ -420,7 +445,7 @@ export default function Adminbilling() {
     setIsloadOriginal(true);
     const payload = buildPayload();
 
-    recordSale(payload);
+    await recordSale(payload);
 
     const url = `${import.meta.env.VITE_BACKEND_URL}/api/v3/bill/billing-work`;
 
@@ -612,6 +637,26 @@ export default function Adminbilling() {
         </div>
 
         <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown} className="space-y-6">
+          {/* Editing Status Banner */}
+          {editingInvoiceId && (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-amber-800 shadow-xs">
+              <div className="flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  Editing Saved Invoice: <strong className="font-semibold">{details.invoiceNumber || 'Draft'}</strong>. Updates will save directly to the database.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearForm}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-md transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+                Cancel / New Invoice
+              </button>
+            </div>
+          )}
+
           {/* Section 1: General Details */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
             <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-6 border-b pb-4">
@@ -1044,30 +1089,48 @@ export default function Adminbilling() {
             <button
               type="button"
               onClick={handleClearForm}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-slate-100 px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
               Clear Form
             </button>
             <button
               type="button"
-              disabled={isloadOriginal || Isload1}
+              disabled={isSavingInvoice || isloadOriginal || Isload1}
+              onClick={async (e) => {
+                if (e.currentTarget.form && !e.currentTarget.form.reportValidity()) return;
+                setIsSavingInvoice(true);
+                const payload = buildPayload();
+                const ok = await recordSale(payload);
+                setIsSavingInvoice(false);
+                if (ok) {
+                  handleSuccess(`Invoice "${payload.invoiceNumber}" saved successfully!`);
+                }
+              }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:opacity-60 transition-colors cursor-pointer"
+            >
+              {isSavingInvoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {editingInvoiceId ? "Update Invoice" : "Save Invoice"}
+            </button>
+            <button
+              type="button"
+              disabled={isSavingInvoice || isloadOriginal || Isload1}
               onClick={(e) => {
                 if (e.currentTarget.form && !e.currentTarget.form.reportValidity()) return;
                 handleoriginalcopy(e);
               }}
-              className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
             >
               {isloadOriginal ? <div className='w-4 h-4 border-2 border-white rounded-sm animate-spin'></div> : "Original copy"}
             </button>
             <button
               type="button"
-              disabled={isloadOriginal || Isload1}
+              disabled={isSavingInvoice || isloadOriginal || Isload1}
               onClick={(e) => {
                 if (e.currentTarget.form && !e.currentTarget.form.reportValidity()) return;
                 handleofficecopy(e);
               }}
-              className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-60 transition-colors cursor-pointer"
             >
               {Isload1 ? <div className='w-4 h-4 border-2 border-white rounded-sm animate-spin'></div> : "Duplicate copy"}
             </button>

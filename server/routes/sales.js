@@ -7,12 +7,21 @@ const router = express.Router();
 router.post('/record-sale', async (req, res) => {
   try {
     const {
+      id,
+      _id,
       invoiceNumber,
       invoiceType,
       invoiceDate,
       customerName,
       customerEmail,
       customerGstNumber,
+      billingAddress,
+      shippingAddress,
+      supplyPlace,
+      isGstApplied,
+      isIGstApplied,
+      isStampApplied,
+      isRoundOff,
       items,
       salesAmount
     } = req.body;
@@ -42,21 +51,36 @@ router.post('/record-sale', async (req, res) => {
       yearMonth = new Date().toISOString().substring(0, 7);
     }
 
-    const existingSale = await Sale.findOne({ invoiceNumber });
+    let existingSale = null;
+    const saleId = id || _id;
+    if (saleId) {
+      existingSale = await Sale.findById(saleId);
+    }
+    if (!existingSale && invoiceNumber) {
+      existingSale = await Sale.findOne({ invoiceNumber });
+    }
 
     if (existingSale) {
-      const profit = parseFloat((salesAmount - existingSale.purchaseAmount).toFixed(2));
+      const profit = parseFloat((salesAmount - (existingSale.purchaseAmount || 0)).toFixed(2));
       
-      const updatedSale = await Sale.findOneAndUpdate(
-        { invoiceNumber },
+      const updatedSale = await Sale.findByIdAndUpdate(
+        existingSale._id,
         {
           $set: {
+            invoiceNumber,
             invoiceType: invoiceType || "tax",
             invoiceDate,
             yearMonth,
             customerName,
             customerEmail: customerEmail || "",
             customerGstNumber: customerGstNumber || "",
+            billingAddress: billingAddress || "",
+            shippingAddress: shippingAddress || "",
+            supplyPlace: supplyPlace || "",
+            isGstApplied: isGstApplied !== undefined ? Boolean(isGstApplied) : true,
+            isIGstApplied: Boolean(isIGstApplied),
+            isStampApplied: isStampApplied !== undefined ? Boolean(isStampApplied) : true,
+            isRoundOff: Boolean(isRoundOff),
             items: items || [],
             salesAmount: salesAmount || 0,
             profit,
@@ -80,6 +104,13 @@ router.post('/record-sale', async (req, res) => {
         customerName,
         customerEmail: customerEmail || "",
         customerGstNumber: customerGstNumber || "",
+        billingAddress: billingAddress || "",
+        shippingAddress: shippingAddress || "",
+        supplyPlace: supplyPlace || "",
+        isGstApplied: isGstApplied !== undefined ? Boolean(isGstApplied) : true,
+        isIGstApplied: Boolean(isIGstApplied),
+        isStampApplied: isStampApplied !== undefined ? Boolean(isStampApplied) : true,
+        isRoundOff: Boolean(isRoundOff),
         items: items || [],
         salesAmount: salesAmount || 0,
         purchaseAmount,

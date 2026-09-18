@@ -8,6 +8,13 @@ const SaleSchema = new mongoose.Schema({
   customerName: { type: String, default: "", index: true },
   customerEmail: { type: String, default: "" },
   customerGstNumber: { type: String, default: "" },
+  billingAddress: { type: String, default: "" },
+  shippingAddress: { type: String, default: "" },
+  supplyPlace: { type: String, default: "" },
+  isGstApplied: { type: Boolean, default: true },
+  isIGstApplied: { type: Boolean, default: false },
+  isStampApplied: { type: Boolean, default: true },
+  isRoundOff: { type: Boolean, default: false },
   items: [{
     productName: String,
     hsnNumber: String,
