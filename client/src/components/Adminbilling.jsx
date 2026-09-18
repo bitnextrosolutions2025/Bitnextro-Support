@@ -9,6 +9,7 @@ import ProformaWorkspace from './ProformaWorkspace';
 import SalesWorkspace from './SalesWorkspace';
 import DailyExpensesWorkspace from './DailyExpensesWorkspace';
 import secureLocalStorage from 'react-secure-storage';
+import { authSignature } from '../assets/authSignature';
 
 // Official Bitnextro letterhead assets
 const companyLogo = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772130931/user_profiles/iasw8ry0br2wgwprakxg.jpg";
@@ -634,7 +635,15 @@ export default function Adminbilling() {
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Print Stylesheet */}
             <style>{`
+              .border-black { border-color: #000 !important; }
+              .bg-gray-100 { background-color: #f3f4f6 !important; }
+              .text-blue-600 { color: #2563eb !important; }
               @media print {
+                body {
+                  background: white !important;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                }
                 body * {
                   visibility: hidden;
                 }
@@ -647,9 +656,9 @@ export default function Adminbilling() {
                   top: 0;
                   width: 100%;
                   margin: 0;
-                  padding: 24px;
+                  padding: 0;
                   box-shadow: none !important;
-                  border: none !important;
+                  border: 1px solid #000 !important;
                   background: white !important;
                 }
                 .no-print {
@@ -1266,10 +1275,24 @@ export default function Adminbilling() {
         const isGst = !isCash && Boolean(details.isGstApplied);
         const isIGst = !isCash && Boolean(details.isIGstApplied);
 
-        const cgst = isGst ? Math.round(previewTaxable * 0.09 * 100) / 100 : 0;
-        const sgst = isGst ? Math.round(previewTaxable * 0.09 * 100) / 100 : 0;
-        const igst = isIGst ? Math.round(previewTaxable * 0.18 * 100) / 100 : 0;
-        const totalTaxAmount = cgst + sgst + igst;
+        let totalTaxAmount = 0;
+        const productsWithCalc = products.map((p, index) => {
+          const effRate = getEffectiveRate(p.rate);
+          const qty = parseInt(p.quantity, 10) || 0;
+          const taxable = Math.round(effRate * qty * 100) / 100;
+          const taxVal = isGst ? (taxable * 0.18) : isIGst ? (taxable * 0.18) : 0;
+          const finalItemTotal = taxable + taxVal;
+          totalTaxAmount += taxVal;
+          return {
+            ...p,
+            effRate,
+            qty,
+            taxable,
+            taxVal,
+            finalItemTotal
+          };
+        });
+
         let previewGrandTotal = previewTaxable + totalTaxAmount;
         let previewRoundOff = 0;
         if (details.isRoundOff) {
@@ -1277,6 +1300,9 @@ export default function Adminbilling() {
           previewRoundOff = rounded - previewGrandTotal;
           previewGrandTotal = rounded;
         }
+
+        const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent("BITNEXTRO SOLUTIONS PVT. LTD.")}&am=${previewGrandTotal.toFixed(2)}&cu=INR`;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(upiString)}`;
 
         return (
           <div className="space-y-6">
@@ -1289,7 +1315,7 @@ export default function Adminbilling() {
                     Document Preview: {details.invoiceNumber || 'Draft Invoice'}
                   </p>
                   <p className="text-xs text-slate-400">
-                    Official letterhead view • Ready to print or export PDF
+                    Official PDF letterhead layout • Identical to downloaded invoice PDF
                   </p>
                 </div>
               </div>
@@ -1335,225 +1361,237 @@ export default function Adminbilling() {
               </div>
             </div>
 
-            {/* Authentic Letterhead Printable Document */}
+            {/* Exactly matching downloaded PDF invoice layout */}
             <div
               id="billing-printable-document"
-              className="bg-white rounded-xl shadow-lg ring-1 ring-slate-200 p-6 sm:p-10 text-slate-800 font-sans border border-slate-300"
+              className="border border-black max-w-4xl mx-auto flex flex-col bg-white text-black font-sans shadow-lg"
             >
-              {/* Header Row: Title & Recipient Copy */}
-              <div className="flex justify-between items-center border-b-2 border-black pb-2 mb-4 text-xs font-bold uppercase tracking-wider">
-                <div className="text-slate-500 font-medium">{details.isPaymentdone ? 'PAID INVOICE' : 'TAX INVOICE'}</div>
-                <div className={`text-base font-extrabold ${isCash ? 'text-emerald-600' : 'text-blue-600'}`}>
+              {/* Header Row */}
+              <div className="flex justify-between items-center border-b border-black px-2 py-1 text-xs font-bold uppercase tracking-wider">
+                <div className="w-1/3"></div>
+                <div className="w-1/3 text-center text-blue-600 text-sm font-bold">
                   {isCash ? 'CASH INVOICE' : 'TAX INVOICE'}
                 </div>
-                <div className="text-slate-600">ORIGINAL FOR RECIPIENT</div>
+                <div className="w-1/3 text-right">ORIGINAL FOR RECIPIENT</div>
               </div>
 
-              {/* Top Grid: Company Info & Invoice Info */}
-              <div className="flex flex-col sm:flex-row border border-black mb-4">
-                {/* Company Details */}
-                <div className="w-full sm:w-1/2 p-3 border-b sm:border-b-0 sm:border-r border-black flex items-start gap-3">
-                  <img src={companyLogo} alt="Bitnextro Logo" className="w-16 h-16 object-contain rounded-md shrink-0" />
-                  <div className="text-[11px] leading-tight space-y-0.5">
-                    <h2 className="font-bold text-sm text-slate-900">BITNEXTRO SOLUTIONS PVT. LTD.</h2>
-                    <p className="text-[10px] text-slate-600 font-medium">IT & Cybersecurity Company</p>
+              {/* Top Details Grid */}
+              <div className="flex border-b border-black">
+                {/* Company Info */}
+                <div className="w-1/2 border-r border-black p-3 flex items-start gap-3">
+                  <img src={companyLogo} alt="Logo" className="w-16 h-16 object-contain" />
+                  <div className="text-[11px] leading-tight">
+                    <h2 className="font-bold text-sm mb-0.5">BITNEXTRO SOLUTIONS PVT. LTD.</h2>
+                    <p className="text-[10px] text-gray-600 font-medium mb-1">IT & Cybersecurity Company</p>
                     {!isCash && (
-                      <p className="font-semibold text-slate-900">GSTIN: 19AAOCB2081P1ZO</p>
+                      <p><strong>GSTIN: 19AAOCB2081P1ZO</strong></p>
                     )}
-                    <p className="text-slate-600">5, Park Lane, Parkstreet, Kolkata, West Bengal, 700016</p>
-                    <p className="text-slate-600">Mobile: +91 9330855877</p>
-                    <p className="text-slate-600">Email: info@bitnextro.com | Web: www.bitnextro.com</p>
+                    <p>5, Park Lane, Parkstreet, Kolkata, West Bengal, 700016</p>
+                    <p>Mobile: +91 9330855877</p>
+                    <p>Email: info@bitnextro.com</p>
+                    <p>Website: www.bitnextro.com</p>
                   </div>
                 </div>
 
-                {/* Invoice Meta */}
-                <div className="w-full sm:w-1/2 grid grid-cols-2 divide-x divide-y divide-black text-[11px]">
-                  <div className="p-2.5">
-                    <p className="text-slate-500 font-medium text-[10px]">Invoice #:</p>
-                    <p className="font-bold text-slate-900 text-sm">{details.invoiceNumber || '—'}</p>
+                {/* Invoice Info & Dates */}
+                <div className="w-1/2 flex flex-col">
+                  <div className="flex border-b border-black h-1/2">
+                    <div className="w-1/2 border-r border-black p-2 text-[11px]">
+                      <p className="text-gray-600 mb-1">Invoice #:</p>
+                      <p className="text-sm font-bold">{details.invoiceNumber || 'N/A'}</p>
+                    </div>
+                    <div className="w-1/2 p-2 text-[11px]">
+                      <p className="text-gray-600 mb-1">Invoice Date:</p>
+                      <p className="">{details.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
+                    </div>
                   </div>
-                  <div className="p-2.5">
-                    <p className="text-slate-500 font-medium text-[10px]">Invoice Date:</p>
-                    <p className="font-bold text-slate-900">{details.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
-                  </div>
-                  <div className="p-2.5">
-                    <p className="text-slate-500 font-medium text-[10px]">Place of Supply:</p>
-                    <p className="font-semibold text-slate-900 uppercase">{details.supplyPlace || 'West Bengal'}</p>
-                  </div>
-                  <div className="p-2.5">
-                    <p className="text-slate-500 font-medium text-[10px]">Payment Status:</p>
-                    <p className={`font-bold ${details.isPaymentdone ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {details.isPaymentdone ? 'Amount Paid' : 'Amount Due'}
-                    </p>
+                  <div className="flex h-1/2">
+                    <div className="w-1/2 border-r border-black p-2 text-[11px]">
+                      <p className="text-gray-600 mb-1">Place of Supply:</p>
+                      <p className="uppercase font-semibold">{details.supplyPlace || 'WEST BENGAL'}</p>
+                    </div>
+                    <div className="w-1/2 p-2 text-[11px]">
+                      <p className="text-gray-600 mb-1">Due Date:</p>
+                      <p className="">{details.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Customer Details Row */}
-              <div className="flex flex-col sm:flex-row border border-black mb-4">
-                <div className="w-full sm:w-1/2 p-3 border-b sm:border-b-0 sm:border-r border-black text-[11px] leading-tight space-y-1">
-                  <p className="font-bold text-slate-900 uppercase text-[10px] tracking-wider text-slate-500">Billed To (Customer Details):</p>
-                  <p className="font-bold text-slate-900 text-xs">{details.user || '—'}</p>
-                  {details.email && <p className="text-slate-600">Email: {details.email}</p>}
-                  {!isCash && details.gstno && (
-                    <p className="font-semibold text-slate-900">GSTIN: {details.gstno}</p>
+              <div className="flex border-b border-black">
+                <div className="w-1/2 border-r border-black p-2 text-[11px] leading-tight">
+                  <p className="font-bold mb-1">CUSTOMER DETAILS:</p>
+                  <p>Name: {details.user || 'N/A'}</p>
+                  <p>Email: {details.email || 'N/A'}</p>
+                  {!isCash && details.gstno && <p>GSTIN: {details.gstno}</p>}
+                  <p className="font-bold mt-1">BILLING ADDRESS:</p>
+                  <p className="whitespace-pre-line">{details.billingAddress || 'N/A'}</p>
+                </div>
+                <div className="w-1/2 p-2 text-[11px] leading-tight">
+                  <p className="font-bold mb-1">SHIPPING ADDRESS</p>
+                  <p className="whitespace-pre-line">{details.shippingAddress || 'N/A'}</p>
+                </div>
+              </div>
+
+              {/* Products Table */}
+              <table className="w-full border-b border-black border-collapse">
+                <thead>
+                  <tr className="border-b border-black text-[11px] font-bold">
+                    <th className="border-r border-black p-1 w-8">#</th>
+                    <th className="border-r border-black p-1 text-left w-64">Item</th>
+                    <th className="border-r border-black p-1">HSN/SAC</th>
+                    <th className="border-r border-black p-1 text-right">Rate/Item</th>
+                    <th className="border-r border-black p-1">Qty</th>
+                    <th className="border-r border-black p-1 text-right">Taxable Value</th>
+                    <th className="border-r border-black p-1 text-right">Tax Amount</th>
+                    <th className="p-1 text-right w-28">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="align-top">
+                  {productsWithCalc.map((p, index) => (
+                    <tr key={p.id || index} className="border-b border-black text-xs text-center h-8">
+                      <td className="border-r border-black p-1">{index + 1}</td>
+                      <td className="border-r border-black p-1 text-left font-semibold whitespace-pre-line break-words">{p.name}</td>
+                      <td className="border-r border-black p-1">{p.hsn || '-'}</td>
+                      <td className="border-r border-black p-1 text-right">{p.effRate.toFixed(2)}</td>
+                      <td className="border-r border-black p-1">{p.qty}</td>
+                      <td className="border-r border-black p-1 text-right">{p.taxable.toFixed(2)}</td>
+                      <td className="border-r border-black p-1 text-right">
+                        {isGst ? (
+                          <>
+                            {p.taxVal.toFixed(2)}
+                            <br /><span className="text-[10px]">(18%)</span>
+                          </>
+                        ) : isIGst ? (
+                          <>
+                            {p.taxVal.toFixed(2)}
+                            <br /><span className="text-[10px]">(18%)</span>
+                          </>
+                        ) : '0.00'}
+                      </td>
+                      <td className="p-1 text-right font-medium">{p.finalItemTotal.toFixed(2)}</td>
+                    </tr>
+                  ))}
+
+                  {/* Empty filler space to match the PDF height style */}
+                  <tr className="h-32">
+                    <td className="border-r border-black"></td>
+                    <td className="border-r border-black"></td>
+                    <td className="border-r border-black"></td>
+                    <td className="border-r border-black"></td>
+                    <td className="border-r border-black"></td>
+                    <td className="border-r border-black"></td>
+                    <td className="border-r border-black"></td>
+                    <td></td>
+                  </tr>
+
+                  {/* Totals Section */}
+                  <tr className="border-t border-black text-xs">
+                    <td colSpan={5} className="border-r border-black p-1 px-2 font-medium text-left">
+                      Total Items / Qty : {products.length} / {products.reduce((acc, p) => acc + (parseInt(p.quantity, 10) || 0), 0)}
+                    </td>
+                    <td colSpan={2} className="border-r border-black p-1 font-bold text-right">
+                      {isCash ? 'Sub Total' : 'Taxable Amount'}
+                    </td>
+                    <td className="p-1 font-bold text-right">₹{previewTaxable.toFixed(2)}</td>
+                  </tr>
+
+                  {isGst && (
+                    <>
+                      <tr className="border-t border-black text-xs">
+                        <td colSpan={7} className="border-r border-black p-1 text-right">SGST 9.0%</td>
+                        <td className="p-1 text-right">₹{(totalTaxAmount / 2).toFixed(2)}</td>
+                      </tr>
+                      <tr className="border-t border-black text-xs">
+                        <td colSpan={7} className="border-r border-black p-1 text-right">CGST 9.0%</td>
+                        <td className="p-1 text-right">₹{(totalTaxAmount / 2).toFixed(2)}</td>
+                      </tr>
+                    </>
                   )}
-                  <p className="font-semibold text-slate-700 mt-1">Billing Address:</p>
-                  <p className="text-slate-600 whitespace-pre-line">{details.billingAddress || '—'}</p>
-                </div>
-                <div className="w-full sm:w-1/2 p-3 text-[11px] leading-tight space-y-1">
-                  <p className="font-bold text-slate-900 uppercase text-[10px] tracking-wider text-slate-500">Shipped To:</p>
-                  <p className="font-semibold text-slate-700">Shipping Address:</p>
-                  <p className="text-slate-600 whitespace-pre-line">{details.shippingAddress || '—'}</p>
-                </div>
-              </div>
 
-              {/* Line Items Table */}
-              <div className="border border-black overflow-hidden mb-4">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-black bg-slate-50 text-[11px] font-bold text-slate-900 text-center">
-                      <th className="border-r border-black p-1.5 w-8">#</th>
-                      <th className="border-r border-black p-1.5 text-left">Item Description</th>
-                      <th className="border-r border-black p-1.5 w-24">HSN/SAC</th>
-                      <th className="border-r border-black p-1.5 text-right w-24">Rate/Item</th>
-                      <th className="border-r border-black p-1.5 w-14">Qty</th>
-                      <th className="border-r border-black p-1.5 text-right w-28">Taxable Value</th>
-                      <th className="border-r border-black p-1.5 text-right w-28">Tax Amount</th>
-                      <th className="p-1.5 text-right w-28">Amount</th>
+                  {isIGst && (
+                    <tr className="border-t border-black text-xs">
+                      <td colSpan={7} className="border-r border-black p-1 text-right">IGST 18%</td>
+                      <td className="p-1 text-right">₹{totalTaxAmount.toFixed(2)}</td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-black/20 text-xs">
-                    {products.map((p, idx) => {
-                      const effRate = getEffectiveRate(p.rate);
-                      const qty = parseInt(p.quantity, 10) || 0;
-                      const taxable = Math.round(effRate * qty * 100) / 100;
-                      const taxVal = (!isCash && details.isGstApplied) ? (taxable * 0.18) : (!isCash && details.isIGstApplied) ? (taxable * 0.18) : 0;
-                      const finalItemTotal = taxable + taxVal;
-                      return (
-                        <tr key={p.id || idx} className="text-center h-8">
-                          <td className="border-r border-black p-1.5 text-slate-500">{idx + 1}</td>
-                          <td className="border-r border-black p-1.5 text-left font-medium text-slate-900 whitespace-pre-line break-words">
-                            {p.name || '—'}
-                          </td>
-                          <td className="border-r border-black p-1.5 text-slate-600">{p.hsn || '-'}</td>
-                          <td className="border-r border-black p-1.5 text-right text-slate-800">₹{effRate.toFixed(2)}</td>
-                          <td className="border-r border-black p-1.5 text-slate-900 font-semibold">{qty}</td>
-                          <td className="border-r border-black p-1.5 text-right font-semibold text-slate-900">₹{taxable.toFixed(2)}</td>
-                          <td className="border-r border-black p-1.5 text-right text-slate-700">
-                            {taxVal > 0 ? (
-                              <>
-                                ₹{taxVal.toFixed(2)}
-                                <span className="text-[10px] text-slate-500 block">(18%)</span>
-                              </>
-                            ) : '₹0.00'}
-                          </td>
-                          <td className="p-1.5 text-right font-bold text-slate-900">₹{finalItemTotal.toFixed(2)}</td>
-                        </tr>
-                      );
-                    })}
+                  )}
 
-                    {/* Totals Breakdown Rows */}
-                    <tr className="border-t-2 border-black font-semibold text-xs bg-slate-50">
-                      <td colSpan="5" className="border-r border-black p-2 text-left font-medium">
-                        Total Items / Qty: {products.length} / {products.reduce((acc, p) => acc + (parseInt(p.quantity, 10) || 0), 0)}
-                      </td>
-                      <td colSpan="2" className="border-r border-black p-2 font-bold text-right">
-                        {isCash ? 'Sub Total' : 'Taxable Amount'}
-                      </td>
-                      <td className="p-2 font-bold text-right">₹{previewTaxable.toFixed(2)}</td>
+                  {details.isRoundOff && (
+                    <tr className="border-t border-black text-xs">
+                      <td colSpan={7} className="border-r border-black p-1 text-right">Round Off</td>
+                      <td className="p-1 text-right">₹{previewRoundOff.toFixed(2)}</td>
                     </tr>
+                  )}
 
-                    {isGst && (
-                      <>
-                        <tr className="border-t border-black text-xs">
-                          <td colSpan="7" className="border-r border-black p-1.5 text-right text-slate-600">CGST (9.0%)</td>
-                          <td className="p-1.5 text-right font-medium">₹{cgst.toFixed(2)}</td>
-                        </tr>
-                        <tr className="border-t border-black text-xs">
-                          <td colSpan="7" className="border-r border-black p-1.5 text-right text-slate-600">SGST (9.0%)</td>
-                          <td className="p-1.5 text-right font-medium">₹{sgst.toFixed(2)}</td>
-                        </tr>
-                      </>
-                    )}
+                  <tr className="border-t border-black font-bold text-sm bg-gray-100">
+                    <td colSpan={7} className="border-r border-black p-1 text-right uppercase">Total</td>
+                    <td className="p-1 text-right text-base">₹{previewGrandTotal.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
 
-                    {isIGst && (
-                      <tr className="border-t border-black text-xs">
-                        <td colSpan="7" className="border-r border-black p-1.5 text-right text-slate-600">IGST (18.0%)</td>
-                        <td className="p-1.5 text-right font-medium">₹{igst.toFixed(2)}</td>
-                      </tr>
-                    )}
-
-                    {details.isRoundOff && (
-                      <tr className="border-t border-black text-xs">
-                        <td colSpan="7" className="border-r border-black p-1.5 text-right text-slate-600">Round Off</td>
-                        <td className="p-1.5 text-right font-medium">₹{previewRoundOff.toFixed(2)}</td>
-                      </tr>
-                    )}
-
-                    <tr className="border-t-2 border-black font-bold text-sm bg-slate-100">
-                      <td colSpan="7" className="border-r border-black p-2 text-right uppercase tracking-wider text-slate-900">
-                        Total Bill Amount
-                      </td>
-                      <td className="p-2 text-right text-base text-indigo-700">₹{previewGrandTotal.toFixed(2)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Payment Status Bar */}
-              <div className={`flex items-center justify-end gap-1.5 py-1.5 px-3 border border-black mb-4 text-xs font-bold ${
-                details.isPaymentdone ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-              }`}>
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{details.isPaymentdone ? 'AMOUNT PAID' : 'AMOUNT DUE'}</span>
-              </div>
-
-              {/* Bank Details, UPI QR, and Signature */}
-              <div className="flex flex-col sm:flex-row border border-black mb-4">
-                {/* Bank Details */}
-                <div className="w-full sm:w-1/3 p-3 border-b sm:border-b-0 sm:border-r border-black text-[11px] leading-relaxed">
-                  <p className="font-bold text-slate-900 mb-1.5 uppercase text-[10px] tracking-wider">Bank Details:</p>
-                  <div className="flex justify-between py-0.5"><span className="text-slate-500">Bank:</span><strong className="text-slate-800">{bankDetails.bank}</strong></div>
-                  <div className="flex justify-between py-0.5"><span className="text-slate-500">Account #:</span><strong className="text-slate-800">{bankDetails.acc}</strong></div>
-                  <div className="flex justify-between py-0.5"><span className="text-slate-500">IFSC:</span><strong className="text-slate-800">{bankDetails.ifsc}</strong></div>
-                  <div className="flex justify-between py-0.5"><span className="text-slate-500">Branch:</span><strong className="text-slate-800">{bankDetails.branch}</strong></div>
+              {/* Amount Due Status */}
+              {details.isPaymentdone ? (
+                <div className="text-right text-[11px] font-bold text-green-600 p-1 border-b border-black">
+                  <span className="inline-flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Amount Paid
+                  </span>
                 </div>
-
-                {/* UPI QR */}
-                <div className="w-full sm:w-1/3 p-3 border-b sm:border-b-0 sm:border-r border-black flex flex-col items-center justify-center text-center">
-                  <p className="text-[11px] font-bold text-slate-900 mb-1">Pay using UPI:</p>
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(`upi://pay?pa=81153201@ubin&pn=BITNEXTRO%20SOLUTIONS%20PVT.%20LTD.&am=${previewGrandTotal.toFixed(2)}&cu=INR`)}`}
-                    alt="UPI QR"
-                    className="w-20 h-20 object-contain mix-blend-multiply"
-                  />
-                  <p className="text-[10px] text-slate-500 font-mono mt-1">81153201@ubin</p>
+              ) : (
+                <div className="text-right text-[11px] font-bold text-red-600 p-1 border-b border-black">
+                  <span className="inline-flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    Amount Due
+                  </span>
                 </div>
+              )}
 
-                {/* Stamp & Authorized Signatory */}
-                <div className="w-full sm:w-1/3 p-3 flex flex-col justify-between items-end text-right">
-                  <p className="text-[11px] font-bold text-slate-700">For BITNEXTRO SOLUTIONS PVT. LTD.</p>
-                  <div className="flex items-center justify-end gap-2 my-2">
-                    {details.isStampApplied && (
-                      <img src={authStamp} alt="Authorized Stamp" className="w-16 h-16 object-contain opacity-90" />
+              {/* Footer Grid (Bank, QR, Sign) */}
+              <div className="flex border-b border-black">
+                <div className="w-1/3 border-r border-black p-2 text-[11px] leading-relaxed">
+                  <p className="font-bold mb-1">Bank Details:</p>
+                  <div className="flex"><span className="w-20">Bank:</span><strong>{bankDetails.bank}</strong></div>
+                  <div className="flex"><span className="w-20">Account #:</span><strong>{bankDetails.acc}</strong></div>
+                  <div className="flex"><span className="w-20">IFSC:</span><strong>{bankDetails.ifsc}</strong></div>
+                  <div className="flex"><span className="w-20">Branch:</span><strong>{bankDetails.branch}</strong></div>
+                </div>
+                <div className="w-1/3 border-r border-black p-2 flex flex-col items-center justify-center">
+                  <p className="text-[11px] w-full text-left font-bold mb-1">Pay using UPI:</p>
+                  <img src={qrUrl} alt="UPI QR" className="w-20 h-20 object-contain mix-blend-multiply" />
+                </div>
+                <div className="w-1/3 p-2 flex flex-col items-end justify-between text-[11px]">
+                  <p className="font-bold text-gray-600">For BITNEXTRO SOLUTIONS PVT. LTD.</p>
+                  <div className="flex items-center justify-end gap-2 mt-1 mb-0">
+                    {details.isStampApplied !== false && (
+                      <img src={authStamp} alt="Stamp" className="w-16 h-16 object-contain opacity-90" />
                     )}
+                    <div className="w-24 h-16 flex items-end justify-center pb-1">
+                      {authSignature ? (
+                        <img src={authSignature} alt="Signature" className="max-h-14 max-w-full object-contain" />
+                      ) : (
+                        <div className="w-24 h-16"></div>
+                      )}
+                    </div>
                   </div>
-                  <p className="font-medium text-[11px] text-slate-500 border-t border-slate-400 pt-1 w-32 text-center">
-                    Authorized Signatory
-                  </p>
+                  <p className="font-medium text-gray-500 border-t border-gray-400 pt-1 w-24 text-center">Authorized Signatory</p>
                 </div>
               </div>
 
-              {/* Notes & Terms */}
-              <div className="flex flex-col sm:flex-row border border-black text-[10px] text-slate-600">
-                <div className="w-full sm:w-1/3 p-3 border-b sm:border-b-0 sm:border-r border-black">
-                  <p className="font-bold text-slate-800 mb-1">Notes:</p>
-                  <p>Thank you for your business!</p>
+              {/* Terms and Notes */}
+              <div className="flex text-[10px] h-28">
+                <div className="w-1/3 border-r border-black p-2">
+                  <p className="font-bold mb-1">Notes:</p>
+                  <p>Thank you for the Business</p>
                 </div>
-                <div className="w-full sm:w-2/3 p-3">
-                  <p className="font-bold text-slate-800 mb-1">Terms and Conditions:</p>
-                  <ol className="list-decimal pl-4 space-y-0.5">
+                <div className="p-2">
+                  <p className="font-bold mb-1">Terms and Conditions:</p>
+                  <ol className="list-decimal pl-4 leading-relaxed">
                     <li>All services will be provided as per the scope mentioned in this invoice.</li>
                     <li>Work delivery and credential handover will be completed after full payment.</li>
                     <li>No refunds will be applicable once services are activated.</li>
@@ -1561,6 +1599,12 @@ export default function Adminbilling() {
                   </ol>
                 </div>
               </div>
+            </div>
+
+            {/* Page End */}
+            <div className="max-w-4xl mx-auto mt-2 text-[10px] flex justify-between text-gray-600 font-medium">
+              <span>Page 1 / 1</span>
+              <span>This is a digitally signed document.</span>
             </div>
           </div>
         );
