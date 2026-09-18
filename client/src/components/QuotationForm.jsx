@@ -696,13 +696,14 @@ export default function QuotationForm({ onBack }) {
                       <label className="block sm:hidden text-xs font-medium text-slate-500 mb-1">
                         Item / Service Name
                       </label>
-                      <input
-                        type="text"
+                      <textarea
                         required
+                        rows={1}
                         placeholder="e.g. IT Maintenance / Web Development"
                         value={item.name}
                         onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
-                        className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                        onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                        className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 resize-none overflow-hidden"
                       />
                     </div>
 
