@@ -603,6 +603,7 @@ export default function Adminbilling() {
               <FileText className="w-3.5 h-3.5" />
               Cash Invoice
             </button>
+          </div>
         </div>
 
         <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown} className="space-y-6">
