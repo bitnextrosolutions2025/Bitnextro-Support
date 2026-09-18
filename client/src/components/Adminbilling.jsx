@@ -763,38 +763,8 @@ export default function Adminbilling() {
                 </p>
               </div>
 
-              {/* Controls: Edit/Preview View Switcher + Tax/Cash Switcher */}
+              {/* Controls: Tax/Cash Switcher */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('edit')}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                      viewMode === 'edit'
-                        ? 'bg-white text-indigo-700 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    Edit Form
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setViewMode('preview');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                      viewMode === 'preview'
-                        ? 'bg-white text-indigo-700 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    Document Preview
-                  </button>
-                </div>
-
                 {viewMode === 'edit' && (
                   <div className="inline-flex rounded-lg bg-slate-100 p-1 border border-slate-200 shrink-0">
                     <button
