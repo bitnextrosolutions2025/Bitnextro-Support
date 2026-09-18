@@ -115,6 +115,8 @@ export default function Adminbilling() {
       email: inv.customerEmail || '',
       user: inv.customerName || '',
       gstno: inv.customerGstNumber || '',
+      billingAddress: inv.billingAddress || '',
+      shippingAddress: inv.shippingAddress || '',
       isGstApplied: hasTax,
       isIGstApplied: false,
       isStampApplied: true,
@@ -336,6 +338,8 @@ export default function Adminbilling() {
         customerName: payload.user,
         customerEmail: payload.email,
         customerGstNumber: payload.gstno,
+        billingAddress: payload.billingAddress || '',
+        shippingAddress: payload.shippingAddress || '',
         items: payload.products.map(p => ({
           productName: p.name,
           hsnNumber: p.hsn,
@@ -1086,7 +1090,7 @@ export default function Adminbilling() {
               </span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Click View to load the invoice data back into the form. (Note: Addresses are not saved in ledger).
+              Click View to load the invoice data back into the form.
             </p>
           </div>
           <button
@@ -1127,6 +1131,8 @@ export default function Adminbilling() {
                   <th className="px-4 py-3 whitespace-nowrap">Invoice #</th>
                   <th className="px-4 py-3 whitespace-nowrap">Date</th>
                   <th className="px-4 py-3 whitespace-nowrap">Customer</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Billing Address</th>
+                  <th className="px-4 py-3 whitespace-nowrap">Shipping Address</th>
                   <th className="px-4 py-3 whitespace-nowrap">Amount</th>
                   <th className="px-4 py-3 whitespace-nowrap text-right">Actions</th>
                 </tr>
@@ -1137,9 +1143,19 @@ export default function Adminbilling() {
                     <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">{inv.invoiceNumber}</td>
                     <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{inv.invoiceDate || new Date(inv.createdAt).toLocaleDateString()}</td>
                     <td className="px-4 py-3 text-slate-700 whitespace-nowrap max-w-[150px] truncate">{inv.customerName}</td>
+                    <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={inv.billingAddress || '—'}>{inv.billingAddress || '—'}</td>
+                    <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={inv.shippingAddress || '—'}>{inv.shippingAddress || '—'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">₹{inv.salesAmount?.toFixed(2)}</td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleViewInvoice(inv)}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                          title="View / Load Invoice"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </button>
                         <button
                           onClick={() => handleViewInvoice(inv)}
                           className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
