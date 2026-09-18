@@ -60,15 +60,22 @@ export default function Adminbilling() {
         method: "DELETE",
         headers: { "auth-token": token }
       });
+      
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        throw new Error(`Server returned non-JSON response: ${res.status} ${text.substring(0, 50)}`);
+      }
+      
       const data = await res.json();
-      if (data.status) {
+      if (res.ok && (data.status === true || data.message === "Sale deleted successfully")) {
         setSavedInvoices(prev => prev.filter(inv => inv._id !== id));
       } else {
-        alert(data.msg || "Failed to delete invoice");
+        alert(data.msg || data.error || data.message || "Failed to delete invoice");
       }
     } catch (err) {
       console.error(err);
-      alert("Error deleting invoice");
+      alert(`Error deleting invoice: ${err.message}`);
     }
   };
 
