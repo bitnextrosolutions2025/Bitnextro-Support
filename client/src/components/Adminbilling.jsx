@@ -38,6 +38,7 @@ export default function Adminbilling() {
   const [invoiceListError, setInvoiceListError] = useState(null);
   const [editingInvoiceId, setEditingInvoiceId] = useState(null);
   const [isSavingInvoice, setIsSavingInvoice] = useState(false);
+  const [previewInvoice, setPreviewInvoice] = useState(null);
 
     const fetchInvoices = async () => {
     setIsLoadingInvoices(true);
@@ -98,6 +99,7 @@ export default function Adminbilling() {
   const handleClearForm = () => {
     if (window.confirm("Are you sure you want to clear the form?")) {
       setEditingInvoiceId(null);
+      setPreviewInvoice(null);
       setViewMode('edit');
       setDetails({
         invoiceNumber: '',
@@ -123,8 +125,8 @@ export default function Adminbilling() {
 
   const handlePrint = () => {
     const originalTitle = document.title;
-    const invNum = (details.invoiceNumber || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
-    const cName = (details.user || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
+    const invNum = ((previewInvoice ? previewInvoice.invoiceNumber : details.invoiceNumber) || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
+    const cName = ((previewInvoice ? previewInvoice.customerName : details.user) || '').trim().replace(/[/\\?%*:|"<>]/g, '-');
     const fileName = [invNum, cName].filter(Boolean).join(' - ') || 'Invoice';
 
     document.title = fileName;
@@ -140,19 +142,17 @@ export default function Adminbilling() {
     setTimeout(restoreTitle, 1500);
   };
 
-  const handleViewInvoice = async (inv, mode = 'edit') => {
-    // If the user is currently editing THIS invoice and clicks 'view' from the table,
-    // save the current form changes first so both table and preview are up-to-date!
-    if (editingInvoiceId === inv._id && mode === 'preview') {
-      const payload = buildPayload();
-      if (payload.invoiceNumber && payload.user) {
-        await recordSale(payload);
-      }
-      setViewMode('preview');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
+  // View a saved invoice in Document Preview WITHOUT touching the form's input state
+  const handleViewSavedInvoice = (inv) => {
+    setPreviewInvoice(inv);
+    setViewMode('preview');
+    handleSuccess(`Previewing invoice "${inv.invoiceNumber}".`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
+  // Edit an invoice - ONLY this repopulates the form inputs
+  const handleEditInvoice = (inv) => {
+    setPreviewInvoice(null);
     setEditingInvoiceId(inv._id);
     const totalTaxable = (inv.items || []).reduce((acc, curr) => acc + (curr.qty * curr.rate), 0);
     const hasTax = (inv.salesAmount - totalTaxable) > 1;
@@ -185,14 +185,8 @@ export default function Adminbilling() {
     }));
     
     setProducts(mappedProducts.length > 0 ? mappedProducts : [{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
-    
-    if (mode === 'preview') {
-      setViewMode('preview');
-      handleSuccess(`Previewing invoice "${inv.invoiceNumber}".`);
-    } else {
-      setViewMode('edit');
-      handleSuccess(`Invoice "${inv.invoiceNumber}" loaded into form for editing.`);
-    }
+    setViewMode('edit');
+    handleSuccess(`Invoice "${inv.invoiceNumber}" loaded into form for editing.`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   useEffect(() => {
@@ -466,12 +460,56 @@ export default function Adminbilling() {
     }
   };
 
+  const getDownloadPayload = () => {
+    if (previewInvoice) {
+      const isCash = previewInvoice.invoiceType === 'cash';
+      const items = previewInvoice.items || [];
+      const totalTaxable = items.reduce((sum, item) => sum + ((Number(item.qty) || 0) * (Number(item.rate) || 0)), 0);
+      const isGst = !isCash && Boolean(previewInvoice.isGstApplied);
+      const isIGst = !isCash && Boolean(previewInvoice.isIGstApplied);
+      const gstRate = (isGst || isIGst) ? 0.18 : 0;
+      const rawTotal = totalTaxable + (totalTaxable * gstRate);
+      const grandTotal = previewInvoice.salesAmount || (previewInvoice.isRoundOff ? Math.round(rawTotal) : rawTotal);
+      const adv = parseFloat(previewInvoice.advanceAmount !== undefined ? previewInvoice.advanceAmount : (previewInvoice.amountReceived || 0));
+
+      return {
+        invoiceNumber: previewInvoice.invoiceNumber || '',
+        supplyPlace: previewInvoice.supplyPlace || '',
+        email: previewInvoice.customerEmail || '',
+        user: previewInvoice.customerName || '',
+        gstno: isCash ? '' : (previewInvoice.customerGstNumber || ''),
+        billingAddress: previewInvoice.billingAddress || '',
+        shippingAddress: previewInvoice.shippingAddress || '',
+        isGstApplied: !isCash && previewInvoice.isGstApplied !== false,
+        isIGstApplied: !isCash && Boolean(previewInvoice.isIGstApplied),
+        isStampApplied: previewInvoice.isStampApplied !== false,
+        isPaymentdone: previewInvoice.paymentStatus === 'Paid',
+        isRoundOff: Boolean(previewInvoice.isRoundOff),
+        invoiceType: previewInvoice.invoiceType || 'tax',
+        date: previewInvoice.invoiceDate || (previewInvoice.createdAt ? new Date(previewInvoice.createdAt).toLocaleDateString("en-GB") : ''),
+        advanceAmount: adv,
+        amountReceived: adv,
+        balanceDue: Math.max(0, parseFloat((grandTotal - adv).toFixed(2))),
+        products: items.map(p => ({
+          name: p.productName || '',
+          hsn: p.hsnNumber || '',
+          rate: Number(p.rate) || 0,
+          quantity: Number(p.qty) || 1
+        })),
+        totalAmount: grandTotal
+      };
+    }
+    return buildPayload();
+  };
+
   const handleofficecopy = async (e) => {
     e.preventDefault();
     setIsload1(true);
-    const payload = buildPayload();
+    const payload = getDownloadPayload();
 
-    await recordSale(payload);
+    if (!previewInvoice) {
+      await recordSale(payload);
+    }
 
     const url = `${import.meta.env.VITE_BACKEND_URL}/api/v4/copybill/billing-work`;
 
@@ -492,7 +530,7 @@ export default function Adminbilling() {
 
       const link = document.createElement('a');
       link.href = pdfUrl;
-      const safeCustomerName = (payload.customerName || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
+      const safeCustomerName = (payload.user || payload.customerName || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
       link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}_${safeCustomerName}.pdf`);
       document.body.appendChild(link);
       link.click();
@@ -524,9 +562,11 @@ export default function Adminbilling() {
   const handleoriginalcopy = async (e) => {
     e.preventDefault();
     setIsloadOriginal(true);
-    const payload = buildPayload();
+    const payload = getDownloadPayload();
 
-    await recordSale(payload);
+    if (!previewInvoice) {
+      await recordSale(payload);
+    }
 
     const url = `${import.meta.env.VITE_BACKEND_URL}/api/v3/bill/billing-work`;
 
@@ -547,7 +587,7 @@ export default function Adminbilling() {
 
       const link = document.createElement('a');
       link.href = pdfUrl;
-      const safeCustomerNameOrig = (payload.customerName || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
+      const safeCustomerNameOrig = (payload.user || payload.customerName || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
       link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}_${safeCustomerNameOrig}_Original.pdf`);
       document.body.appendChild(link);
       link.click();
@@ -1295,6 +1335,7 @@ export default function Adminbilling() {
               type="button"
               disabled={isSavingInvoice}
               onClick={async () => {
+                setPreviewInvoice(null);
                 const payload = buildPayload();
                 if (payload.invoiceNumber && payload.user) {
                   setIsSavingInvoice(true);
@@ -1355,19 +1396,48 @@ export default function Adminbilling() {
 
       {/* Mode 2: Official Document Preview */}
       {viewMode === 'preview' && (() => {
-        const previewTaxable = calculateTotalTaxable();
-        const isCash = invoiceType === 'cash';
-        const isGst = !isCash && Boolean(details.isGstApplied);
-        const isIGst = !isCash && Boolean(details.isIGstApplied);
+        const isPreviewingSaved = Boolean(previewInvoice);
+
+        const activeDetails = previewInvoice ? {
+          invoiceNumber: previewInvoice.invoiceNumber || '',
+          supplyPlace: previewInvoice.supplyPlace || '',
+          email: previewInvoice.customerEmail || '',
+          user: previewInvoice.customerName || '',
+          gstno: previewInvoice.customerGstNumber || '',
+          billingAddress: previewInvoice.billingAddress || '',
+          shippingAddress: previewInvoice.shippingAddress || '',
+          isGstApplied: previewInvoice.isGstApplied !== undefined ? previewInvoice.isGstApplied : true,
+          isIGstApplied: Boolean(previewInvoice.isIGstApplied),
+          isStampApplied: previewInvoice.isStampApplied !== false,
+          isPaymentdone: previewInvoice.paymentStatus === 'Paid',
+          isRoundOff: Boolean(previewInvoice.isRoundOff),
+          invoiceDate: previewInvoice.invoiceDate || (previewInvoice.createdAt ? new Date(previewInvoice.createdAt).toLocaleDateString("en-GB") : ''),
+          advanceAmount: previewInvoice.advanceAmount !== undefined ? previewInvoice.advanceAmount : (previewInvoice.amountReceived || 0)
+        } : details;
+
+        const activeInvoiceType = previewInvoice ? (previewInvoice.invoiceType || 'tax') : invoiceType;
+        const activeProducts = previewInvoice ? (previewInvoice.items || []).map((item, idx) => ({
+          id: idx,
+          name: item.productName || '',
+          hsn: item.hsnNumber || '',
+          rate: item.rate !== undefined ? item.rate : 0,
+          quantity: item.qty || 1
+        })) : products;
+
+        const isCash = activeInvoiceType === 'cash';
+        const isGst = !isCash && Boolean(activeDetails.isGstApplied);
+        const isIGst = !isCash && Boolean(activeDetails.isIGstApplied);
 
         let totalTaxAmount = 0;
-        const productsWithCalc = products.map((p, index) => {
+        let previewTaxable = 0;
+        const productsWithCalc = activeProducts.map((p, index) => {
           const effRate = getEffectiveRate(p.rate);
           const qty = parseInt(p.quantity, 10) || 0;
           const taxable = Math.round(effRate * qty * 100) / 100;
           const taxVal = isGst ? (taxable * 0.18) : isIGst ? (taxable * 0.18) : 0;
           const finalItemTotal = taxable + taxVal;
           totalTaxAmount += taxVal;
+          previewTaxable += taxable;
           return {
             ...p,
             effRate,
@@ -1378,17 +1448,22 @@ export default function Adminbilling() {
           };
         });
 
-        let previewGrandTotal = previewTaxable + totalTaxAmount;
+        let previewGrandTotal = previewInvoice && previewInvoice.salesAmount
+          ? previewInvoice.salesAmount
+          : (previewTaxable + totalTaxAmount);
+
         let previewRoundOff = 0;
-        if (details.isRoundOff) {
+        if (activeDetails.isRoundOff && (!previewInvoice || !previewInvoice.salesAmount)) {
           const rounded = Math.round(previewGrandTotal);
           previewRoundOff = rounded - previewGrandTotal;
           previewGrandTotal = rounded;
         }
 
-        const previewAdvanceAmount = parseFloat(details.advanceAmount || 0);
-        const previewBalanceDue = Math.max(0, parseFloat((previewGrandTotal - previewAdvanceAmount).toFixed(2)));
-        const isPaymentDone = Boolean(details.isPaymentdone) || (previewAdvanceAmount >= previewGrandTotal && previewGrandTotal > 0);
+        const previewAdvanceAmount = parseFloat(activeDetails.advanceAmount || 0);
+        const previewBalanceDue = previewInvoice && previewInvoice.balanceDue !== undefined && previewInvoice.advanceAmount > 0
+          ? previewInvoice.balanceDue
+          : Math.max(0, parseFloat((previewGrandTotal - previewAdvanceAmount).toFixed(2)));
+        const isPaymentDone = Boolean(activeDetails.isPaymentdone) || (previewAdvanceAmount >= previewGrandTotal && previewGrandTotal > 0);
 
         const upiPayAmount = previewBalanceDue > 0 ? previewBalanceDue : previewGrandTotal;
         const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent("BITNEXTRO SOLUTIONS PVT. LTD.")}&am=${upiPayAmount.toFixed(2)}&cu=INR`;
@@ -1401,8 +1476,13 @@ export default function Adminbilling() {
               <div className="flex items-center gap-3">
                 <FileCheck className="w-5 h-5 text-emerald-400" />
                 <div>
-                  <p className="text-sm font-semibold">
-                    Document Preview: {details.invoiceNumber || 'Draft Invoice'}
+                  <p className="text-sm font-semibold flex items-center gap-2">
+                    <span>Document Preview: {activeDetails.invoiceNumber || 'Draft Invoice'}</span>
+                    {isPreviewingSaved && (
+                      <span className="text-[10px] font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full">
+                        Saved Document (Preview Only)
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-slate-400">
                     Official PDF letterhead layout • Identical to downloaded invoice PDF
@@ -1411,34 +1491,61 @@ export default function Adminbilling() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  disabled={isSavingInvoice}
-                  onClick={async () => {
-                    setIsSavingInvoice(true);
-                    const payload = buildPayload();
-                    const ok = await recordSale(payload);
-                    setIsSavingInvoice(false);
-                    if (ok) {
-                      handleSuccess(`Invoice "${payload.invoiceNumber}" saved and updated!`);
-                    }
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors cursor-pointer"
-                >
-                  {isSavingInvoice ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                  {editingInvoiceId ? "Save Changes" : "Save Invoice"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewMode('edit');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  Edit Form
-                </button>
+                {isPreviewingSaved ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleEditInvoice(previewInvoice)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-colors cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      Edit This Invoice
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewInvoice(null);
+                        setViewMode('edit');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Close Preview
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      disabled={isSavingInvoice}
+                      onClick={async () => {
+                        setIsSavingInvoice(true);
+                        const payload = buildPayload();
+                        const ok = await recordSale(payload);
+                        setIsSavingInvoice(false);
+                        if (ok) {
+                          handleSuccess(`Invoice "${payload.invoiceNumber}" saved and updated!`);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors cursor-pointer"
+                    >
+                      {isSavingInvoice ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                      {editingInvoiceId ? "Save Changes" : "Save Invoice"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewMode('edit');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      Edit Form
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={handlePrint}
@@ -1505,21 +1612,21 @@ export default function Adminbilling() {
                   <div className="flex border-b border-black h-1/2">
                     <div className="w-1/2 border-r border-black p-2 text-[11px]">
                       <p className="text-gray-600 mb-1">Invoice #:</p>
-                      <p className="text-sm font-bold">{details.invoiceNumber || 'N/A'}</p>
+                      <p className="text-sm font-bold">{activeDetails.invoiceNumber || 'N/A'}</p>
                     </div>
                     <div className="w-1/2 p-2 text-[11px]">
                       <p className="text-gray-600 mb-1">Invoice Date:</p>
-                      <p className="">{details.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
+                      <p className="">{activeDetails.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
                     </div>
                   </div>
                   <div className="flex h-1/2">
                     <div className="w-1/2 border-r border-black p-2 text-[11px]">
                       <p className="text-gray-600 mb-1">Place of Supply:</p>
-                      <p className="uppercase font-semibold">{details.supplyPlace || 'WEST BENGAL'}</p>
+                      <p className="uppercase font-semibold">{activeDetails.supplyPlace || 'WEST BENGAL'}</p>
                     </div>
                     <div className="w-1/2 p-2 text-[11px]">
                       <p className="text-gray-600 mb-1">Due Date:</p>
-                      <p className="">{details.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
+                      <p className="">{activeDetails.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
                     </div>
                   </div>
                 </div>
@@ -1529,15 +1636,15 @@ export default function Adminbilling() {
               <div className="flex border-b border-black">
                 <div className="w-1/2 border-r border-black p-2 text-[11px] leading-tight">
                   <p className="font-bold mb-1">CUSTOMER DETAILS:</p>
-                  <p>Name: {details.user || 'N/A'}</p>
-                  <p>Email: {details.email || 'N/A'}</p>
-                  {!isCash && details.gstno && <p>GSTIN: {details.gstno}</p>}
+                  <p>Name: {activeDetails.user || 'N/A'}</p>
+                  <p>Email: {activeDetails.email || 'N/A'}</p>
+                  {!isCash && activeDetails.gstno && <p>GSTIN: {activeDetails.gstno}</p>}
                   <p className="font-bold mt-1">BILLING ADDRESS:</p>
-                  <p className="whitespace-pre-line">{details.billingAddress || 'N/A'}</p>
+                  <p className="whitespace-pre-line">{activeDetails.billingAddress || 'N/A'}</p>
                 </div>
                 <div className="w-1/2 p-2 text-[11px] leading-tight">
                   <p className="font-bold mb-1">SHIPPING ADDRESS</p>
-                  <p className="whitespace-pre-line">{details.shippingAddress || 'N/A'}</p>
+                  <p className="whitespace-pre-line">{activeDetails.shippingAddress || 'N/A'}</p>
                 </div>
               </div>
 
@@ -1596,7 +1703,7 @@ export default function Adminbilling() {
                   {/* Totals Section */}
                   <tr className="border-t border-black text-xs">
                     <td colSpan={5} className="border-r border-black p-1 px-2 font-medium text-left">
-                      Total Items / Qty : {products.length} / {products.reduce((acc, p) => acc + (parseInt(p.quantity, 10) || 0), 0)}
+                      Total Items / Qty : {activeProducts.length} / {activeProducts.reduce((acc, p) => acc + (parseInt(p.quantity, 10) || 0), 0)}
                     </td>
                     <td colSpan={2} className="border-r border-black p-1 font-bold text-right">
                       {isCash ? 'Sub Total' : 'Taxable Amount'}
@@ -1660,7 +1767,7 @@ export default function Adminbilling() {
                 <div className="w-1/3 p-2 flex flex-col items-end justify-between text-[11px]">
                   <p className="font-bold text-gray-600">For BITNEXTRO SOLUTIONS PVT. LTD.</p>
                   <div className="flex items-center justify-end gap-2 mt-1 mb-0">
-                    {details.isStampApplied !== false && (
+                    {activeDetails.isStampApplied !== false && (
                       <img src={authStamp} alt="Stamp" className="w-16 h-16 object-contain opacity-90" />
                     )}
                     <div className="w-24 h-16 flex items-end justify-center pb-1">
@@ -1788,7 +1895,7 @@ export default function Adminbilling() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => handleViewInvoice(inv, 'preview')}
+                          onClick={() => handleViewSavedInvoice(inv)}
                           className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
                           title="Preview Document"
                         >
@@ -1797,7 +1904,7 @@ export default function Adminbilling() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleViewInvoice(inv, 'edit')}
+                          onClick={() => handleEditInvoice(inv)}
                           className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
                           title="Edit Invoice"
                         >
