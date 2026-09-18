@@ -43,7 +43,7 @@ export default function Adminbilling() {
     setIsLoadingInvoices(true);
     setInvoiceListError(null);
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/all?type=Sales`);
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/all?type=Sales&_t=${Date.now()}`);
       const data = await res.json();
       if (data && Array.isArray(data.sales)) {
         // Sort by newest first
@@ -140,7 +140,19 @@ export default function Adminbilling() {
     setTimeout(restoreTitle, 1500);
   };
 
-  const handleViewInvoice = (inv, mode = 'edit') => {
+  const handleViewInvoice = async (inv, mode = 'edit') => {
+    // If the user is currently editing THIS invoice and clicks 'view' from the table,
+    // save the current form changes first so both table and preview are up-to-date!
+    if (editingInvoiceId === inv._id && mode === 'preview') {
+      const payload = buildPayload();
+      if (payload.invoiceNumber && payload.user) {
+        await recordSale(payload);
+      }
+      setViewMode('preview');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setEditingInvoiceId(inv._id);
     const totalTaxable = (inv.items || []).reduce((acc, curr) => acc + (curr.qty * curr.rate), 0);
     const hasTax = (inv.salesAmount - totalTaxable) > 1;
@@ -432,6 +444,14 @@ export default function Adminbilling() {
       if (res.ok) {
         if (data.sale && data.sale._id) {
           setEditingInvoiceId(data.sale._id);
+          setSavedInvoices(prev => {
+            const exists = prev.some(item => item._id === data.sale._id);
+            if (exists) {
+              return prev.map(item => item._id === data.sale._id ? { ...item, ...data.sale } : item);
+            } else {
+              return [data.sale, ...prev];
+            }
+          });
         }
         await fetchInvoices();
         return true;
@@ -1273,13 +1293,20 @@ export default function Adminbilling() {
             </button>
             <button
               type="button"
-              onClick={() => {
+              disabled={isSavingInvoice}
+              onClick={async () => {
+                const payload = buildPayload();
+                if (payload.invoiceNumber && payload.user) {
+                  setIsSavingInvoice(true);
+                  await recordSale(payload);
+                  setIsSavingInvoice(false);
+                }
                 setViewMode('preview');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-xs hover:bg-slate-50 transition-colors cursor-pointer"
             >
-              <Eye className="w-4 h-4 text-slate-500" />
+              {isSavingInvoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4 text-slate-500" />}
               Preview Document
             </button>
             <button
@@ -1384,6 +1411,23 @@ export default function Adminbilling() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isSavingInvoice}
+                  onClick={async () => {
+                    setIsSavingInvoice(true);
+                    const payload = buildPayload();
+                    const ok = await recordSale(payload);
+                    setIsSavingInvoice(false);
+                    if (ok) {
+                      handleSuccess(`Invoice "${payload.invoiceNumber}" saved and updated!`);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-colors cursor-pointer"
+                >
+                  {isSavingInvoice ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  {editingInvoiceId ? "Save Changes" : "Save Invoice"}
+                </button>
                 <button
                   type="button"
                   onClick={() => {
