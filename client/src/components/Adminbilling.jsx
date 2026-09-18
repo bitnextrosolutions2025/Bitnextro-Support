@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X, Wallet } from 'lucide-react';
+import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp } from 'lucide-react';
 import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
 import SalesWorkspace from './SalesWorkspace';
-import DailyExpensesWorkspace from './DailyExpensesWorkspace';
 
 export default function Adminbilling() {
   const { user } = useAuth();
@@ -20,110 +19,7 @@ export default function Adminbilling() {
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const naviget = useNavigate();
-  const [savedInvoices, setSavedInvoices] = useState([]);
-  const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
-  const [invoiceListError, setInvoiceListError] = useState(null);
 
-    const fetchInvoices = async () => {
-    setIsLoadingInvoices(true);
-    setInvoiceListError(null);
-    try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/all?type=Sales`);
-      const data = await res.json();
-      if (data && Array.isArray(data.sales)) {
-        // Sort by newest first
-        const autoInvoices = data.sales.filter(inv => !inv.source || inv.source === 'billing_auto');
-        setSavedInvoices(autoInvoices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-      } else {
-        setInvoiceListError(data.msg || "Could not retrieve saved invoices.");
-      }
-    } catch (err) {
-      console.error(err);
-      setInvoiceListError("Unable to reach backend server.");
-    } finally {
-      setIsLoadingInvoices(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'invoice') {
-      fetchInvoices();
-    }
-  }, [activeTab]);
-
-  
-  const handleDeleteInvoice = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this invoice? This will also remove it from your Sales ledger.")) return;
-    try {
-      const token = secureLocalStorage.getItem("auth-token") || "";
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v12/sales/delete/${id}`, {
-        method: "DELETE",
-        headers: { "auth-token": token }
-      });
-      const data = await res.json();
-      if (data.status) {
-        setSavedInvoices(prev => prev.filter(inv => inv._id !== id));
-      } else {
-        alert(data.msg || "Failed to delete invoice");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error deleting invoice");
-    }
-  };
-
-  
-  const handleClearForm = () => {
-    if (window.confirm("Are you sure you want to clear the form?")) {
-      setDetails({
-        invoiceNumber: '',
-        supplyPlace: '',
-        email: "",
-        user: "",
-        gstno: "",
-        billingAddress: "",
-        shippingAddress: '',
-        isGstApplied: true,
-        isIGstApplied: false,
-        isStampApplied: true,
-        isPaymentdone: true,
-        isRoundOff: false
-      });
-      setProducts([{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
-      setInvoiceType('tax');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleViewInvoice = (inv) => {
-    const totalTaxable = (inv.items || []).reduce((acc, curr) => acc + (curr.qty * curr.rate), 0);
-    const hasTax = (inv.salesAmount - totalTaxable) > 1;
-
-    setInvoiceType(inv.invoiceType || (hasTax ? 'tax' : 'cash'));
-    
-    setDetails(prev => ({
-      ...prev,
-      invoiceNumber: inv.invoiceNumber || '',
-      email: inv.customerEmail || '',
-      user: inv.customerName || '',
-      gstno: inv.customerGstNumber || '',
-      isGstApplied: hasTax,
-      isIGstApplied: false,
-      isStampApplied: true,
-      isPaymentdone: inv.paymentStatus === 'Paid',
-    }));
-
-    const mappedProducts = (inv.items || []).map((item, idx) => ({
-      id: Date.now() + idx,
-      name: item.productName || '',
-      hsn: item.hsnNumber || '',
-      rate: item.rate || '',
-      quantity: item.qty || 1
-    }));
-    
-    setProducts(mappedProducts.length > 0 ? mappedProducts : [{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
   useEffect(() => {
     const getoken = async () => {
       try {
@@ -324,7 +220,7 @@ export default function Adminbilling() {
       const salesPayload = {
         invoiceNumber: payload.invoiceNumber,
         invoiceType: payload.invoiceType,
-        invoiceDate: payload.date || new Date().toLocaleDateString("en-GB"),
+        invoiceDate: payload.date,
         customerName: payload.user,
         customerEmail: payload.email,
         customerGstNumber: payload.gstno,
@@ -374,8 +270,7 @@ export default function Adminbilling() {
 
       const link = document.createElement('a');
       link.href = pdfUrl;
-      const safeCustomerName = (payload.customerName || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
-      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}_${safeCustomerName}.pdf`);
+      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}.pdf`);
       document.body.appendChild(link);
       link.click();
 
@@ -415,8 +310,7 @@ export default function Adminbilling() {
 
       const link = document.createElement('a');
       link.href = pdfUrl;
-      const safeCustomerNameOrig = (payload.customerName || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
-      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}_${safeCustomerNameOrig}_Original.pdf`);
+      link.setAttribute('download', `${payload.invoiceNumber || 'Invoice'}_Original.pdf`);
       document.body.appendChild(link);
       link.click();
 
@@ -445,25 +339,10 @@ export default function Adminbilling() {
         </div>
 
         <nav className="p-3 space-y-1.5" aria-label="Billing navigation">
-
-          <button
-            type="button"
-            id="sidebar-invoice"
-            onClick={() => setActiveTab('invoice')}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
-              activeTab === 'invoice'
-                ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <Plus className={`h-4 w-4 shrink-0 ${activeTab === 'invoice' ? 'text-indigo-600' : 'text-slate-400'}`} />
-            <span>Create Invoice</span>
-          </button>
-
           <button
             type="button"
             id="sidebar-customer"
-            onClick={() => setActiveTab('customer')}
+            onClick={() => setActiveTab(activeTab === 'customer' ? 'invoice' : 'customer')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
               activeTab === 'customer'
                 ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
@@ -477,7 +356,7 @@ export default function Adminbilling() {
           <button
             type="button"
             id="sidebar-quotation"
-            onClick={() => setActiveTab('quotation')}
+            onClick={() => setActiveTab(activeTab === 'quotation' ? 'invoice' : 'quotation')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
               activeTab === 'quotation'
                 ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
@@ -491,7 +370,7 @@ export default function Adminbilling() {
           <button
             type="button"
             id="sidebar-proforma"
-            onClick={() => setActiveTab('proforma')}
+            onClick={() => setActiveTab(activeTab === 'proforma' ? 'invoice' : 'proforma')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
               activeTab === 'proforma'
                 ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
@@ -499,27 +378,13 @@ export default function Adminbilling() {
             }`}
           >
             <Receipt className={`h-4 w-4 shrink-0 ${activeTab === 'proforma' ? 'text-indigo-600' : 'text-slate-400'}`} />
-            <span>Proforma Invoice</span>
-          </button>
-
-          <button
-            type="button"
-            id="sidebar-expenses"
-            onClick={() => setActiveTab('expenses')}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
-              activeTab === 'expenses'
-                ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <Wallet className={`h-4 w-4 shrink-0 ${activeTab === 'expenses' ? 'text-indigo-600' : 'text-slate-400'}`} />
-            <span>Daily Expenses</span>
+            <span>Pro Forma Invoice</span>
           </button>
 
           <button
             type="button"
             id="sidebar-sales"
-            onClick={() => setActiveTab('sales')}
+            onClick={() => setActiveTab(activeTab === 'sales' ? 'invoice' : 'sales')}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-left cursor-pointer ${
               activeTab === 'sales'
                 ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
@@ -850,7 +715,7 @@ export default function Adminbilling() {
               ))}
             </div>
 
-            <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-slate-100 pt-4">
+            <div className="mt-6 flex flex-col sm:flex-row items-start justify-between gap-4 border-t border-slate-100 pt-4">
               <button
                 type="button"
                 onClick={addProduct}
@@ -858,18 +723,99 @@ export default function Adminbilling() {
               >
                 <Plus className="h-4 w-4" /> Add Another Item
               </button>
-
-              <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 flex items-center gap-4 text-sm">
-                <span className="text-slate-500 text-xs">Total Taxable:</span>
-                <span className="font-bold text-slate-900">₹{calculateTotalTaxable().toFixed(2)}</span>
-                {details.isRoundOff && (
-                  <span className="text-[11px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200">
-                    Round Off Active
-                  </span>
-                )}
-              </div>
             </div>
           </div>
+
+          {/* Section 2.5: GST Calculation UI */}
+          {invoiceType === 'tax' && (
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">GST Calculation Convention</h3>
+                  <p className="text-sm text-slate-500 mt-1">Standard 18% GST calculation as configured in Bitnextro billing.</p>
+                </div>
+                
+                <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0 overflow-x-auto w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setDetails(prev => ({...prev, isGstApplied: true, isIGstApplied: false}))}
+                    className={`px-4 py-2 text-xs font-medium rounded-md transition-all whitespace-nowrap ${details.isGstApplied && !details.isIGstApplied ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`}
+                  >
+                    CGST (9%) + SGST (9%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDetails(prev => ({...prev, isGstApplied: false, isIGstApplied: true}))}
+                    className={`px-4 py-2 text-xs font-medium rounded-md transition-all whitespace-nowrap ${!details.isGstApplied && details.isIGstApplied ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`}
+                  >
+                    IGST (18%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDetails(prev => ({...prev, isGstApplied: false, isIGstApplied: false}))}
+                    className={`px-4 py-2 text-xs font-medium rounded-md transition-all whitespace-nowrap ${!details.isGstApplied && !details.isIGstApplied ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`}
+                  >
+                    Without GST
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 sm:p-6 bg-white">
+                <div className="flex flex-col ml-auto sm:w-1/2 w-full gap-3 text-sm">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Total Taxable Amount</span>
+                    <span className="font-medium text-slate-900">₹{calculateTotalTaxable().toFixed(2)}</span>
+                  </div>
+                  
+                  {details.isGstApplied && !details.isIGstApplied && (
+                    <>
+                      <div className="flex justify-between text-slate-600">
+                        <span>CGST (9%)</span>
+                        <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>SGST (9%)</span>
+                        <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+
+                  {!details.isGstApplied && details.isIGstApplied && (
+                    <div className="flex justify-between text-slate-600">
+                      <span>IGST (18%)</span>
+                      <span>₹{(calculateTotalTaxable() * 0.18).toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between text-slate-600 border-b border-slate-200 pb-3 mb-1">
+                    <span>GST Total (18%)</span>
+                    <span className="font-medium text-slate-900">
+                      ₹{((details.isGstApplied || details.isIGstApplied) ? (calculateTotalTaxable() * 0.18) : 0).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between text-slate-900 text-base font-bold items-center mt-1">
+                    <div className="flex items-center gap-2">
+                      Total Amount
+                      {details.isRoundOff && (
+                        <span className="text-[10px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 uppercase tracking-wider">
+                          Round Off
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-indigo-700 text-lg">
+                      ₹{
+                        (details.isRoundOff 
+                          ? Math.round(calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                          : (calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                        ).toFixed(2)
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Section 3: Configuration & Settings */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
@@ -879,43 +825,7 @@ export default function Adminbilling() {
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {invoiceType === 'tax' ? (
-                <>
-                  {/* GST Toggle */}
-                  <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">Apply GST</p>
-                      <p className="text-xs text-slate-500 mt-1">Calculate CGST/SGST on PDF</p>
-                    </div>
-                    <div className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="isGstApplied"
-                        className="sr-only peer"
-                        checked={details.isGstApplied}
-                        onChange={handleDetailChange}
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </div>
-                  </label>
-                  <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">Apply IGST</p>
-                      <p className="text-xs text-slate-500 mt-1">Calculate IGST (18%) on PDF</p>
-                    </div>
-                    <div className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="isIGstApplied"
-                        className="sr-only peer"
-                        checked={details.isIGstApplied}
-                        onChange={handleDetailChange}
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </div>
-                  </label>
-                </>
-              ) : (
+              {invoiceType !== 'tax' && (
                 <div className="sm:col-span-2 p-4 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-800">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -961,15 +871,7 @@ export default function Adminbilling() {
           </div>
 
           {/* Submit Actions */}
-          <div className="flex flex-wrap items-center justify-end gap-2 pt-4">
-            <button
-              type="button"
-              onClick={handleClearForm}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-slate-100 px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600 transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-              Clear Form
-            </button>
+          <div className="flex flex-wrap items-center justify-end gap-4 pt-4">
             <button
               type="submit"
               disabled={isloadOriginal || Isload1}
@@ -993,111 +895,7 @@ export default function Adminbilling() {
       </div>
     )}
 
-
-      {/* Saved Invoices Section */}
-      {activeTab === 'invoice' && (
-      <div className="max-w-4xl mx-auto bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8 space-y-4 mb-10 mt-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
-              Saved Invoices
-              <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
-                {savedInvoices.length}
-              </span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Click View to load the invoice data back into the form. (Note: Addresses are not saved in ledger).
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={fetchInvoices}
-            disabled={isLoadingInvoices}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-md transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingInvoices ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
-
-        {isLoadingInvoices && (
-          <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            <p className="text-xs">Loading saved invoices...</p>
-          </div>
-        )}
-
-        {invoiceListError && !isLoadingInvoices && (
-          <div className="p-4 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100">
-            {invoiceListError}
-          </div>
-        )}
-
-        {!isLoadingInvoices && !invoiceListError && savedInvoices.length === 0 && (
-          <div className="py-12 text-center text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-            <p className="text-sm">No saved invoices found in the database.</p>
-          </div>
-        )}
-
-        {!isLoadingInvoices && !invoiceListError && savedInvoices.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
-            <table className="min-w-full divide-y divide-slate-200 text-sm text-left">
-              <thead className="bg-slate-50 text-slate-600 font-semibold">
-                <tr>
-                  <th className="px-4 py-3 whitespace-nowrap">Invoice #</th>
-                  <th className="px-4 py-3 whitespace-nowrap">Date</th>
-                  <th className="px-4 py-3 whitespace-nowrap">Customer</th>
-                  <th className="px-4 py-3 whitespace-nowrap">Amount</th>
-                  <th className="px-4 py-3 whitespace-nowrap text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {savedInvoices.slice(0, 15).map(inv => (
-                  <tr key={inv._id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">{inv.invoiceNumber}</td>
-                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{inv.invoiceDate || new Date(inv.createdAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-slate-700 whitespace-nowrap max-w-[150px] truncate">{inv.customerName}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">₹{inv.salesAmount?.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleViewInvoice(inv)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
-                          title="Edit / Load Invoice"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteInvoice(inv._id)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
-                          title="Delete Invoice"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {savedInvoices.length > 15 && (
-              <div className="p-3 bg-slate-50 text-center text-xs text-slate-500 border-t border-slate-200">
-                Showing most recent 15 invoices. View all in the Sales tab.
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      )}
-      
-    
-        {/* Daily Expenses Workspace */}
-        {activeTab === 'expenses' && <DailyExpensesWorkspace />}
-
-        {/* Customer Workspace */}
+    {/* Customer Workspace */}
     {activeTab === 'customer' && (
       <CustomerWorkspace onBack={() => setActiveTab('invoice')} />
     )}
@@ -1107,7 +905,7 @@ export default function Adminbilling() {
       <QuotationForm onBack={() => setActiveTab('invoice')} />
     )}
 
-    {/* Proforma Invoice Workspace */}
+    {/* Pro Forma Invoice Workspace */}
     {activeTab === 'proforma' && (
       <ProformaWorkspace onBack={() => setActiveTab('invoice')} />
     )}
