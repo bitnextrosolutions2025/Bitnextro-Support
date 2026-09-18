@@ -389,6 +389,20 @@ export default function Adminbilling() {
     }
   }
 
+  // Prevent Enter key from submitting the form and instead move to the next input
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+      e.preventDefault();
+      const form = e.target.form;
+      if (!form) return;
+      const index = Array.prototype.indexOf.call(form, e.target);
+      const nextElement = form.elements[index + 1];
+      if (nextElement) {
+        nextElement.focus();
+      }
+    }
+  };
+
   const handleoriginalcopy = async (e) => {
     e.preventDefault();
     setIsloadOriginal(true);
@@ -582,10 +596,9 @@ export default function Adminbilling() {
               <FileText className="w-3.5 h-3.5" />
               Cash Invoice
             </button>
-          </div>
         </div>
 
-        <form onSubmit={handleoriginalcopy} className="space-y-6">
+        <form onSubmit={handleoriginalcopy} onKeyDown={handleKeyDown} className="space-y-6">
           {/* Section 1: General Details */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
             <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-6 border-b pb-4">

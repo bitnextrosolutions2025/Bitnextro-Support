@@ -174,6 +174,20 @@ export default function ProformaWorkspace({ onBack }) {
   };
 
   // Save / Update Handler
+  // Prevent Enter key from submitting the form and instead move to the next input
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+      e.preventDefault();
+      const form = e.target.form;
+      if (!form) return;
+      const index = Array.prototype.indexOf.call(form, e.target);
+      const nextElement = form.elements[index + 1];
+      if (nextElement) {
+        nextElement.focus();
+      }
+    }
+  };
+
   const handleSave = async (e) => {
     if (e) e.preventDefault();
     if (!validateForm()) return;
@@ -436,7 +450,7 @@ export default function ProformaWorkspace({ onBack }) {
       {/* MODE 1: PROFORMA INVOICE EDIT FORM */}
       {/* ========================================================================= */}
       {viewMode === 'edit' && (
-        <form onSubmit={handleSave} className="space-y-6">
+        <form onSubmit={handleSave} onKeyDown={handleKeyDown} className="space-y-6">
           {/* SECTION 1: Company Header & Proforma Invoice Details */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-200">
