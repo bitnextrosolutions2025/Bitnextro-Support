@@ -1580,13 +1580,6 @@ export default function Adminbilling() {
                     </tr>
                   )}
 
-                  {details.isRoundOff && (
-                    <tr className="border-t border-black text-xs">
-                      <td colSpan={7} className="border-r border-black p-1 text-right">Round Off</td>
-                      <td className="p-1 text-right">₹{previewRoundOff.toFixed(2)}</td>
-                    </tr>
-                  )}
-
                   <tr className="border-t border-black font-bold text-sm bg-gray-100">
                     <td colSpan={7} className="border-r border-black p-1 text-right uppercase">Total</td>
                     <td className="p-1 text-right text-base">₹{previewGrandTotal.toFixed(2)}</td>
@@ -1606,27 +1599,6 @@ export default function Adminbilling() {
                   )}
                 </tbody>
               </table>
-
-              {/* Amount Due Status */}
-              {isPaymentDone ? (
-                <div className="text-right text-[11px] font-bold text-green-600 p-1 border-b border-black">
-                  <span className="inline-flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Amount Paid
-                  </span>
-                </div>
-              ) : previewAdvanceAmount > 0 ? null : (
-                <div className="text-right text-[11px] font-bold text-red-600 p-1 border-b border-black">
-                  <span className="inline-flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                    </svg>
-                    Amount Due
-                  </span>
-                </div>
-              )}
 
               {/* Footer Grid (Bank, QR, Sign) */}
               <div className="flex border-b border-black">
