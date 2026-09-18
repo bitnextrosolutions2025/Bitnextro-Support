@@ -808,13 +808,14 @@ export default function Adminbilling() {
                 <div key={product.id} className="relative flex flex-col sm:grid sm:grid-cols-12 gap-4 items-start sm:items-start bg-slate-50 sm:bg-transparent p-4 sm:p-0 rounded-lg sm:rounded-none border sm:border-0 border-slate-200">
                   <div className="col-span-5 w-full">
                     <label className="block sm:hidden text-xs font-medium text-slate-500 mb-1">Product Name</label>
-                    <input
-                      type="text"
+                    <textarea
                       required
+                      rows={1}
                       placeholder="e.g. Tata Nexon / Car Cover"
                       value={product.name}
                       onChange={(e) => handleProductChange(product.id, 'name', e.target.value)}
-                      className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                      onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                      className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 resize-none overflow-hidden"
                     />
                   </div>
                   <div className="col-span-2 w-full">
