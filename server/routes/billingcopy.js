@@ -53,9 +53,7 @@ const generateHTML = (data) => {
 
     const productsHtml = data.products.map((p, index) => {
         let rate = parseFloat(p.rate);
-        if (data.isRoundOff) {
-            rate = Math.floor(rate);
-        }
+
         const qty = parseInt(p.quantity, 10);
         const taxable = Math.round(rate * qty * 100) / 100;
         
@@ -84,8 +82,16 @@ const generateHTML = (data) => {
         `;
     }).join('');
 
-    const grandTotal = totalTaxable + totalTaxAmount;
-    const amountInWords = numberToWords(Math.round(grandTotal));
+    let grandTotal = totalTaxable + totalTaxAmount;
+    let roundOffAmount = 0;
+    
+    if (data.isRoundOff) {
+        const roundedTotal = Math.round(grandTotal);
+        roundOffAmount = roundedTotal - grandTotal;
+        grandTotal = roundedTotal;
+    }
+
+    const amountInWords = numberToWords(grandTotal);
     
     // Generate UPI QR dynamically based on amount
     const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent(companyName)}&am=${grandTotal.toFixed(2)}&cu=INR`;
@@ -221,6 +227,12 @@ const generateHTML = (data) => {
                     <tr class="border-t border-black text-xs">
                         <td colspan="7" class="border-r border-black p-1 text-right">IGST 18%</td>
                         <td class="p-1 text-right">₹${totalTaxAmount.toFixed(2)}</td>
+                    </tr>
+                    ` : ''}
+                    ${data.isRoundOff && roundOffAmount !== 0 ? `
+                    <tr class="border-t border-black text-xs">
+                        <td colspan="7" class="border-r border-black p-1 text-right">Round Off</td>
+                        <td class="p-1 text-right">${roundOffAmount > 0 ? '+' : ''}${roundOffAmount.toFixed(2)}</td>
                     </tr>
                     ` : ''}
                     <tr class="border-t border-black font-bold text-sm bg-gray-100">

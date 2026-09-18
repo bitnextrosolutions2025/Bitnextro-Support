@@ -124,7 +124,7 @@ export default function QuotationForm({ onBack }) {
   const getEffectiveRate = (rawRate) => {
     const num = parseFloat(rawRate);
     if (isNaN(num)) return 0;
-    return isRoundOff ? Math.floor(num) : num;
+    return num;
   };
 
   const totalTaxable = items.reduce((sum, item) => {

@@ -283,7 +283,7 @@ export default function Adminbilling() {
     if (rawRate === '' || rawRate === null || rawRate === undefined) return 0;
     const num = parseFloat(rawRate);
     if (isNaN(num)) return 0;
-    return details.isRoundOff ? Math.floor(num) : num;
+    return num;
   };
 
   // Helper to calculate taxable amount for a single product (avoiding floating-point issues)
