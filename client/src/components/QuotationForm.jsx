@@ -482,7 +482,7 @@ export default function QuotationForm({ onBack }) {
       {/* MODE 1: DATA ENTRY / EDIT MODE */}
       {/* ========================================================================= */}
       {viewMode === 'edit' && (
-        <form onSubmit={handleSave} onKeyDown={handleKeyDown} className="space-y-6">
+        <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown} className="space-y-6">
           {/* SECTION 1: Company Header Display */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8 border-t-4 border-indigo-600">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-slate-200">
@@ -879,8 +879,12 @@ export default function QuotationForm({ onBack }) {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
             <button
-              type="submit"
+              type="button"
               disabled={isSaving}
+              onClick={(e) => {
+                if (e.currentTarget.form && !e.currentTarget.form.reportValidity()) return;
+                handleSave(e);
+              }}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 transition-colors cursor-pointer"
             >
               {isSaving ? (

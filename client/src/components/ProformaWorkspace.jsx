@@ -450,7 +450,7 @@ export default function ProformaWorkspace({ onBack }) {
       {/* MODE 1: PROFORMA INVOICE EDIT FORM */}
       {/* ========================================================================= */}
       {viewMode === 'edit' && (
-        <form onSubmit={handleSave} onKeyDown={handleKeyDown} className="space-y-6">
+        <form onSubmit={(e) => e.preventDefault()} onKeyDown={handleKeyDown} className="space-y-6">
           {/* SECTION 1: Company Header & Proforma Invoice Details */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-200">
@@ -851,8 +851,12 @@ export default function ProformaWorkspace({ onBack }) {
               Preview Document
             </button>
             <button
-              type="submit"
+              type="button"
               disabled={isSaving}
+              onClick={(e) => {
+                if (e.currentTarget.form && !e.currentTarget.form.reportValidity()) return;
+                handleSave(e);
+              }}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 transition-colors cursor-pointer"
             >
               {isSaving ? (
