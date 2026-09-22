@@ -55,13 +55,14 @@ const calculateProformaAmounts = (rawItems, taxType = 'cgst_sgst') => {
   const roundedTaxable = Math.round(totalTaxable * 100) / 100;
 
   const isIgst = taxType === 'igst';
+  const isNoGst = taxType === 'none';
   let cgst = 0;
   let sgst = 0;
   let igst = 0;
 
   if (isIgst) {
     igst = Math.round(roundedTaxable * 0.18 * 100) / 100;
-  } else {
+  } else if (!isNoGst) {
     cgst = Math.round(roundedTaxable * 0.09 * 100) / 100;
     sgst = Math.round(roundedTaxable * 0.09 * 100) / 100;
   }
@@ -71,7 +72,7 @@ const calculateProformaAmounts = (rawItems, taxType = 'cgst_sgst') => {
 
   return {
     processedItems,
-    taxType: isIgst ? 'igst' : 'cgst_sgst',
+    taxType: isNoGst ? 'none' : (isIgst ? 'igst' : 'cgst_sgst'),
     taxableAmount: roundedTaxable,
     cgst,
     sgst,
