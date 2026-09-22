@@ -130,10 +130,11 @@ export default function ProformaWorkspace({ onBack }) {
   }, 0);
 
   const isIgst = taxType === 'igst';
-  const cgst = !isIgst ? totalTaxable * 0.09 : 0;
-  const sgst = !isIgst ? totalTaxable * 0.09 : 0;
-  const igst = isIgst ? totalTaxable * 0.18 : 0;
-  const totalTax = cgst + sgst + igst;
+  const isNoGst = taxType === 'none';
+  const cgst = !isIgst && !isNoGst ? totalTaxable * 0.09 : 0;
+  const sgst = !isIgst && !isNoGst ? totalTaxable * 0.09 : 0;
+  const igst = isIgst && !isNoGst ? totalTaxable * 0.18 : 0;
+  const totalTax = isNoGst ? 0 : cgst + sgst + igst;
   const grandTotal = totalTaxable + totalTax;
 
   // Validation
@@ -784,6 +785,25 @@ export default function ProformaWorkspace({ onBack }) {
                       </span>
                     </div>
                   </label>
+
+                  <label className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
+                    <input
+                      type="radio"
+                      name="taxType"
+                      value="none"
+                      checked={taxType === 'none'}
+                      onChange={() => setTaxType('none')}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-600 border-slate-300"
+                    />
+                    <div>
+                      <span className="block text-sm font-medium text-slate-900">
+                        Without GST
+                      </span>
+                      <span className="block text-xs text-slate-500">
+                        Applicable for non-taxable proforma invoices
+                      </span>
+                    </div>
+                  </label>
                 </div>
               </div>
 
@@ -798,22 +818,24 @@ export default function ProformaWorkspace({ onBack }) {
                   <span className="font-semibold text-slate-900">₹{totalTaxable.toFixed(2)}</span>
                 </div>
 
-                {!isIgst ? (
-                  <>
+                {taxType !== 'none' && (
+                  !isIgst ? (
+                    <>
+                      <div className="flex justify-between text-sm text-slate-500 pl-2">
+                        <span>CGST (9%)</span>
+                        <span>₹{cgst.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-slate-500 pl-2">
+                        <span>SGST (9%)</span>
+                        <span>₹{sgst.toFixed(2)}</span>
+                      </div>
+                    </>
+                  ) : (
                     <div className="flex justify-between text-sm text-slate-500 pl-2">
-                      <span>CGST (9%)</span>
-                      <span>₹{cgst.toFixed(2)}</span>
+                      <span>IGST (18%)</span>
+                      <span>₹{igst.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-sm text-slate-500 pl-2">
-                      <span>SGST (9%)</span>
-                      <span>₹{sgst.toFixed(2)}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex justify-between text-sm text-slate-500 pl-2">
-                    <span>IGST (18%)</span>
-                    <span>₹{igst.toFixed(2)}</span>
-                  </div>
+                  )
                 )}
 
                 <div className="flex justify-between text-sm text-slate-600 pt-2 border-t border-slate-200">
@@ -1075,22 +1097,24 @@ export default function ProformaWorkspace({ onBack }) {
                   <span className="font-semibold text-slate-900">₹{totalTaxable.toFixed(2)}</span>
                 </div>
 
-                {!isIgst ? (
-                  <>
+                {taxType !== 'none' && (
+                  !isIgst ? (
+                    <>
+                      <div className="flex justify-between text-slate-500">
+                        <span>CGST (9%)</span>
+                        <span>₹{cgst.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500">
+                        <span>SGST (9%)</span>
+                        <span>₹{sgst.toFixed(2)}</span>
+                      </div>
+                    </>
+                  ) : (
                     <div className="flex justify-between text-slate-500">
-                      <span>CGST (9%)</span>
-                      <span>₹{cgst.toFixed(2)}</span>
+                      <span>IGST (18%)</span>
+                      <span>₹{igst.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-slate-500">
-                      <span>SGST (9%)</span>
-                      <span>₹{sgst.toFixed(2)}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex justify-between text-slate-500">
-                    <span>IGST (18%)</span>
-                    <span>₹{igst.toFixed(2)}</span>
-                  </div>
+                  )
                 )}
 
                 <div className="flex justify-between text-slate-600 pt-1 border-t border-slate-100">
