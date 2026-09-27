@@ -7,6 +7,7 @@ export default function DailyExpensesWorkspace() {
   const [isLoading, setIsLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [filterMonth, setFilterMonth] = useState('');
   
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -138,6 +139,17 @@ export default function DailyExpensesWorkspace() {
     }
   });
 
+  const displayedExpenses = filterMonth
+    ? expenses.filter(exp => {
+        if (!exp.date) return false;
+        return exp.date.startsWith(filterMonth);
+      })
+    : expenses;
+
+  const filteredTotal = filterMonth 
+    ? displayedExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0)
+    : 0;
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       {/* Header */}
@@ -243,7 +255,7 @@ export default function DailyExpensesWorkspace() {
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               Expense History
               <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
-                {expenses.length}
+                {displayedExpenses.length} {filterMonth && `(Filtered from ${expenses.length})`}
               </span>
             </h2>
             <div className="flex flex-wrap gap-4 mt-2">
@@ -251,15 +263,36 @@ export default function DailyExpensesWorkspace() {
               <p className="text-sm text-slate-500">This Year: <span className="font-bold text-blue-600">₹{currentYearAmount.toFixed(2)}</span></p>
               <p className="text-sm text-slate-500">Total All-Time: <span className="font-bold text-indigo-700">₹{totalAmount.toFixed(2)}</span></p>
             </div>
+            {filterMonth && (
+              <p className="text-sm text-rose-600 mt-2 font-semibold">
+                Filtered Total ({filterMonth}): ₹{filteredTotal.toFixed(2)}
+              </p>
+            )}
           </div>
-          <button
-            onClick={fetchExpenses}
-            disabled={isLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <input 
+              type="month"
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="px-3 py-1.5 text-sm rounded-md border-0 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 shadow-sm text-slate-700"
+            />
+            {filterMonth && (
+              <button 
+                onClick={() => setFilterMonth('')}
+                className="text-xs text-rose-500 hover:text-rose-700 font-semibold cursor-pointer"
+              >
+                Clear
+              </button>
+            )}
+            <button
+              onClick={fetchExpenses}
+              disabled={isLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -284,12 +317,12 @@ export default function DailyExpensesWorkspace() {
                 <tr>
                   <td colSpan="5" className="py-8 text-center text-slate-500">Loading expenses...</td>
                 </tr>
-              ) : expenses.length === 0 ? (
+              ) : displayedExpenses.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="py-8 text-center text-slate-500">No expenses recorded yet.</td>
+                  <td colSpan="5" className="py-8 text-center text-slate-500">No expenses found.</td>
                 </tr>
               ) : (
-                expenses.map(exp => (
+                displayedExpenses.map(exp => (
                   <tr key={exp._id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="py-3 px-3 text-slate-600 font-medium">
                       {new Date(exp.date).toLocaleDateString('en-GB')}
