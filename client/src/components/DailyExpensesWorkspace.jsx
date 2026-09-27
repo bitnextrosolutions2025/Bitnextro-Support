@@ -116,7 +116,27 @@ export default function DailyExpensesWorkspace() {
     }
   };
 
-  const totalAmount = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  let totalAmount = 0;
+  let currentMonthAmount = 0;
+  let currentYearAmount = 0;
+
+  expenses.forEach(exp => {
+    const amt = exp.amount || 0;
+    totalAmount += amt;
+    
+    if (exp.date) {
+      const expDate = new Date(exp.date);
+      if (expDate.getFullYear() === currentYear) {
+        currentYearAmount += amt;
+        if (expDate.getMonth() === currentMonth) {
+          currentMonthAmount += amt;
+        }
+      }
+    }
+  });
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -226,7 +246,11 @@ export default function DailyExpensesWorkspace() {
                 {expenses.length}
               </span>
             </h2>
-            <p className="text-sm text-slate-500 mt-1">Total Expenses: <span className="font-bold text-indigo-700">₹{totalAmount.toFixed(2)}</span></p>
+            <div className="flex flex-wrap gap-4 mt-2">
+              <p className="text-sm text-slate-500">This Month: <span className="font-bold text-emerald-600">₹{currentMonthAmount.toFixed(2)}</span></p>
+              <p className="text-sm text-slate-500">This Year: <span className="font-bold text-blue-600">₹{currentYearAmount.toFixed(2)}</span></p>
+              <p className="text-sm text-slate-500">Total All-Time: <span className="font-bold text-indigo-700">₹{totalAmount.toFixed(2)}</span></p>
+            </div>
           </div>
           <button
             onClick={fetchExpenses}
