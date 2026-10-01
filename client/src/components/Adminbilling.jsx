@@ -1706,7 +1706,18 @@ export default function Adminbilling() {
                     <td className="p-1 text-right text-base">₹{previewGrandTotal.toFixed(2)}</td>
                   </tr>
 
-                  {previewAdvanceAmount > 0 && (
+                  {isPaymentDone ? (
+                    <>
+                      <tr className="border-t border-black text-xs font-semibold">
+                        <td colSpan={7} className="border-r border-black p-1 text-right text-emerald-700">Payment Status</td>
+                        <td className="p-1 text-right font-bold text-emerald-700">Fully Paid</td>
+                      </tr>
+                      <tr className="border-t border-black text-xs font-bold bg-emerald-50">
+                        <td colSpan={7} className="border-r border-black p-1 text-right uppercase text-emerald-700">Balance Due Amount</td>
+                        <td className="p-1 text-right text-sm text-emerald-700 font-extrabold">₹0.00</td>
+                      </tr>
+                    </>
+                  ) : previewAdvanceAmount > 0 ? (
                     <>
                       <tr className="border-t border-black text-xs font-semibold">
                         <td colSpan={7} className="border-r border-black p-1 text-right text-emerald-700">Advance Paid</td>
@@ -1717,7 +1728,7 @@ export default function Adminbilling() {
                         <td className="p-1 text-right text-sm text-rose-700 font-extrabold">₹{previewBalanceDue.toFixed(2)}</td>
                       </tr>
                     </>
-                  )}
+                  ) : null}
                 </tbody>
               </table>
 
