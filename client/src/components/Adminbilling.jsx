@@ -1430,10 +1430,15 @@ export default function Adminbilling() {
         }
 
         const previewAdvanceAmount = parseFloat(activeDetails.advanceAmount || 0);
-        const previewBalanceDue = previewInvoice && previewInvoice.balanceDue !== undefined && previewInvoice.advanceAmount > 0
+        let previewBalanceDue = previewInvoice && previewInvoice.balanceDue !== undefined && previewInvoice.advanceAmount > 0
           ? previewInvoice.balanceDue
           : Math.max(0, parseFloat((previewGrandTotal - previewAdvanceAmount).toFixed(2)));
-        const isPaymentDone = Boolean(activeDetails.isPaymentdone) || (previewAdvanceAmount >= previewGrandTotal && previewGrandTotal > 0);
+
+        if (Boolean(activeDetails.isPaymentdone) && previewAdvanceAmount === 0) {
+          previewBalanceDue = 0;
+        }
+
+        const isPaymentDone = previewBalanceDue <= 0 && previewGrandTotal > 0;
 
         const upiPayAmount = previewBalanceDue > 0 ? previewBalanceDue : previewGrandTotal;
         const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent("BITNEXTRO SOLUTIONS PVT. LTD.")}&am=${upiPayAmount.toFixed(2)}&cu=INR`;
