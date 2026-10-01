@@ -1733,7 +1733,18 @@ export default function Adminbilling() {
                         <td className="p-1 text-right text-sm text-rose-700 font-extrabold">₹{previewBalanceDue.toFixed(2)}</td>
                       </tr>
                     </>
-                  ) : null}
+                  ) : (
+                    <>
+                      <tr className="border-t border-black text-xs font-semibold">
+                        <td colSpan={7} className="border-r border-black p-1 text-right text-rose-700">Payment Status</td>
+                        <td className="p-1 text-right font-bold text-rose-700">Payment Due</td>
+                      </tr>
+                      <tr className="border-t border-black text-xs font-bold bg-rose-50">
+                        <td colSpan={7} className="border-r border-black p-1 text-right uppercase text-rose-700">Balance Due Amount</td>
+                        <td className="p-1 text-right text-sm text-rose-700 font-extrabold">₹{previewGrandTotal.toFixed(2)}</td>
+                      </tr>
+                    </>
+                  )}
                 </tbody>
               </table>
 
