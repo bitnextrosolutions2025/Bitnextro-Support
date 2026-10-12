@@ -1764,6 +1764,7 @@ export default function Adminbilling() {
                 <div className="w-1/3 border-r border-black p-2 text-[11px] leading-relaxed">
                   <p className="font-bold mb-1">Bank Details:</p>
                   <div className="flex"><span className="w-20">Bank:</span><strong>{bankDetails.bank}</strong></div>
+                  <div className="flex"><span className="w-20">A/C Name:</span><strong>{bankDetails.AH}</strong></div>
                   <div className="flex"><span className="w-20">Account #:</span><strong>{bankDetails.acc}</strong></div>
                   <div className="flex"><span className="w-20">IFSC:</span><strong>{bankDetails.ifsc}</strong></div>
                   <div className="flex"><span className="w-20">Branch:</span><strong>{bankDetails.branch}</strong></div>

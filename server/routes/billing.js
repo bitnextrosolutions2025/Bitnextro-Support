@@ -256,6 +256,7 @@ const generateHTML = (data) => {
                 <div class="w-1/3 border-r border-black p-2 text-[11px] leading-relaxed">
                     <p class="font-bold mb-1">Bank Details:</p>
                     <div class="flex"><span class="w-20">Bank:</span><strong>${bankDetails.bank}</strong></div>
+                    <div class="flex"><span class="w-20">A/C Name:</span><strong>${bankDetails.AH}</strong></div>
                     <div class="flex"><span class="w-20">Account #:</span><strong>${bankDetails.acc}</strong></div>
                     <div class="flex"><span class="w-20">IFSC:</span> <strong>${bankDetails.ifsc}</strong></div>
                     <div class="flex"><span class="w-20">Branch:</span> <strong>${bankDetails.branch}</strong></div>
