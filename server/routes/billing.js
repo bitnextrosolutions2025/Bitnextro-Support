@@ -235,7 +235,7 @@ const generateHTML = (data) => {
                     </tr>
                     ` : ''}
                     <tr class="border-t border-black font-bold text-sm bg-gray-100">
-                        <td colspan="7" class="border-r border-black p-1 text-right uppercase">Total</td>
+                        <td colspan="7" class="border-r border-black p-1 text-right uppercase">${isCashInvoice ? 'Total Amount' : 'Total'}</td>
                         <td class="p-1 text-right text-base">₹${grandTotal.toFixed(2)}</td>
                     </tr>
                     ${advanceAmount > 0 ? `

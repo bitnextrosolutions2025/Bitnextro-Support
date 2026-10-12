@@ -1096,9 +1096,9 @@ export default function Adminbilling() {
             </div>
           </div>
 
-          {/* Section 2.5: GST Calculation UI */}
-          {invoiceType === 'tax' && (
-            <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
+          {/* Section 2.5: Invoice Summary & Calculation UI */}
+          <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
+            {invoiceType === 'tax' ? (
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-200">
                 <div>
                   <h3 className="text-base font-semibold text-slate-900">GST Calculation Convention</h3>
@@ -1142,102 +1142,112 @@ export default function Adminbilling() {
                   </button>
                 </div>
               </div>
-
-              {/* Detailed Summary Rows */}
-              <div className="pt-6 max-w-sm ml-auto space-y-3">
-                <div className="flex justify-between text-sm text-slate-600">
-                  <span>Total Taxable Amount</span>
-                  <span className="font-semibold text-slate-900">₹{calculateTotalTaxable().toFixed(2)}</span>
+            ) : (
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-200">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">Cash Invoice Summary</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Non-GST bill amount calculation without tax deductions.</p>
                 </div>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Pure Cash Bill (Non-GST)
+                </span>
+              </div>
+            )}
 
-                {details.isGstApplied && !details.isIGstApplied && (
-                  <>
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>CGST (9%)</span>
-                      <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>SGST (9%)</span>
-                      <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
+            {/* Detailed Summary Rows */}
+            <div className="pt-6 max-w-sm ml-auto space-y-3">
+              <div className="flex justify-between text-sm text-slate-600">
+                <span>{invoiceType === 'cash' ? 'Sub Total' : 'Total Taxable Amount'}</span>
+                <span className="font-semibold text-slate-900">₹{calculateTotalTaxable().toFixed(2)}</span>
+              </div>
 
-                {!details.isGstApplied && details.isIGstApplied && (
+              {invoiceType === 'tax' && details.isGstApplied && !details.isIGstApplied && (
+                <>
                   <div className="flex justify-between text-xs text-slate-500">
-                    <span>IGST (18%)</span>
-                    <span>₹{(calculateTotalTaxable() * 0.18).toFixed(2)}</span>
+                    <span>CGST (9%)</span>
+                    <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
                   </div>
-                )}
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>SGST (9%)</span>
+                    <span>₹{(calculateTotalTaxable() * 0.09).toFixed(2)}</span>
+                  </div>
+                </>
+              )}
 
-                {(details.isGstApplied || details.isIGstApplied) && (
-                  <div className="flex justify-between text-sm text-slate-600 pt-1 border-t border-slate-100">
-                    <span>GST Total (18%)</span>
-                    <span className="font-semibold text-slate-900">₹{(calculateTotalTaxable() * 0.18).toFixed(2)}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center text-base font-bold text-slate-900 pt-3 border-t-2 border-slate-900">
-                  <div className="flex items-center gap-2">
-                    <span>Total Amount</span>
-                    {details.isRoundOff && (
-                      <span className="text-[10px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 uppercase tracking-wider">
-                        Round Off
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-indigo-600 text-lg">
-                    ₹{
-                      (details.isRoundOff 
-                        ? Math.round(calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
-                        : (calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
-                      ).toFixed(2)
-                    }
-                  </span>
+              {invoiceType === 'tax' && !details.isGstApplied && details.isIGstApplied && (
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>IGST (18%)</span>
+                  <span>₹{(calculateTotalTaxable() * 0.18).toFixed(2)}</span>
                 </div>
+              )}
 
-                {/* Advance Amount Paid */}
-                <div className="pt-3 mt-2 border-t border-slate-200 space-y-2">
-                  <div className="flex items-center justify-between gap-4">
-                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1">
-                      <span>Advance Paid by Client</span>
-                      <span className="text-[10px] text-slate-400 font-normal">(Optional)</span>
-                    </label>
-                    <div className="relative w-44">
-                      <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-sm font-semibold pointer-events-none">₹</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        name="advanceAmount"
-                        value={details.advanceAmount || ''}
-                        onChange={handleDetailChange}
-                        placeholder="0.00"
-                        className="w-full pl-7 pr-3 py-1.5 text-right text-sm font-semibold text-emerald-700 bg-emerald-50/50 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                      />
-                    </div>
-                  </div>
+              {invoiceType === 'tax' && (details.isGstApplied || details.isIGstApplied) && (
+                <div className="flex justify-between text-sm text-slate-600 pt-1 border-t border-slate-100">
+                  <span>GST Total (18%)</span>
+                  <span className="font-semibold text-slate-900">₹{(calculateTotalTaxable() * 0.18).toFixed(2)}</span>
+                </div>
+              )}
 
-                  {parseFloat(details.advanceAmount || 0) > 0 && (
-                    <div className="flex justify-between items-center text-sm font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                        <span>Rest Due Amount:</span>
-                      </div>
-                      <span className="text-base font-extrabold">
-                        ₹{Math.max(0, (
-                          (details.isRoundOff 
-                            ? Math.round(calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
-                            : (calculateTotalTaxable() + ((details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
-                          ) - parseFloat(details.advanceAmount || 0)
-                        )).toFixed(2)}
-                      </span>
-                    </div>
+              <div className="flex justify-between items-center text-base font-bold text-slate-900 pt-3 border-t-2 border-slate-900">
+                <div className="flex items-center gap-2">
+                  <span>Total Amount</span>
+                  {details.isRoundOff && (
+                    <span className="text-[10px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 uppercase tracking-wider">
+                      Round Off
+                    </span>
                   )}
                 </div>
+                <span className="text-indigo-600 text-lg">
+                  ₹{
+                    (details.isRoundOff 
+                      ? Math.round(calculateTotalTaxable() + (invoiceType === 'tax' && (details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                      : (calculateTotalTaxable() + (invoiceType === 'tax' && (details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                    ).toFixed(2)
+                  }
+                </span>
+              </div>
+
+              {/* Advance Amount Paid */}
+              <div className="pt-3 mt-2 border-t border-slate-200 space-y-2">
+                <div className="flex items-center justify-between gap-4">
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                    <span>Advance Paid by Client</span>
+                    <span className="text-[10px] text-slate-400 font-normal">(Optional)</span>
+                  </label>
+                  <div className="relative w-44">
+                    <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-sm font-semibold pointer-events-none">₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      name="advanceAmount"
+                      value={details.advanceAmount || ''}
+                      onChange={handleDetailChange}
+                      placeholder="0.00"
+                      className="w-full pl-7 pr-3 py-1.5 text-right text-sm font-semibold text-emerald-700 bg-emerald-50/50 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                {parseFloat(details.advanceAmount || 0) > 0 && (
+                  <div className="flex justify-between items-center text-sm font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                      <span>Rest Due Amount:</span>
+                    </div>
+                    <span className="text-base font-extrabold">
+                      ₹{Math.max(0, (
+                        (details.isRoundOff 
+                          ? Math.round(calculateTotalTaxable() + (invoiceType === 'tax' && (details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                          : (calculateTotalTaxable() + (invoiceType === 'tax' && (details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                        ) - parseFloat(details.advanceAmount || 0)
+                      )).toFixed(2)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
 
           {/* Section 3: Configuration & Settings */}
           <div className="bg-white shadow-sm ring-1 ring-slate-200 rounded-xl p-6 sm:p-8">
@@ -1708,7 +1718,7 @@ export default function Adminbilling() {
                   )}
 
                   <tr className="border-t border-black font-bold text-sm bg-gray-100">
-                    <td colSpan={7} className="border-r border-black p-1 text-right uppercase">Total</td>
+                    <td colSpan={7} className="border-r border-black p-1 text-right uppercase">{isCash ? 'Total Amount' : 'Total'}</td>
                     <td className="p-1 text-right text-base">₹{previewGrandTotal.toFixed(2)}</td>
                   </tr>
 
