@@ -15,10 +15,11 @@ import { authSignature } from '../assets/authSignature';
 const companyLogo = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772130931/user_profiles/iasw8ry0br2wgwprakxg.jpg";
 const authStamp = "https://res.cloudinary.com/dcvejeszo/image/upload/v1772137306/user_profiles/a9siliu0rbff2z4p8o5k.png";
 const bankDetails = {
-  bank: "HDFC Bank",
-  acc: "50200098939227",
-  ifsc: "HDFC0000014",
-  branch: "Kolkata, Central Plaza"
+  bank: "UNION BANK OF INDIA",
+  AH: "BITNEXTRO SOLUTIONS PRIVATE LIMITED",
+  acc: "436901010039787",
+  ifsc: "UBIN0543691",
+  branch: "CANNING STREET - KOLKATA"
 };
 
 export default function Adminbilling() {
