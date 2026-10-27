@@ -116,7 +116,9 @@ export default function Adminbilling() {
         isPaymentdone: true,
         isRoundOff: false,
         invoiceDate: '',
-        advanceAmount: ''
+        advanceAmount: '',
+        discount: '',
+        remarks: ''
       });
       setProducts([{ id: Date.now(), name: '', hsn: '', rate: '', quantity: 1 }]);
       setInvoiceType('tax');
@@ -174,7 +176,9 @@ export default function Adminbilling() {
       isPaymentdone: inv.paymentStatus === 'Paid',
       isRoundOff: Boolean(inv.isRoundOff),
       invoiceDate: inv.invoiceDate || (inv.createdAt ? new Date(inv.createdAt).toLocaleDateString("en-GB") : ''),
-      advanceAmount: inv.advanceAmount !== undefined && inv.advanceAmount !== null ? inv.advanceAmount : (inv.amountReceived || '')
+      advanceAmount: inv.advanceAmount !== undefined && inv.advanceAmount !== null ? inv.advanceAmount : (inv.amountReceived || ''),
+      discount: inv.discount !== undefined && inv.discount !== null ? inv.discount : '',
+      remarks: inv.remarks || inv.notes || ''
     });
 
     const mappedProducts = (inv.items || []).map((item, idx) => ({
@@ -222,7 +226,9 @@ export default function Adminbilling() {
     isPaymentdone: true,
     isRoundOff: false,
     invoiceDate: '',
-    advanceAmount: ''
+    advanceAmount: '',
+    discount: '',
+    remarks: ''
   });
 
   // State for dynamic products list
@@ -375,8 +381,10 @@ export default function Adminbilling() {
     const gstRate = (isTax && (details.isGstApplied || details.isIGstApplied)) ? 0.18 : 0;
     const rawTotal = totalTaxable + (totalTaxable * gstRate);
     const grandTotalCalculated = details.isRoundOff ? Math.round(rawTotal) : rawTotal;
+    const discountOffered = Math.max(0, parseFloat(details.discount || 0));
+    const netPayableCalculated = Math.max(0, parseFloat((grandTotalCalculated - discountOffered).toFixed(2)));
     const advancePaid = parseFloat(details.advanceAmount || 0);
-    const calculatedDue = Math.max(0, parseFloat((grandTotalCalculated - advancePaid).toFixed(2)));
+    const calculatedDue = Math.max(0, parseFloat((netPayableCalculated - advancePaid).toFixed(2)));
 
     return {
       ...details,
@@ -386,14 +394,18 @@ export default function Adminbilling() {
       isIGstApplied: invoiceType === 'cash' ? false : details.isIGstApplied,
       gstno: invoiceType === 'cash' ? '' : details.gstno,
       isRoundOff: Boolean(details.isRoundOff),
+      discount: discountOffered,
       advanceAmount: advancePaid,
       amountReceived: advancePaid,
       balanceDue: calculatedDue,
+      remarks: (details.remarks || '').trim(),
+      notes: (details.remarks || '').trim(),
       products: products.map(({ id, ...rest }) => ({
         ...rest,
         rate: getEffectiveRate(rest.rate)
       })),
-      totalAmount: grandTotalCalculated
+      totalAmount: netPayableCalculated,
+      grandTotalBeforeDiscount: grandTotalCalculated
     };
   };
 
@@ -417,9 +429,12 @@ export default function Adminbilling() {
         isStampApplied: payload.isStampApplied,
         isRoundOff: payload.isRoundOff,
         isPaymentdone: payload.isPaymentdone,
+        discount: parseFloat(payload.discount || 0),
         advanceAmount: parseFloat(payload.advanceAmount || 0),
         amountReceived: parseFloat(payload.advanceAmount || 0),
         balanceDue: parseFloat(payload.balanceDue || 0),
+        remarks: payload.remarks || '',
+        notes: payload.remarks || '',
         items: payload.products.map(p => ({
           productName: p.name,
           hsnNumber: p.hsn,
@@ -472,6 +487,9 @@ export default function Adminbilling() {
       const rawTotal = totalTaxable + (totalTaxable * gstRate);
       const grandTotal = previewInvoice.salesAmount || (previewInvoice.isRoundOff ? Math.round(rawTotal) : rawTotal);
       const adv = parseFloat(previewInvoice.advanceAmount !== undefined ? previewInvoice.advanceAmount : (previewInvoice.amountReceived || 0));
+      const rawDiscount = parseFloat(previewInvoice.discount !== undefined ? previewInvoice.discount : 0);
+      const discount = Math.max(0, rawDiscount);
+      const netTotal = Math.max(0, parseFloat((grandTotal - discount).toFixed(2)));
 
       return {
         invoiceNumber: previewInvoice.invoiceNumber || '',
@@ -488,16 +506,19 @@ export default function Adminbilling() {
         isRoundOff: Boolean(previewInvoice.isRoundOff),
         invoiceType: previewInvoice.invoiceType || 'tax',
         date: previewInvoice.invoiceDate || (previewInvoice.createdAt ? new Date(previewInvoice.createdAt).toLocaleDateString("en-GB") : ''),
+        discount,
+        remarks: previewInvoice.remarks || previewInvoice.notes || '',
+        notes: previewInvoice.remarks || previewInvoice.notes || '',
         advanceAmount: adv,
         amountReceived: adv,
-        balanceDue: Math.max(0, parseFloat((grandTotal - adv).toFixed(2))),
+        balanceDue: Math.max(0, parseFloat((netTotal - adv).toFixed(2))),
         products: items.map(p => ({
           name: p.productName || '',
           hsn: p.hsnNumber || '',
           rate: Number(p.rate) || 0,
           quantity: Number(p.qty) || 1
         })),
-        totalAmount: grandTotal
+        totalAmount: netTotal
       };
     }
     return buildPayload();
@@ -1207,6 +1228,43 @@ export default function Adminbilling() {
                 </span>
               </div>
 
+              {/* Discount Option */}
+              <div className="pt-3 mt-2 border-t border-slate-200 space-y-2">
+                <div className="flex items-center justify-between gap-4">
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                    <span>Discount</span>
+                    <span className="text-[10px] text-slate-400 font-normal">(Optional)</span>
+                  </label>
+                  <div className="relative w-44">
+                    <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-sm font-semibold pointer-events-none">₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      name="discount"
+                      value={details.discount || ''}
+                      onChange={handleDetailChange}
+                      placeholder="0.00"
+                      className="w-full pl-7 pr-3 py-1.5 text-right text-sm font-semibold text-amber-700 bg-amber-50/50 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                {parseFloat(details.discount || 0) > 0 && (
+                  <div className="flex justify-between items-center text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+                    <span>Net Amount after Discount:</span>
+                    <span className="font-bold text-sm text-amber-900">
+                      ₹{Math.max(0, (
+                        (details.isRoundOff 
+                          ? Math.round(calculateTotalTaxable() + (invoiceType === 'tax' && (details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                          : (calculateTotalTaxable() + (invoiceType === 'tax' && (details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
+                        ) - parseFloat(details.discount || 0)
+                      )).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
               {/* Advance Amount Paid */}
               <div className="pt-3 mt-2 border-t border-slate-200 space-y-2">
                 <div className="flex items-center justify-between gap-4">
@@ -1240,7 +1298,7 @@ export default function Adminbilling() {
                         (details.isRoundOff 
                           ? Math.round(calculateTotalTaxable() + (invoiceType === 'tax' && (details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
                           : (calculateTotalTaxable() + (invoiceType === 'tax' && (details.isGstApplied || details.isIGstApplied) ? calculateTotalTaxable() * 0.18 : 0))
-                        ) - parseFloat(details.advanceAmount || 0)
+                        ) - parseFloat(details.discount || 0) - parseFloat(details.advanceAmount || 0)
                       )).toFixed(2)}
                     </span>
                   </div>
@@ -1299,6 +1357,27 @@ export default function Adminbilling() {
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                 </div>
               </label>
+
+              {/* Remarks / Notes Field */}
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium leading-6 text-slate-900 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 font-semibold">
+                    <FileText className="w-4 h-4 text-slate-400" />
+                    Remarks / Notes
+                  </span>
+                  <span className="text-xs text-slate-400 font-normal">(Printed in the Notes section of the bill)</span>
+                </label>
+                <div className="mt-2">
+                  <textarea
+                    name="remarks"
+                    rows={2}
+                    placeholder="Enter special remarks, terms, or notes (default: Thank you for the Business)..."
+                    value={details.remarks || ''}
+                    onChange={handleDetailChange}
+                    className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1393,7 +1472,9 @@ export default function Adminbilling() {
           isPaymentdone: previewInvoice.paymentStatus === 'Paid',
           isRoundOff: Boolean(previewInvoice.isRoundOff),
           invoiceDate: previewInvoice.invoiceDate || (previewInvoice.createdAt ? new Date(previewInvoice.createdAt).toLocaleDateString("en-GB") : ''),
-          advanceAmount: previewInvoice.advanceAmount !== undefined ? previewInvoice.advanceAmount : (previewInvoice.amountReceived || 0)
+          advanceAmount: previewInvoice.advanceAmount !== undefined ? previewInvoice.advanceAmount : (previewInvoice.amountReceived || 0),
+          discount: previewInvoice.discount !== undefined ? previewInvoice.discount : 0,
+          remarks: previewInvoice.remarks || previewInvoice.notes || ''
         } : details;
 
         const activeInvoiceType = previewInvoice ? (previewInvoice.invoiceType || 'tax') : invoiceType;
@@ -1429,9 +1510,7 @@ export default function Adminbilling() {
           };
         });
 
-        let previewGrandTotal = previewInvoice && previewInvoice.salesAmount
-          ? previewInvoice.salesAmount
-          : (previewTaxable + totalTaxAmount);
+        let previewGrandTotal = previewTaxable + totalTaxAmount;
 
         let previewRoundOff = 0;
         if (activeDetails.isRoundOff && (!previewInvoice || !previewInvoice.salesAmount)) {
@@ -1440,18 +1519,21 @@ export default function Adminbilling() {
           previewGrandTotal = rounded;
         }
 
+        const previewDiscount = Math.max(0, parseFloat(activeDetails.discount || 0));
+        const previewNetTotal = Math.max(0, parseFloat((previewGrandTotal - previewDiscount).toFixed(2)));
+
         const previewAdvanceAmount = parseFloat(activeDetails.advanceAmount || 0);
         let previewBalanceDue = previewInvoice && previewInvoice.balanceDue !== undefined && previewInvoice.advanceAmount > 0
           ? previewInvoice.balanceDue
-          : Math.max(0, parseFloat((previewGrandTotal - previewAdvanceAmount).toFixed(2)));
+          : Math.max(0, parseFloat((previewNetTotal - previewAdvanceAmount).toFixed(2)));
 
         if (Boolean(activeDetails.isPaymentdone) && previewAdvanceAmount === 0) {
           previewBalanceDue = 0;
         }
 
-        const isPaymentDone = previewBalanceDue <= 0 && previewGrandTotal > 0;
+        const isPaymentDone = previewBalanceDue <= 0 && previewNetTotal > 0;
 
-        const upiPayAmount = previewBalanceDue > 0 ? previewBalanceDue : previewGrandTotal;
+        const upiPayAmount = previewBalanceDue > 0 ? previewBalanceDue : previewNetTotal;
         const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent("BITNEXTRO SOLUTIONS PVT. LTD.")}&am=${upiPayAmount.toFixed(2)}&cu=INR`;
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(upiString)}`;
 
@@ -1722,6 +1804,19 @@ export default function Adminbilling() {
                     <td className="p-1 text-right text-base">₹{previewGrandTotal.toFixed(2)}</td>
                   </tr>
 
+                  {previewDiscount > 0 && (
+                    <>
+                      <tr className="border-t border-black text-xs font-semibold">
+                        <td colSpan={7} className="border-r border-black p-1 text-right text-amber-700">Discount</td>
+                        <td className="p-1 text-right font-bold text-amber-700">-₹{previewDiscount.toFixed(2)}</td>
+                      </tr>
+                      <tr className="border-t border-black font-bold text-sm bg-gray-100">
+                        <td colSpan={7} className="border-r border-black p-1 text-right uppercase">Net Amount</td>
+                        <td className="p-1 text-right text-base text-indigo-700">₹{previewNetTotal.toFixed(2)}</td>
+                      </tr>
+                    </>
+                  )}
+
                   {isPaymentDone ? (
                     <>
                       <tr className="border-t border-black text-xs font-semibold">
@@ -1752,7 +1847,7 @@ export default function Adminbilling() {
                       </tr>
                       <tr className="border-t border-black text-xs font-bold bg-rose-50">
                         <td colSpan={7} className="border-r border-black p-1 text-right uppercase text-rose-700">Balance Due Amount</td>
-                        <td className="p-1 text-right text-sm text-rose-700 font-extrabold">₹{previewGrandTotal.toFixed(2)}</td>
+                        <td className="p-1 text-right text-sm text-rose-700 font-extrabold">₹{previewNetTotal.toFixed(2)}</td>
                       </tr>
                     </>
                   )}
@@ -1793,9 +1888,11 @@ export default function Adminbilling() {
 
               {/* Terms and Notes */}
               <div className="flex text-[10px] h-28">
-                <div className="w-1/3 border-r border-black p-2">
-                  <p className="font-bold mb-1">Notes:</p>
-                  <p>Thank you for the Business</p>
+                <div className="w-1/3 border-r border-black p-2 overflow-hidden">
+                  <p className="font-bold mb-1">Remarks / Notes:</p>
+                  <p className="whitespace-pre-line text-slate-800 break-words leading-tight">
+                    {activeDetails.remarks || activeDetails.notes || 'Thank you for the Business'}
+                  </p>
                 </div>
                 <div className="p-2">
                   <p className="font-bold mb-1">Terms and Conditions:</p>
@@ -1887,6 +1984,11 @@ export default function Adminbilling() {
                     <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={inv.shippingAddress || '—'}>{inv.shippingAddress || '—'}</td>
                     <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
                       <div>₹{inv.salesAmount?.toFixed(2)}</div>
+                      {inv.discount > 0 && (
+                        <div className="text-[10px] font-medium text-amber-600">
+                          Disc: -₹{inv.discount?.toFixed(2)}
+                        </div>
+                      )}
                       {inv.advanceAmount > 0 ? (
                         <div className="text-[11px] font-normal text-slate-500">
                           <span className="text-emerald-700 font-medium">Adv: ₹{inv.advanceAmount?.toFixed(2)}</span>

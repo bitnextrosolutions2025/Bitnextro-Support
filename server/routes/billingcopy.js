@@ -91,14 +91,17 @@ const generateHTML = (data) => {
         grandTotal = roundedTotal;
     }
 
-    const advanceAmount = parseFloat(data.advanceAmount || data.amountReceived || 0);
-    const balanceDue = Math.max(0, parseFloat((grandTotal - advanceAmount).toFixed(2)));
-    const isPaymentDone = Boolean(data.isPaymentdone) || (advanceAmount >= grandTotal && grandTotal > 0);
+    const discount = Math.max(0, parseFloat(data.discount || 0));
+    const finalTotal = Math.max(0, parseFloat((grandTotal - discount).toFixed(2)));
 
-    const amountInWords = numberToWords(grandTotal);
+    const advanceAmount = parseFloat(data.advanceAmount || data.amountReceived || 0);
+    const balanceDue = Math.max(0, parseFloat((finalTotal - advanceAmount).toFixed(2)));
+    const isPaymentDone = Boolean(data.isPaymentdone) || (advanceAmount >= finalTotal && finalTotal > 0);
+
+    const amountInWords = numberToWords(finalTotal);
     
     // Generate UPI QR dynamically based on balance due (or total if no advance)
-    const upiPayAmount = balanceDue > 0 ? balanceDue : grandTotal;
+    const upiPayAmount = balanceDue > 0 ? balanceDue : finalTotal;
     const upiString = `upi://pay?pa=81153201@ubin&pn=${encodeURIComponent(companyName)}&am=${upiPayAmount.toFixed(2)}&cu=INR`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(upiString)}`;
 
@@ -238,6 +241,16 @@ const generateHTML = (data) => {
                         <td colspan="7" class="border-r border-black p-1 text-right uppercase">${isCashInvoice ? 'Total Amount' : 'Total'}</td>
                         <td class="p-1 text-right text-base">₹${grandTotal.toFixed(2)}</td>
                     </tr>
+                    ${discount > 0 ? `
+                    <tr class="border-t border-black text-xs font-semibold">
+                        <td colspan="7" class="border-r border-black p-1 text-right text-amber-700">Discount</td>
+                        <td class="p-1 text-right font-bold text-amber-700">-₹${discount.toFixed(2)}</td>
+                    </tr>
+                    <tr class="border-t border-black font-bold text-sm bg-gray-100">
+                        <td colspan="7" class="border-r border-black p-1 text-right uppercase">Net Amount</td>
+                        <td class="p-1 text-right text-base text-indigo-700">₹${finalTotal.toFixed(2)}</td>
+                    </tr>
+                    ` : ''}
                     ${advanceAmount > 0 ? `
                     <tr class="border-t border-black text-xs font-semibold">
                         <td colspan="7" class="border-r border-black p-1 text-right text-emerald-700">Advance Paid</td>
@@ -279,9 +292,9 @@ const generateHTML = (data) => {
 
             <!-- Terms and Notes -->
             <div class="flex text-[10px] h-28">
-                <div class="w-1/3 border-r border-black p-2">
-                    <p class="font-bold mb-1">Notes:</p>
-                    <p>Thank you for the Business</p>
+                <div class="w-1/3 border-r border-black p-2 overflow-hidden">
+                    <p class="font-bold mb-1">Remarks / Notes:</p>
+                    <p class="whitespace-pre-line leading-tight text-gray-800">${(data.remarks || data.notes || 'Thank you for the Business').trim()}</p>
                 </div>
                 <div class="p-2">
                     <p class="font-bold mb-1">Terms and Conditions:</p>

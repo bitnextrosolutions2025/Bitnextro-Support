@@ -64,6 +64,8 @@ router.post('/record-sale', async (req, res) => {
 
     const totalSalesNum = Number(salesAmount) || 0;
     const isPaymentDoneBool = req.body.isPaymentdone !== undefined ? Boolean(req.body.isPaymentdone) : false;
+    const discountNum = Math.max(0, Number(req.body.discount) || 0);
+    const remarksStr = (req.body.remarks !== undefined ? req.body.remarks : (req.body.notes || "")).trim();
 
     // Check if advance was explicitly provided in the request body (including 0 when cleared)
     let advanceNum = 0;
@@ -114,10 +116,13 @@ router.post('/record-sale', async (req, res) => {
             items: items || [],
             salesAmount: totalSalesNum,
             profit,
+            discount: discountNum,
             advanceAmount: advanceNum,
             amountReceived: receivedNum,
             balanceDue: finalBalanceDue,
-            paymentStatus: finalPaymentStatus
+            paymentStatus: finalPaymentStatus,
+            remarks: remarksStr,
+            notes: remarksStr
           }
         },
         { new: true }
@@ -146,12 +151,14 @@ router.post('/record-sale', async (req, res) => {
         salesAmount: totalSalesNum,
         purchaseAmount,
         profit,
+        discount: discountNum,
         advanceAmount: advanceNum,
         amountReceived: receivedNum,
         balanceDue: finalBalanceDue,
         paymentStatus: finalPaymentStatus,
         source: "billing_auto",
-        notes: ""
+        remarks: remarksStr,
+        notes: remarksStr
       });
       
       await newSale.save();
