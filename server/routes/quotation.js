@@ -101,8 +101,10 @@ quotationRoute.post('/create-quotation', async (req, res) => {
       customerGstNo,
       items,
       taxType,
-        isRoundOff
-      } = req.body;
+      isRoundOff,
+      remarks,
+      notes
+    } = req.body;
 
     if (!invoiceNumber || !invoiceNumber.trim()) {
       return res.status(400).json({
@@ -130,6 +132,8 @@ quotationRoute.post('/create-quotation', async (req, res) => {
     // Recalculate amounts server-side
     const calculations = calculateQuotationAmounts(items, taxType);
 
+    const remarksToSave = (remarks !== undefined ? remarks : (notes || "")).trim();
+
     const newQuotation = new Quotation({
       invoiceNumber: invoiceNumber.trim(),
       invoiceDate: (invoiceDate || '').trim(),
@@ -145,7 +149,9 @@ quotationRoute.post('/create-quotation', async (req, res) => {
       igst: calculations.igst,
       taxableAmount: calculations.taxableAmount,
       gst: calculations.gst,
-      totalAmount: calculations.totalAmount
+      totalAmount: calculations.totalAmount,
+      remarks: remarksToSave,
+      notes: remarksToSave
     });
 
     const savedQuotation = await newQuotation.save();
@@ -222,8 +228,10 @@ quotationRoute.put('/update-quotation/:id', async (req, res) => {
       customerGstNo,
       items,
       taxType,
-        isRoundOff
-      } = req.body;
+      isRoundOff,
+      remarks,
+      notes
+    } = req.body;
 
     if (!invoiceNumber || !invoiceNumber.trim()) {
       return res.status(400).json({
@@ -248,6 +256,7 @@ quotationRoute.put('/update-quotation/:id', async (req, res) => {
     }
 
     const calculations = calculateQuotationAmounts(items, taxType);
+    const remarksToSave = (remarks !== undefined ? remarks : (notes || "")).trim();
 
     const updatedQuotation = await Quotation.findByIdAndUpdate(
       id,
@@ -266,7 +275,9 @@ quotationRoute.put('/update-quotation/:id', async (req, res) => {
         igst: calculations.igst,
         taxableAmount: calculations.taxableAmount,
         gst: calculations.gst,
-        totalAmount: calculations.totalAmount
+        totalAmount: calculations.totalAmount,
+        remarks: remarksToSave,
+        notes: remarksToSave
       },
       { new: true, runValidators: true }
     );

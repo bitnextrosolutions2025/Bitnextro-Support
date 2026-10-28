@@ -39,6 +39,7 @@ export default function QuotationForm({ onBack }) {
     invoiceNumber: '',
     invoiceDate: '',
     validUntil: '',
+    remarks: '',
   });
 
   // Customer Details (all values blank by default)
@@ -201,6 +202,8 @@ export default function QuotationForm({ onBack }) {
         invoiceNumber: quotationDetails.invoiceNumber.trim(),
         invoiceDate: quotationDetails.invoiceDate,
         validUntil: quotationDetails.validUntil,
+        remarks: (quotationDetails.remarks || '').trim(),
+        notes: (quotationDetails.remarks || '').trim(),
         customerName: customer.name.trim(),
         customerAddress: customer.address.trim(),
         customerEmail: customer.email.trim(),
@@ -231,7 +234,7 @@ export default function QuotationForm({ onBack }) {
           setEditingId(null);
         } else {
           // Reset form to blank on creation
-          setQuotationDetails({ invoiceNumber: '', invoiceDate: '', validUntil: '' });
+          setQuotationDetails({ invoiceNumber: '', invoiceDate: '', validUntil: '', remarks: '' });
           setCustomer({ name: '', address: '', email: '', gstNo: '' });
           setItems([{ id: Date.now(), name: '', hsn: '', quantity: '', rate: '' }]);
           setIsRoundOff(false);
@@ -255,7 +258,8 @@ export default function QuotationForm({ onBack }) {
     setQuotationDetails({
       invoiceNumber: quote.invoiceNumber || '',
       invoiceDate: quote.invoiceDate || '',
-      validUntil: quote.validUntil || ''
+      validUntil: quote.validUntil || '',
+      remarks: quote.remarks || quote.notes || ''
     });
     setCustomer({
       name: quote.customerName || '',
@@ -286,7 +290,8 @@ export default function QuotationForm({ onBack }) {
     setQuotationDetails({
       invoiceNumber: quote.invoiceNumber || '',
       invoiceDate: quote.invoiceDate || '',
-      validUntil: quote.validUntil || ''
+      validUntil: quote.validUntil || '',
+      remarks: quote.remarks || quote.notes || ''
     });
     setCustomer({
       name: quote.customerName || '',
@@ -314,10 +319,10 @@ export default function QuotationForm({ onBack }) {
   // Cancel editing mode
   const handleCancelEdit = () => {
     setEditingId(null);
-    setQuotationDetails({ invoiceNumber: '', invoiceDate: '', validUntil: '' });
+    setQuotationDetails({ invoiceNumber: '', invoiceDate: '', validUntil: '', remarks: '' });
     setCustomer({ name: '', address: '', email: '', gstNo: '' });
     setItems([{ id: Date.now(), name: '', hsn: '', quantity: '', rate: '' }]);
-          setIsRoundOff(false);
+    setIsRoundOff(false);
   };
 
   // Delete quotation from MongoDB
@@ -569,6 +574,24 @@ export default function QuotationForm({ onBack }) {
                       className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Remarks / Notes field */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium leading-6 text-slate-900">
+                  Remarks / Notes
+                </label>
+                <div className="mt-2">
+                  <textarea
+                    rows={2}
+                    placeholder="Enter remarks, payment terms, delivery notes, or special instructions..."
+                    value={quotationDetails.remarks}
+                    onChange={(e) =>
+                      setQuotationDetails({ ...quotationDetails, remarks: e.target.value })
+                    }
+                    className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
                 </div>
               </div>
             </div>
@@ -1087,8 +1110,14 @@ export default function QuotationForm({ onBack }) {
 
             {/* Financial Summary & Breakdown */}
             <div className="mt-6 flex flex-col sm:flex-row justify-between items-start gap-6 pt-2">
-              {/* Payment Notes */}
+              {/* Payment Notes & Remarks */}
               <div className="w-full sm:w-1/2 space-y-3">
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-700">
+                  <p className="font-bold text-slate-800 mb-1">Remarks / Notes:</p>
+                  <p className="whitespace-pre-line leading-relaxed text-slate-800">
+                    {(quotationDetails.remarks || '').trim() || 'Thank you for considering our proposal.'}
+                  </p>
+                </div>
                 <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600">
                   <p className="font-bold text-slate-800 mb-1">BITNEXTRO SOLUTIONS PVT. LTD.</p>
                   <p>5, Park Lane, Parkstreet, Kolkata, West Bengal, 700016</p>
@@ -1276,6 +1305,11 @@ export default function QuotationForm({ onBack }) {
                           <span className="ml-1.5 text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-medium">
                             Editing
                           </span>
+                        )}
+                        {(quote.remarks || quote.notes) && (
+                          <p className="text-[10px] text-slate-500 font-normal italic truncate max-w-[180px]" title={quote.remarks || quote.notes}>
+                            Note: {quote.remarks || quote.notes}
+                          </p>
                         )}
                       </td>
                       <td className="py-3 px-3 text-slate-600">

@@ -111,6 +111,16 @@ const quotationSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  remarks: {
+    type: String,
+    default: "",
+    trim: true,
+  },
+  notes: {
+    type: String,
+    default: "",
+    trim: true,
+  },
 }, { timestamps: true });
 
 const Quotation = mongoose.model("Quotation", quotationSchema);
