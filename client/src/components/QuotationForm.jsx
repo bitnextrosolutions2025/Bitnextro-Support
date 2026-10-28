@@ -576,24 +576,6 @@ export default function QuotationForm({ onBack }) {
                   </div>
                 </div>
               </div>
-
-              {/* Remarks / Notes field */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium leading-6 text-slate-900">
-                  Remarks / Notes
-                </label>
-                <div className="mt-2">
-                  <textarea
-                    rows={2}
-                    placeholder="Enter remarks, payment terms, delivery notes, or special instructions..."
-                    value={quotationDetails.remarks}
-                    onChange={(e) =>
-                      setQuotationDetails({ ...quotationDetails, remarks: e.target.value })
-                    }
-                    className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  />
-                </div>
-              </div>
             </div>
           </div>
 
@@ -852,50 +834,72 @@ export default function QuotationForm({ onBack }) {
               </div>
             </div>
 
-            {/* Detailed Summary Rows */}
-            <div className="pt-6 max-w-sm ml-auto space-y-3">
-              <div className="flex justify-between text-sm text-slate-600">
-                <span>Total Taxable Amount</span>
-                <span className="font-semibold text-slate-900">₹{totalTaxable.toFixed(2)}</span>
+            {/* Bottom Section: Remarks / Notes (Left) & Detailed Summary Rows (Right) */}
+            <div className="pt-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Column: Remarks / Notes */}
+              <div className="lg:col-span-7">
+                <label className="block text-sm font-semibold text-slate-900 mb-1">
+                  Remarks / Notes
+                </label>
+                <p className="text-xs text-slate-500 mb-2">
+                  Add custom terms, payment conditions, delivery notes, or special instructions to display on the quotation.
+                </p>
+                <textarea
+                  rows={4}
+                  placeholder="Enter remarks, payment terms, delivery notes, or special instructions..."
+                  value={quotationDetails.remarks}
+                  onChange={(e) =>
+                    setQuotationDetails({ ...quotationDetails, remarks: e.target.value })
+                  }
+                  className="block w-full rounded-md border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 resize-y"
+                />
               </div>
 
-              {taxType !== 'none' && (
-                !isIgst ? (
-                <>
-                  <div className="flex justify-between text-xs text-slate-500">
-                    <span>CGST (9%)</span>
-                    <span>₹{cgst.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-500">
-                    <span>SGST (9%)</span>
-                    <span>₹{sgst.toFixed(2)}</span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex justify-between text-xs text-slate-500">
-                  <span>IGST (18%)</span>
-                  <span>₹{igst.toFixed(2)}</span>
+              {/* Right Column: Detailed Summary Rows */}
+              <div className="lg:col-span-5 space-y-3">
+                <div className="flex justify-between text-sm text-slate-600">
+                  <span>Total Taxable Amount</span>
+                  <span className="font-semibold text-slate-900">₹{totalTaxable.toFixed(2)}</span>
                 </div>
-              )
-              )}
 
-              {taxType !== 'none' && (
-                <div className="flex justify-between text-sm text-slate-600 pt-1 border-t border-slate-100">
-                  <span>GST Total (18%)</span>
-                  <span className="font-semibold text-slate-900">₹{totalGst.toFixed(2)}</span>
-                </div>
-              )}
+                {taxType !== 'none' && (
+                  !isIgst ? (
+                  <>
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>CGST (9%)</span>
+                      <span>₹{cgst.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-500">
+                      <span>SGST (9%)</span>
+                      <span>₹{sgst.toFixed(2)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>IGST (18%)</span>
+                    <span>₹{igst.toFixed(2)}</span>
+                  </div>
+                )
+                )}
 
-              <div className="flex justify-between items-center text-base font-bold text-slate-900 pt-3 border-t-2 border-slate-900">
-                <div className="flex items-center gap-2">
-                  <span>Total Amount</span>
-                  {isRoundOff && (
-                    <span className="text-[10px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 uppercase tracking-wider">
-                      Round Off
-                    </span>
-                  )}
+                {taxType !== 'none' && (
+                  <div className="flex justify-between text-sm text-slate-600 pt-1 border-t border-slate-100">
+                    <span>GST Total (18%)</span>
+                    <span className="font-semibold text-slate-900">₹{totalGst.toFixed(2)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center text-base font-bold text-slate-900 pt-3 border-t-2 border-slate-900">
+                  <div className="flex items-center gap-2">
+                    <span>Total Amount</span>
+                    {isRoundOff && (
+                      <span className="text-[10px] font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 uppercase tracking-wider">
+                        Round Off
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-indigo-600 text-lg">₹{grandTotal.toFixed(2)}</span>
                 </div>
-                <span className="text-indigo-600 text-lg">₹{grandTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>
