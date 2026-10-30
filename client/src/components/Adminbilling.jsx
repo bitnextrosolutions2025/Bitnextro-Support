@@ -40,6 +40,8 @@ export default function Adminbilling() {
   const [editingInvoiceId, setEditingInvoiceId] = useState(null);
   const [isSavingInvoice, setIsSavingInvoice] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState(null);
+  const [viewAllInvoices, setViewAllInvoices] = useState(true);
+  const [invoiceSearchQuery, setInvoiceSearchQuery] = useState('');
 
     const fetchInvoices = async () => {
     setIsLoadingInvoices(true);
@@ -623,6 +625,20 @@ export default function Adminbilling() {
       alert("Failed to generate invoice. Please check the console.");
     }
   };
+
+  const filteredSavedInvoices = savedInvoices.filter(inv => {
+    if (!invoiceSearchQuery.trim()) return true;
+    const q = invoiceSearchQuery.toLowerCase().trim();
+    const invNum = (inv.invoiceNumber || '').toLowerCase();
+    const custName = (inv.customerName || '').toLowerCase();
+    const billAddr = (inv.billingAddress || '').toLowerCase();
+    const shipAddr = (inv.shippingAddress || '').toLowerCase();
+    return invNum.includes(q) || custName.includes(q) || billAddr.includes(q) || shipAddr.includes(q);
+  });
+
+  const displayedInvoices = (viewAllInvoices || invoiceSearchQuery.trim())
+    ? filteredSavedInvoices
+    : filteredSavedInvoices.slice(0, 15);
 
 
   return (
@@ -1930,15 +1946,57 @@ export default function Adminbilling() {
               Click View to preview the official document, or Edit to load into the form for modification.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={fetchInvoices}
-            disabled={isLoadingInvoices}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-md transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingInvoices ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search invoice or client..."
+                value={invoiceSearchQuery}
+                onChange={(e) => setInvoiceSearchQuery(e.target.value)}
+                className="pl-8 pr-7 py-1.5 text-xs rounded-md border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50 focus:bg-white w-44 sm:w-52 text-slate-800"
+              />
+              {invoiceSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setInvoiceSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* View All / Show Recent Toggle */}
+            {savedInvoices.length > 15 && !invoiceSearchQuery.trim() && (
+              <button
+                type="button"
+                onClick={() => setViewAllInvoices(prev => !prev)}
+                className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors cursor-pointer border ${
+                  viewAllInvoices
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+                title={viewAllInvoices ? "Switch to recent 15 invoices" : "View all invoices with scroll"}
+              >
+                {viewAllInvoices ? 'Show Recent 15' : `View All (${savedInvoices.length})`}
+              </button>
+            )}
+
+            {/* Refresh */}
+            <button
+              type="button"
+              onClick={fetchInvoices}
+              disabled={isLoadingInvoices}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoadingInvoices ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {isLoadingInvoices && (
@@ -1960,88 +2018,122 @@ export default function Adminbilling() {
           </div>
         )}
 
-        {!isLoadingInvoices && !invoiceListError && savedInvoices.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
-            <table className="min-w-full divide-y divide-slate-200 text-sm text-left">
-              <thead className="bg-slate-50 text-slate-600 font-semibold">
-                <tr>
-                  <th className="px-4 py-3 whitespace-nowrap">Invoice #</th>
-                  <th className="px-4 py-3 whitespace-nowrap">Date</th>
-                  <th className="px-4 py-3 whitespace-nowrap">Customer</th>
-                  <th className="px-4 py-3 whitespace-nowrap">Billing Address</th>
-                  <th className="px-4 py-3 whitespace-nowrap">Shipping Address</th>
-                  <th className="px-4 py-3 whitespace-nowrap">Amount</th>
-                  <th className="px-4 py-3 whitespace-nowrap text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {savedInvoices.slice(0, 15).map(inv => (
-                  <tr key={inv._id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">{inv.invoiceNumber}</td>
-                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{inv.invoiceDate || new Date(inv.createdAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-slate-700 whitespace-nowrap max-w-[150px] truncate">{inv.customerName}</td>
-                    <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={inv.billingAddress || '—'}>{inv.billingAddress || '—'}</td>
-                    <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={inv.shippingAddress || '—'}>{inv.shippingAddress || '—'}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
-                      <div>₹{inv.salesAmount?.toFixed(2)}</div>
-                      {inv.discount > 0 && (
-                        <div className="text-[10px] font-medium text-amber-600">
-                          Disc: -₹{inv.discount?.toFixed(2)}
-                        </div>
-                      )}
-                      {inv.advanceAmount > 0 ? (
-                        <div className="text-[11px] font-normal text-slate-500">
-                          <span className="text-emerald-700 font-medium">Adv: ₹{inv.advanceAmount?.toFixed(2)}</span>
-                          {inv.balanceDue > 0 && (
-                            <span className="text-rose-600 font-semibold ml-1.5">• Due: ₹{inv.balanceDue?.toFixed(2)}</span>
-                          )}
-                        </div>
-                      ) : inv.paymentStatus ? (
-                        <div className={`text-[10px] font-medium ${inv.paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                          {inv.paymentStatus}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleViewSavedInvoice(inv)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
-                          title="Preview Document"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          View
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleEditInvoice(inv)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
-                          title="Edit Invoice"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteInvoice(inv._id)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
-                          title="Delete Invoice"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+        {!isLoadingInvoices && !invoiceListError && savedInvoices.length > 0 && displayedInvoices.length === 0 && (
+          <div className="py-10 text-center text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200 space-y-2">
+            <p className="text-sm font-medium">No invoices match "{invoiceSearchQuery}".</p>
+            <button
+              type="button"
+              onClick={() => setInvoiceSearchQuery('')}
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+            >
+              Clear search filter
+            </button>
+          </div>
+        )}
+
+        {!isLoadingInvoices && !invoiceListError && displayedInvoices.length > 0 && (
+          <div className="rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            {/* Scrollable Container with max height and smooth scrolling */}
+            <div className="overflow-x-auto overflow-y-auto max-h-[520px]">
+              <table className="min-w-full divide-y divide-slate-200 text-sm text-left">
+                <thead className="bg-slate-50 text-slate-600 font-semibold sticky top-0 z-10 shadow-xs">
+                  <tr>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Invoice #</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Date</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Customer</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Billing Address</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Shipping Address</th>
+                    <th className="px-4 py-3 whitespace-nowrap bg-slate-50">Amount</th>
+                    <th className="px-4 py-3 whitespace-nowrap text-right bg-slate-50">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {savedInvoices.length > 15 && (
-              <div className="p-3 bg-slate-50 text-center text-xs text-slate-500 border-t border-slate-200">
-                Showing most recent 15 invoices. View all in the Sales tab.
+                </thead>
+                <tbody className="divide-y divide-slate-200 bg-white">
+                  {displayedInvoices.map(inv => (
+                    <tr key={inv._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">{inv.invoiceNumber}</td>
+                      <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{inv.invoiceDate || new Date(inv.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-slate-700 whitespace-nowrap max-w-[150px] truncate">{inv.customerName}</td>
+                      <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={inv.billingAddress || '—'}>{inv.billingAddress || '—'}</td>
+                      <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={inv.shippingAddress || '—'}>{inv.shippingAddress || '—'}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
+                        <div>₹{inv.salesAmount?.toFixed(2)}</div>
+                        {inv.discount > 0 && (
+                          <div className="text-[10px] font-medium text-amber-600">
+                            Disc: -₹{inv.discount?.toFixed(2)}
+                          </div>
+                        )}
+                        {inv.advanceAmount > 0 ? (
+                          <div className="text-[11px] font-normal text-slate-500">
+                            <span className="text-emerald-700 font-medium">Adv: ₹{inv.advanceAmount?.toFixed(2)}</span>
+                            {inv.balanceDue > 0 && (
+                              <span className="text-rose-600 font-semibold ml-1.5">• Due: ₹{inv.balanceDue?.toFixed(2)}</span>
+                            )}
+                          </div>
+                        ) : inv.paymentStatus ? (
+                          <div className={`text-[10px] font-medium ${inv.paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            {inv.paymentStatus}
+                          </div>
+                        ) : null}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleViewSavedInvoice(inv)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                            title="Preview Document"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            View
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEditInvoice(inv)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                            title="Edit Invoice"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteInvoice(inv._id)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+                            title="Delete Invoice"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Bottom Footer Info & Toggle */}
+            <div className="p-3 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600 border-t border-slate-200">
+              <div className="text-slate-500">
+                {invoiceSearchQuery.trim() ? (
+                  <span>Found <strong>{displayedInvoices.length}</strong> matching invoices out of <strong>{savedInvoices.length}</strong> total.</span>
+                ) : viewAllInvoices ? (
+                  <span>Showing all <strong>{savedInvoices.length}</strong> created invoices. Scroll the table above to view and edit any invoice.</span>
+                ) : (
+                  <span>Showing most recent <strong>{Math.min(15, savedInvoices.length)}</strong> of <strong>{savedInvoices.length}</strong> invoices.</span>
+                )}
               </div>
-            )}
+
+              {savedInvoices.length > 15 && !invoiceSearchQuery.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setViewAllInvoices(prev => !prev)}
+                  className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer inline-flex items-center gap-1"
+                >
+                  {viewAllInvoices ? 'Show Recent 15' : `View All (${savedInvoices.length}) Invoices with Scrolling`}
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
