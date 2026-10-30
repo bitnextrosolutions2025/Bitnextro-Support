@@ -1982,7 +1982,7 @@ export default function Adminbilling() {
                 }`}
                 title={viewAllInvoices ? "Switch to recent 15 invoices" : "View all invoices with scroll"}
               >
-                {viewAllInvoices ? 'Show Recent 15' : `View All (${savedInvoices.length})`}
+                {viewAllInvoices ? 'Show Recent 15' : 'View All'}
               </button>
             )}
 
@@ -2130,7 +2130,7 @@ export default function Adminbilling() {
                   onClick={() => setViewAllInvoices(prev => !prev)}
                   className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer inline-flex items-center gap-1"
                 >
-                  {viewAllInvoices ? 'Show Recent 15' : `View All (${savedInvoices.length}) Invoices with Scrolling`}
+                  {viewAllInvoices ? 'Show Recent 15' : 'View All'}
                 </button>
               )}
             </div>
