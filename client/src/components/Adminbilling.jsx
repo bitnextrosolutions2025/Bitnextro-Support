@@ -40,7 +40,7 @@ export default function Adminbilling() {
   const [editingInvoiceId, setEditingInvoiceId] = useState(null);
   const [isSavingInvoice, setIsSavingInvoice] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState(null);
-  const [viewAllInvoices, setViewAllInvoices] = useState(true);
+  const [viewAllInvoices, setViewAllInvoices] = useState(false);
   const [invoiceSearchQuery, setInvoiceSearchQuery] = useState('');
 
     const fetchInvoices = async () => {
