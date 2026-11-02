@@ -283,7 +283,7 @@ const generateHTML = (data) => {
                     <div class="flex items-center justify-end gap-2 mt-1 mb-0">
                         ${data.isStampApplied !== false ? `<img src="${authStamp}" alt="Stamp" class="w-16 h-16 object-contain opacity-90">` : ''}
                         <div class="w-24 h-16 flex items-end justify-center pb-1">
-                            ${authSignature ? `<img src="${authSignature}" alt="Signature" class="max-h-14 max-w-full object-contain">` : '<div class="w-24 h-16"></div>'}
+                            ${data.isStampApplied !== false && authSignature ? `<img src="${authSignature}" alt="Signature" class="max-h-14 max-w-full object-contain">` : '<div class="w-24 h-16"></div>'}
                         </div>
                     </div>
                     <p class="font-medium text-gray-500 border-t border-gray-400 pt-1 w-24 text-center">Authorized Signatory</p>

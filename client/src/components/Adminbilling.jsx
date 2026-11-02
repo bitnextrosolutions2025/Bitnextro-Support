@@ -1343,7 +1343,7 @@ export default function Adminbilling() {
               {/* Stamp Toggle */}
               <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
                 <div>
-                  <p className="text-sm font-medium text-slate-900">Include Authorized Stamp</p>
+                  <p className="text-sm font-medium text-slate-900">Include Authorized Stamp & Signature</p>
                   <p className="text-xs text-slate-500 mt-1">Append digital signature/stamp</p>
                 </div>
                 <div className="relative inline-flex items-center cursor-pointer">
@@ -1891,7 +1891,7 @@ export default function Adminbilling() {
                       <img src={authStamp} alt="Stamp" className="w-16 h-16 object-contain opacity-90" />
                     )}
                     <div className="w-24 h-16 flex items-end justify-center pb-1">
-                      {authSignature ? (
+                      {activeDetails.isStampApplied !== false && authSignature ? (
                         <img src={authSignature} alt="Signature" className="max-h-14 max-w-full object-contain" />
                       ) : (
                         <div className="w-24 h-16"></div>
