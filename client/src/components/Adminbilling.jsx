@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { handleError, handleSuccess } from './ErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Plus, Trash2, FileText, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X, Wallet, Save, Printer, ArrowLeft, FileCheck, CheckCircle2, Download, Edit3 } from 'lucide-react';
+import { Plus, Trash2, FileText, Calendar, Settings2, Receipt, Loader2, Search, User, TrendingUp, FileSpreadsheet, RefreshCw, Eye, Edit2, X, Wallet, Save, Printer, ArrowLeft, FileCheck, CheckCircle2, Download, Edit3 } from 'lucide-react';
 import QuotationForm from './QuotationForm';
 import CustomerWorkspace from './CustomerWorkspace';
 import ProformaWorkspace from './ProformaWorkspace';
@@ -22,6 +22,45 @@ const bankDetails = {
   branch: "CANNING STREET - KOLKATA"
 };
 
+
+
+const toInputDateFormat = (d) => {
+  if (!d) return new Date().toLocaleDateString('en-CA');
+  if (typeof d === 'string') {
+    const trimmed = d.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+    const dmy = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (dmy) {
+      const day = dmy[1].padStart(2, '0');
+      const month = dmy[2].padStart(2, '0');
+      const year = dmy[3];
+      return `${year}-${month}-${day}`;
+    }
+    const parsed = new Date(trimmed);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString('en-CA');
+    }
+  }
+  if (d instanceof Date && !isNaN(d.getTime())) {
+    return d.toLocaleDateString('en-CA');
+  }
+  return new Date().toLocaleDateString('en-CA');
+};
+
+const formatToDMY = (dateStr) => {
+  if (!dateStr) return new Date().toLocaleDateString('en-GB');
+  if (typeof dateStr === 'string') {
+    const trimmed = dateStr.trim();
+    if (trimmed.includes('-')) {
+      const parts = trimmed.split('-');
+      if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+      }
+    }
+    return trimmed;
+  }
+  return new Date().toLocaleDateString('en-GB');
+};
 
 // Helper to format date nicely (e.g. 22 Oct 2026) while preserving original creation date
 const formatDisplayDate = (d) => {
@@ -429,7 +468,7 @@ export default function Adminbilling() {
     const advancePaid = parseFloat(details.advanceAmount || 0);
     const calculatedDue = Math.max(0, parseFloat((netPayableCalculated - advancePaid).toFixed(2)));
 
-    const resolvedInvoiceDate = details.invoiceDate || new Date().toLocaleDateString("en-GB");
+    const resolvedInvoiceDate = formatToDMY(details.invoiceDate || new Date().toLocaleDateString("en-CA"));
     return {
       ...details,
       invoiceType,
@@ -930,6 +969,23 @@ export default function Adminbilling() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium leading-6 text-slate-900 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-indigo-600" />
+                  Invoice Date
+                </label>
+                <div className="mt-2">
+                  <input
+                    type="date"
+                    name="invoiceDate"
+                    required
+                    value={toInputDateFormat(details.invoiceDate)}
+                    onChange={handleDetailChange}
+                    className="block w-full rounded-md border-0 py-2 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium leading-6 text-slate-900">Place of Supply</label>
                 <div className="mt-2">
                   <input
