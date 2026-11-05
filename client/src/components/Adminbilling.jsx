@@ -22,6 +22,47 @@ const bankDetails = {
   branch: "CANNING STREET - KOLKATA"
 };
 
+
+// Helper to format date nicely (e.g. 22 Oct 2026) while preserving original creation date
+const formatDisplayDate = (d) => {
+  if (!d) return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  if (typeof d === 'string') {
+    const trimmed = d.trim();
+    const dmy = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (dmy) {
+      const day = parseInt(dmy[1], 10);
+      const month = parseInt(dmy[2], 10) - 1;
+      const year = parseInt(dmy[3], 10);
+      const dateObj = new Date(year, month, day);
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+    }
+    const ymd = trimmed.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (ymd) {
+      const year = parseInt(ymd[1], 10);
+      const month = parseInt(ymd[2], 10) - 1;
+      const day = parseInt(ymd[3], 10);
+      const dateObj = new Date(year, month, day);
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+    }
+    if (/[a-zA-Z]/.test(trimmed)) {
+      return trimmed;
+    }
+    const dateObj = new Date(trimmed);
+    if (!isNaN(dateObj.getTime())) {
+      return dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    return trimmed;
+  }
+  if (d instanceof Date && !isNaN(d.getTime())) {
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  return String(d);
+};
+
 export default function Adminbilling() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('invoice');
@@ -388,10 +429,12 @@ export default function Adminbilling() {
     const advancePaid = parseFloat(details.advanceAmount || 0);
     const calculatedDue = Math.max(0, parseFloat((netPayableCalculated - advancePaid).toFixed(2)));
 
+    const resolvedInvoiceDate = details.invoiceDate || new Date().toLocaleDateString("en-GB");
     return {
       ...details,
       invoiceType,
-      date: details.invoiceDate || new Date().toLocaleDateString("en-GB"),
+      date: resolvedInvoiceDate,
+      invoiceDate: resolvedInvoiceDate,
       isGstApplied: invoiceType === 'cash' ? false : details.isGstApplied,
       isIGstApplied: invoiceType === 'cash' ? false : details.isIGstApplied,
       gstno: invoiceType === 'cash' ? '' : details.gstno,
@@ -508,6 +551,7 @@ export default function Adminbilling() {
         isRoundOff: Boolean(previewInvoice.isRoundOff),
         invoiceType: previewInvoice.invoiceType || 'tax',
         date: previewInvoice.invoiceDate || (previewInvoice.createdAt ? new Date(previewInvoice.createdAt).toLocaleDateString("en-GB") : ''),
+        invoiceDate: previewInvoice.invoiceDate || (previewInvoice.createdAt ? new Date(previewInvoice.createdAt).toLocaleDateString("en-GB") : ''),
         discount,
         remarks: previewInvoice.remarks || previewInvoice.notes || '',
         notes: previewInvoice.remarks || previewInvoice.notes || '',
@@ -1700,7 +1744,7 @@ export default function Adminbilling() {
                     </div>
                     <div className="w-1/2 p-2 text-[11px]">
                       <p className="text-gray-600 mb-1">Invoice Date:</p>
-                      <p className="">{activeDetails.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
+                      <p className="">{formatDisplayDate(activeDetails.invoiceDate)}</p>
                     </div>
                   </div>
                   <div className="flex h-1/2">
@@ -1710,7 +1754,7 @@ export default function Adminbilling() {
                     </div>
                     <div className="w-1/2 p-2 text-[11px]">
                       <p className="text-gray-600 mb-1">Due Date:</p>
-                      <p className="">{activeDetails.invoiceDate || new Date().toLocaleDateString('en-GB')}</p>
+                      <p className="">{formatDisplayDate(activeDetails.dueDate || activeDetails.invoiceDate)}</p>
                     </div>
                   </div>
                 </div>

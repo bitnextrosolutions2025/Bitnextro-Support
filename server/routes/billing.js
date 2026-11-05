@@ -2,6 +2,7 @@ import express from "express";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 import fs from "fs";
+import Sale from "../models/Sale.js";
 
 const billingRoute = express.Router();
 
@@ -20,6 +21,49 @@ function numberToWords(num) {
     str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
     str += (n[5] != 0) ? ((str != '') ? 'And ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'Rupees Only' : 'Rupees Only';
     return str.trim();
+}
+
+
+// Helper to format invoice date preserving original creation date
+function formatInvoiceDate(input) {
+    if (!input) {
+        return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    if (typeof input === 'string') {
+        const trimmed = input.trim();
+        const dmy = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        if (dmy) {
+            const day = parseInt(dmy[1], 10);
+            const month = parseInt(dmy[2], 10) - 1;
+            const year = parseInt(dmy[3], 10);
+            const d = new Date(year, month, day);
+            if (!isNaN(d.getTime())) {
+                return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+        }
+        const ymd = trimmed.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+        if (ymd) {
+            const year = parseInt(ymd[1], 10);
+            const month = parseInt(ymd[2], 10) - 1;
+            const day = parseInt(ymd[3], 10);
+            const d = new Date(year, month, day);
+            if (!isNaN(d.getTime())) {
+                return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+        }
+        if (/[a-zA-Z]/.test(trimmed)) {
+            return trimmed;
+        }
+        const d = new Date(trimmed);
+        if (!isNaN(d.getTime())) {
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+        return trimmed;
+    }
+    if (input instanceof Date && !isNaN(input.getTime())) {
+        return input.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    return String(input);
 }
 
 // Helper to generate the exact HTML Template
@@ -49,7 +93,8 @@ const generateHTML = (data) => {
     // --- Calculations ---
     let totalTaxable = 0;
     let totalTaxAmount = 0;
-    const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const invoiceDateFormatted = formatInvoiceDate(data.invoiceDate || data.date);
+    const dueDateFormatted = formatInvoiceDate(data.dueDate || data.invoiceDate || data.date);
 
     const productsHtml = data.products.map((p, index) => {
         let rate = parseFloat(p.rate);
@@ -159,7 +204,7 @@ const generateHTML = (data) => {
                         </div>
                         <div class="w-1/2 p-2 text-[11px]">
                             <p class="text-gray-600 mb-1">Invoice Date:</p>
-                            <p class="">${today}</p>
+                            <p class="">${invoiceDateFormatted}</p>
                         </div>
                     </div>
                     <div class="flex h-1/2">
@@ -169,7 +214,7 @@ const generateHTML = (data) => {
                         </div>
                         <div class="w-1/2 p-2 text-[11px]">
                             <p class="text-gray-600 mb-1">Due Date:</p>
-                            <p class="">${today}</p>
+                            <p class="">${dueDateFormatted}</p>
                         </div>
                     </div>
                 </div>
@@ -328,6 +373,18 @@ billingRoute.post("/billing-work", async (req, res) => {
         }
 
         console.log("Generating invoice for:", alldata.invoiceNumber);
+        if ((!alldata.date && !alldata.invoiceDate) && alldata.invoiceNumber) {
+            try {
+                const existingSale = await Sale.findOne({ invoiceNumber: alldata.invoiceNumber }).lean();
+                if (existingSale) {
+                    alldata.invoiceDate = existingSale.invoiceDate || (existingSale.createdAt ? new Date(existingSale.createdAt).toLocaleDateString('en-GB') : '');
+                    alldata.date = alldata.invoiceDate;
+                }
+            } catch (err) {
+                console.warn("Could not lookup existing sale date:", err.message);
+            }
+        }
+
 
         // 1. Generate HTML string based on req.body
         const htmlContent = generateHTML(alldata);
